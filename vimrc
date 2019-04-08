@@ -37,6 +37,9 @@ Plugin 'ryanoasis/vim-webdevicons'
 " Extra syntax and highlight for nerdtree files
 Plugin 'tiagofumo/vim-nerdtree-syntax-highlight'
 
+" Typescript syntax files for Vim
+Plugin 'leafgarland/typescript-vim'
+
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
 
