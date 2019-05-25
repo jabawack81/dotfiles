@@ -2,7 +2,7 @@
 set number
 
 "nice colorschema
-colorscheme thinkpad
+colorscheme darkblue
 
 " colors are fun
 syntax on
