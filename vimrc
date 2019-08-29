@@ -33,6 +33,9 @@ Plugin 'scrooloose/nerdtree'
 Plugin 'vim-airline/vim-airline'
 Plugin 'vim-airline/vim-airline-themes'
 
+" super simple vim plugin to show the list of buffers in the command bar
+Plugin 'bling/vim-bufferline'
+
 " 🔣 Adds file type glyphs/icons to popular Vim plugins: NERDTree, vim-airline, Powerline, Unite, vim-startify and more
 Plugin 'ryanoasis/vim-devicons'
 Plugin 'ryanoasis/vim-webdevicons'
@@ -73,7 +76,7 @@ let g:WebDevIconsUnicodeDecorateFolderNodes = 1
 let NERDTreeMinimalUI = 1
 let NERDTreeDirArrows = 1
 
-let g:airline_theme='simple'
+let g:airline_theme='badwolf'
 
 if !exists('g:airline_symbols')
   let g:airline_symbols = {}
