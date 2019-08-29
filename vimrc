@@ -1,6 +1,9 @@
 " add line number
 set number
 
+" set central direcotry for swap files
+set directory^=$HOME/.vim/tmp//
+
 "nice colorschema
 colorscheme darkblue
 
