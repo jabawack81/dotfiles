@@ -46,6 +46,9 @@ Plugin 'tiagofumo/vim-nerdtree-syntax-highlight'
 " Typescript syntax files for Vim
 Plugin 'leafgarland/typescript-vim'
 
+" A Vim plugin for Prettier
+Plugin 'prettier/vim-prettier'
+
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
 
