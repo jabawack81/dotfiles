@@ -26,6 +26,9 @@ call vundle#begin()
 " let Vundle manage Vundle, required
 Plugin 'VundleVim/Vundle.vim'
 
+" Vim plugin for generating images of source code using https://github.com/Aloxaf/silicon
+Plugin 'segeljakt/vim-silicon'
+
 " A tree explorer plugin for vim.
 Plugin 'scrooloose/nerdtree'
 
