@@ -4,15 +4,8 @@ set number
 " set central direcotry for swap files
 set directory^=$HOME/.vim/tmp//
 
-"nice colorschema
-colorscheme darkblue
-
 " colors are fun
 syntax on
-
-" vaffanculo touchbar
-inoremap jj <esc>
-inoremap jk <esc>
 
 set nocompatible              " be iMproved, required
 filetype off                  " required
@@ -52,8 +45,14 @@ Plugin 'leafgarland/typescript-vim'
 " A Vim plugin for Prettier
 Plugin 'prettier/vim-prettier'
 
+" Nord theme
+Plugin 'arcticicestudio/nord-vim'
+
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
+
+" nice colorschema
+colorscheme nord
 
 filetype plugin indent on    " required
 " To ignore plugin indent changes, instead use:
@@ -77,12 +76,10 @@ autocmd VimEnter * if argc() == 1 && isdirectory(argv()[0]) && !exists("s:std_in
 autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 
 let g:NERDTreeNodeDelimiter = "\u00a0"
-let NERDTreeShowHidden=1
+let NERDTreeShowHidden = 1
 let g:WebDevIconsUnicodeDecorateFolderNodes = 1
 let NERDTreeMinimalUI = 1
 let NERDTreeDirArrows = 1
-
-let g:airline_theme='badwolf'
 
 if !exists('g:airline_symbols')
   let g:airline_symbols = {}
