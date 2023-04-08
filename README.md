@@ -9,4 +9,4 @@ to install all the plugin use: [Vundle.vim](https://github.com/VundleVim/Vundle.
 ## Tmuxrc
 
  * `git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm`
- * open tmux
+ * open tmux and `prefix` + `I`
