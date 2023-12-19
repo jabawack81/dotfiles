@@ -48,6 +48,9 @@ Plugin 'prettier/vim-prettier'
 " Nord theme
 Plugin 'arcticicestudio/nord-vim'
 
+" EditorConfig Vim Plugin
+Plugin 'editorconfig/editorconfig-vim'
+
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
 
