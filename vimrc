@@ -51,6 +51,9 @@ Plugin 'arcticicestudio/nord-vim'
 " EditorConfig Vim Plugin
 Plugin 'editorconfig/editorconfig-vim'
 
+" Copilot for vim
+Plugin 'github/copilot.vim'
+
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
 
