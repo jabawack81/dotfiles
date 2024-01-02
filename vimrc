@@ -1,5 +1,11 @@
 " add line number
-set number
+set number              " show line numbers
+set nocompatible        " be iMproved, required
+set tabstop=4           " number of visual spaces per TAB
+set softtabstop=4       " number of spaces in tab when editing
+set expandtab           " tabs are spaces
+set showcmd             " show command in bottom bar
+set showcmd             " show command in bottom bar
 
 " set central direcotry for swap files
 set directory^=$HOME/.vim/tmp//
@@ -7,7 +13,6 @@ set directory^=$HOME/.vim/tmp//
 " colors are fun
 syntax on
 
-set nocompatible              " be iMproved, required
 filetype off                  " required
 
 " set the runtime path to include Vundle and initialize
