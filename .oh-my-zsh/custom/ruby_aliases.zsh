@@ -7,12 +7,3 @@ alias hlt="heroku logs -t -a"
 
 alias brspecd="brspec --format documentation --no-fail-fast --order defined"
 
-function until_failure {
-  i=0;
-
-  while "$@"; do
-    echo "############################################################################################"
-    echo "Run number: $i"
-    let i=$i+1
-  done
-}
