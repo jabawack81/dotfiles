@@ -1,65 +1,173 @@
 {
-    "modules-left": ["sway/workspaces", "sway/mode"],
-    "modules-center": ["clock", "idle_inhibitor"],
-    /* "modules-right": ["tray", "custom/scratchpad-indicator", "pulseaudio", "custom/power"], */
-    "modules-right": ["tray", "custom/scratchpad-indicator", "pulseaudio", "custom/power"],
-
-    "sway/mode": {
-        "format": "<span style=\"italic\">{}</span>"
-    },
-    "network": {
-        "format-wifi": "{essid} ({signalStrength}%) ",
-        "format-ethernet": "{ifname} ",
-        "format-disconnected": "", 
-        "max-length": 50,
-        "on-click": "kitty -e 'nmtui'"
-    },
-    "idle_inhibitor": {
+    "height": 40, // Waybar height (to be removed for auto height)
+    "layer": "top", // Waybar at top layer
+    "modules-left": [
+      "custom/launcher",
+      "cpu",
+      "memory",
+      "custom/updates"
+    ],
+    "modules-center": [
+      "wlr/workspaces",
+      "custom/spotify"
+    ],
+    "modules-right": [
+      "tray",
+      "network",
+      "pulseaudio",
+      "pulseaudio#microphone",
+      "bluetooth",
+      "backlight",
+      "battery",
+      "custom/lock",
+      "clock",
+      "custom/power-menu"
+    ],
+    "wlr/workspaces": {
         "format": "{icon}",
+        "on-click": "activate",
         "format-icons": {
-            "activated": "",
-            "deactivated": ""
-        },
-		"on-click": "bash /home/dg/.local/bin/toggleRemote"
+            "active": " 󰮯",
+            "default": ""
+        }
+    },
+    "bluetooth": {
+      "format": "<span color='#b4befe'></span>",
+      "format-disabled": "", // an empty format will hide the module
+      "on-click": "bash ~/.config/waybar/scripts/rofi-bluetooth",
+      "format-connected": "<span color='#b4befe'></span> {num_connections} {device_battery_percentage}%",
+      "tooltip-format": "{device_enumerate}",
+      "tooltip-format-enumerate-connected": "{device_alias}   {device_address}"
+    },
+
+    "hyprland/window": {
+        "format": "{}",
+        "max-length": 25
     },
     "tray": {
-        "icon-size": 15,
         "spacing": 10
     },
     "clock": {
-        // "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
-        // "format-alt": "{:%Y-%m-%d}"
-		"on-click": "gnome-calendar"
+        "format": "{:%H:%M}",
+        "format-alt": "{:%b %d %Y}",
+        "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>"
+    },
+    "cpu": {
+        "interval": 10,
+        "format": " {}%",
+        "max-length": 10,
+        "on-click": ""
+    },
+    "memory": {
+        "interval": 30,
+        "format": " {used:0.1f}GB",
+        "format-alt": " {}%",
+        "max-length": 10
+    },
+    "backlight": {
+        "device": "intel_backlight",
+        "format": "{icon}",
+        "tooltip-format": "{percent}",
+        "format-icons": [
+            "󱩎 ",
+            "󱩏 ",
+            "󱩐 ",
+            "󱩑 ",
+            "󱩒 ",
+            "󱩓 ",
+            "󱩔 ",
+            "󱩕 ",
+            "󱩖 ",
+            "󰛨 "
+        ]
+    },
+    "network": {
+        /* "format-wifi": "直", */
+        "format-wifi": "{icon}",
+        "format-ethernet": " ",
+        "format-disconnected": "睊",
+        "tooltip-format": "{essid}",
+        "on-click": "~/.config/waybar/scripts/network/rofi-network-manager.sh",
+        "format-icons": [
+            "󰤯",
+            "󰤟",
+            "󰤢",
+            "󰤥",
+            "󰤨"
+        ]
+    },
+    "custom/updates": {
+        "format": "{}",
+        "exec": "$HOME/.config/waybar/scripts/updates",
+        "on-click": "$HOME/.config/waybar/scripts/updates update",
+        "interval": 300,
+        "tooltip": true
     },
     "pulseaudio": {
-        "format": "{volume}% {icon} ",
-        "format-bluetooth": "{volume}% {icon} {format_source}",
-        "format-bluetooth-muted": " {icon} {format_source}",
-        "format-muted": "0% {icon} ",
-        "format-source": "{volume}% ",
-        "format-source-muted": "",
+        "format": "{icon}",
+        "format-muted": "婢",
         "format-icons": {
-            "headphone": "",
-            "hands-free": "",
-            "headset": "",
-            "phone": "",
-            "portable": "",
-            "car": "",
-            "default": ["", "", ""]
+            "default": [
+                "",
+                "",
+                "墳"
+            ]
         },
-        "on-click": "pavucontrol"
+        "on-click": "pavucontrol &"
     },
-	"custom/power": {
-		"format": " ",
-		"on-click": "swaynag -t warning -m 'Power Menu Options' -b 'Logout' 'swaymsg exit' -b 'Restart' 'shutdown -r now' -b 'Shutdown'  'shutdown -h now' --background=#005566 --button-background=#009999 --button-border=#002b33 --border-bottom=#002b33"
-	},
-    "custom/scratchpad-indicator": {
-        "format-text": "{}hi",
+    "pulseaudio#microphone": {
+        "format": "{format_source}",
+        "format-source": "",
+        "format-source-muted": "",
+    },
+
+    "battery": {
+        "bat": "BAT0",
+        "adapter": "DC",
+        "interval": 60,
+        "states": {
+            "warning": 30,
+            "critical": 15
+        },
+        "max-length": 30,
+        "format": "{icon} {capacity}% ",
+        "format-warning": "{icon} {capacity}% ",
+        "format-critical": "{icon} {capacity}% ",
+        "format-charging": "<span font-family='Font Awesome 6 Free'></span> {capacity}%",
+        "format-plugged": "ﮣ",
+        "format-alt": "{icon} {time}",
+        "format-full": "ﮣ",
+        "format-icons": [
+            "󱊡",
+            "󱊢",
+            "󱊣"
+        ]
+    },
+    "custom/weather": {
+        "exec": "python3 ~/.config/waybar/scripts/weather.py",
+        "restart-interval": 300,
+        "return-type": "json"
+    },
+    "custom/lock": {
+        "tooltip": false,
+        "on-click": "swaylock",
+        "format": ""
+    },
+    "custom/spotify": {
+        "exec": "python3 ~/.config/waybar/scripts/mediaplayer.py --player spotify",
+        "format": " {}",
+        "max-length": 30,
         "return-type": "json",
-        "interval": 3,
-        "exec": "~/.local/bin/scratchpad-indicator 2> /dev/null",
-        "exec-if": "exit 0",
-        "on-click": "swaymsg 'scratchpad show'",
-        "on-click-right": "swaymsg 'move scratchpad'"
+        "on-click": "playerctl play-pause",
+        "on-double-click-right": "playerctl next",
+        "on-scroll-down": "playerctl previous"
+    },
+    "custom/power-menu": {
+        "format": " ⏻ ",
+        "on-click": "bash ~/.config/waybar/scripts/power-menu/powermenu.sh &"
+    },
+    "custom/launcher": {
+        "format": "",
+        "on-click": "sh .config/rofi/launchers/type-2/launcher.sh --style-2"
     }
 }
