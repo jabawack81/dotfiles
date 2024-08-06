@@ -26,7 +26,7 @@ return {
         marksman = {},
         -- regols is not maanged by Mason. i install it with `brew install kitagry/tap/regols`.
         -- See: https://github.com/kitagry/regols
-        regols = {},
+        -- regols = {},
         -- This should be renamed to `ruby_lsp` once this PR gets merged
         -- https://github.com/williamboman/mason-lspconfig.nvim/pull/395
         ruby_lsp = {
