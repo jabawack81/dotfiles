@@ -11,19 +11,19 @@ return {
         bashls = {
           filetypes = { "sh", "zsh" },
         },
-        denols = {},
-        diagnosticls = {},
+        -- denols = {},
+        -- diagnosticls = {},
         dockerls = {},
-        helm_ls = {},
-        jsonls = {},
-        jsonnet_ls = {},
+        -- helm_ls = {},
+        -- jsonls = {},
+        -- jsonnet_ls = {},
         lua_ls = {
           Lua = {
             workspace = { checkThirdParty = false },
             telemetry = { enable = false },
           },
         },
-        marksman = {},
+        -- marksman = {},
         -- regols is not maanged by Mason. i install it with `brew install kitagry/tap/regols`.
         -- See: https://github.com/kitagry/regols
         -- regols = {},
@@ -41,7 +41,7 @@ return {
           root_dir = lspconfig.util.root_pattern("Gemfile", ".git", "."),
         },
         sqlls = {},
-        terraformls = {},
+        -- terraformls = {},
         tsserver = {},
         yamlls = {},
       },
