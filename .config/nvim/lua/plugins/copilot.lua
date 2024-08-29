@@ -4,7 +4,7 @@ return {
     suggestion = {
       enabled = true,
       auto_trigger = true,
-      keymap = { accept = "<C-j>" },
+      keymap = { accept = "<Tab>" },
     },
     panel = {
       enabled = true,
