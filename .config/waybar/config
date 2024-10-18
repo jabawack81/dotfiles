@@ -7,15 +7,15 @@
     // If height property would be not present, it'd be calculated dynamically
     "height": 15,
 
-    "modules-left": [
-        "custom/launcher" //,
-        ,"cpu"
+    //"modules-left": [
+        //"custom/launcher" //,
+        //,"cpu"
         //"memory",
         //"backlight#icon",
         //"backlight#value",
         //"disk",
         //"mpd",
-    ],
+    //],
 
     "modules-center": [
         "hyprland/workspaces",
