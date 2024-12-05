@@ -30,10 +30,10 @@ return {
         -- This should be renamed to `ruby_lsp` once this PR gets merged
         -- https://github.com/williamboman/mason-lspconfig.nvim/pull/395
         ruby_lsp = {
-          cmd = { "bundle", "exec", "ruby-lsp" },
           init_options = {
             formatter = "auto",
           },
+          cmd = { vim.fn.expand("~/.rbenv/shims/ruby-lsp") },
         },
         rubocop = {
           -- See: https://docs.rubocop.org/rubocop/usage/lsp.html
@@ -42,7 +42,7 @@ return {
         },
         sqlls = {},
         -- terraformls = {},
-        tsserver = {},
+        ts_ls = {},
         yamlls = {},
       },
     },
