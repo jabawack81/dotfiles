@@ -1,0 +1,2 @@
+theme=nord
+custom-shader=./ghostty-shaders/bettercrt.glsl
