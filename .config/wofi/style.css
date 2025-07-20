@@ -1,25 +1,29 @@
 * {
-  font-family: JetBrainsMono;
-  color: #e5e9f0;
+  font-family: monospace;
+  font-size: 15px;
+  color: #fdf6e3;
   background: transparent;
 }
 
 #window {
-  background: rgba(41, 46, 66, 0.5);
+  background: #292b2e;
   margin: auto;
   padding: 10px;
-  border-radius: 20px;
-  border: 5px solid #b072d1;
+  border-radius: 0px;
+  border: 2px solid #1a1a1a;
 }
 
 #input {
   padding: 10px;
   margin-bottom: 10px;
-  border-radius: 15px;
+  border-radius: 0px;
+  background: #1a1a1a;
+  color: #fdf6e3;
+  border: none;
 }
 
 #outer-box {
-  padding: 20px;
+  padding: 10px;
 }
 
 #img {
@@ -28,11 +32,13 @@
 
 #entry {
   padding: 10px;
-  border-radius: 15px;
+  border-radius: 0px;
+  background: transparent;
 }
 
 #entry:selected {
-  background-color: #2e3440;
+  background: #268bd2;
+  color: #ffffff;
 }
 
 #text {
