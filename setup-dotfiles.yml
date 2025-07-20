@@ -254,6 +254,8 @@
           loop:
             - modules.jsonc
             - style.css
+            - power-menu.sh
+            - temperature-common.sh
           when: hostname_waybar.stat.exists
             
         - name: Symlink machine-specific waybar files

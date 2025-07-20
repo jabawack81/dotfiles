@@ -2,19 +2,19 @@
 {
 	// Arrow decorations
 	"custom/left-arrow-dark": {
-		"format": "",
+		"format": "\ue0b2",
 		"tooltip": false
 	},
 	"custom/left-arrow-light": {
-		"format": "",
+		"format": "\ue0b2",
 		"tooltip": false
 	},
 	"custom/right-arrow-dark": {
-		"format": "",
+		"format": "\ue0b0",
 		"tooltip": false
 	},
 	"custom/right-arrow-light": {
-		"format": "",
+		"format": "\ue0b0",
 		"tooltip": false
 	},
 	
@@ -87,7 +87,7 @@
 	
 	// Power menu
 	"custom/power": {
-		"format": "",
+		"format": "⏻",
 		"on-click": "bash ~/.config/waybar/power-menu.sh"
 	},
 	

@@ -3,64 +3,91 @@ require 'json'
 require 'open3'
 
 def get_network_info
-  ethernet_info = ""
-  wifi_info = ""
+  eth_connected = false
+  wifi_connected = false
+  tooltip_lines = []
   
-  # Check ethernet status
+  # Check network status
   eth_output, _, eth_status = Open3.capture3("ip -j addr show")
   if eth_status.success?
     interfaces = JSON.parse(eth_output)
     
-    # Find ethernet interface (usually starts with 'e')
-    eth_interface = interfaces.find { |i| i['ifname'] =~ /^e/ && i['operstate'] == 'UP' }
-    if eth_interface && eth_interface['addr_info']
-      ipv4 = eth_interface['addr_info'].find { |a| a['family'] == 'inet' }
-      ethernet_info = "󰈀 #{ipv4['local']}" if ipv4
-    end
-    
-    # Find WiFi interface (usually starts with 'w')
-    wifi_interface = interfaces.find { |i| i['ifname'] =~ /^w/ && i['operstate'] == 'UP' }
-    if wifi_interface
-      # Get WiFi SSID
-      ssid_output, _, ssid_status = Open3.capture3("iwgetid -r")
-      if ssid_status.success? && !ssid_output.strip.empty?
-        wifi_info = "󰖩 #{ssid_output.strip}"
+    # Check ethernet interface (usually starts with 'e')
+    eth_interface = interfaces.find { |i| i['ifname'] =~ /^e/ }
+    if eth_interface
+      if eth_interface['operstate'] == 'UP' && eth_interface['addr_info']
+        ipv4 = eth_interface['addr_info'].find { |a| a['family'] == 'inet' }
+        if ipv4
+          eth_connected = true
+          tooltip_lines << "Ethernet: Connected (#{ipv4['local']})"
+        else
+          tooltip_lines << "Ethernet: Connected (no IP)"
+        end
       else
-        wifi_info = "󰖩 N/A"
+        tooltip_lines << "Ethernet: Disconnected"
       end
     else
-      wifi_info = "󰖩 N/A"
+      tooltip_lines << "Ethernet: Not found"
+    end
+    
+    # Check WiFi interface (usually starts with 'w')
+    wifi_interface = interfaces.find { |i| i['ifname'] =~ /^w/ }
+    if wifi_interface
+      if wifi_interface['operstate'] == 'UP'
+        # Get WiFi SSID
+        ssid_output, _, ssid_status = Open3.capture3("iwgetid -r")
+        if ssid_status.success? && !ssid_output.strip.empty?
+          wifi_connected = true
+          if wifi_interface['addr_info']
+            ipv4 = wifi_interface['addr_info'].find { |a| a['family'] == 'inet' }
+            if ipv4
+              tooltip_lines << "WiFi: #{ssid_output.strip} (#{ipv4['local']})"
+            else
+              tooltip_lines << "WiFi: #{ssid_output.strip} (no IP)"
+            end
+          else
+            tooltip_lines << "WiFi: #{ssid_output.strip}"
+          end
+        else
+          tooltip_lines << "WiFi: Connected (no SSID)"
+        end
+      else
+        tooltip_lines << "WiFi: Disconnected"
+      end
+    else
+      tooltip_lines << "WiFi: Not found"
     end
   end
   
-  # Fallback if no ethernet
-  ethernet_info = "󰈀 N/A" if ethernet_info.empty?
+  # Build status display with colored status indicators
+  eth_color = eth_connected ? "#859900" : "#dc322f"
+  wifi_color = wifi_connected ? "#859900" : "#dc322f"
+  eth_status = eth_connected ? "✓" : "✗"
+  wifi_status = wifi_connected ? "✓" : "✗"
   
-  # Combine both
-  text = "#{ethernet_info}  #{wifi_info}"
+  text = "󰈀<span color='#{eth_color}'>#{eth_status}</span> 󰖩<span color='#{wifi_color}'>#{wifi_status}</span>"
   
-  # Create tooltip with more details
-  tooltip_lines = []
+  # Determine overall CSS class
+  if eth_connected || wifi_connected
+    css_class = "connected"
+  else
+    css_class = "disconnected"
+  end
   
-  # Ethernet details
-  eth_details, _, _ = Open3.capture3("ip addr show | grep -E '^[0-9]+: e' -A 3")
-  tooltip_lines << "Ethernet:\n#{eth_details.strip}" unless eth_details.empty?
-  
-  # WiFi details
-  wifi_details, _, _ = Open3.capture3("ip addr show | grep -E '^[0-9]+: w' -A 3")
-  tooltip_lines << "\nWiFi:\n#{wifi_details.strip}" unless wifi_details.empty?
+  # Create tooltip - always show both network states
+  tooltip = tooltip_lines.join("\n")
   
   output = {
     text: text,
-    tooltip: tooltip_lines.join("\n"),
-    class: "network-status"
+    tooltip: tooltip,
+    class: css_class
   }
   
   puts output.to_json
   
 rescue => e
   output = {
-    text: "󰈀 Error  󰖩 Error",
+    text: "󰈀! 󰖩!",
     tooltip: "Error: #{e.message}",
     class: "error"
   }

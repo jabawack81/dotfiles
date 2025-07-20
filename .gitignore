@@ -1,2 +1,4 @@
 .DS_Store
 .config/btop/btop.log
+# Claude settings (local)
+settings.local.json

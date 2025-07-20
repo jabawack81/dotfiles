@@ -38,12 +38,12 @@
 		"custom/left-arrow-dark",
 		"cpu",
 		"custom/left-arrow-light",
-		"custom/left-arrow-cpu-before",
+		"custom/left-arrow-temp-cpu-before",
 		"custom/temperature-cpu",
-		"custom/left-arrow-cpu-after",
-		"custom/left-arrow-gpu-before",
+		"custom/left-arrow-temp-cpu-after",
+		"custom/left-arrow-temp-gpu-before",
 		"custom/temperature-gpu",
-		"custom/left-arrow-gpu-after",
+		"custom/left-arrow-temp-gpu-after",
 		"custom/left-arrow-dark",
 		"disk",
 		"custom/left-arrow-light",
@@ -61,12 +61,12 @@
 	"custom/media": {
 		"format": "{}",
 		"return-type": "json",
-		"interval": 1,
-		"exec": "$HOME/.config/waybar/mediaplayer.rb --icon-size 18",
+		"interval": 2,
+		"exec": "$HOME/.config/waybar/mediaplayer.rb",
 		"on-click": "playerctl play-pause",
 		"on-scroll-up": "playerctl next",
 		"on-scroll-down": "playerctl previous",
-		"tooltip": false
+		"tooltip": true
 	},
 	
 	"custom/network-status": {
@@ -74,29 +74,23 @@
 		"interval": 60,
 		"exec": "$HOME/.config/waybar/network-status.rb",
 		"return-type": "json",
-		"tooltip": false
+		"tooltip": true
 	},
 	
 	"custom/temperature-cpu": {
 		"interval": 5,
 		"return-type": "json",
 		"exec": "bash ~/.config/waybar/temperature-cpu.sh",
-		"format": "{icon}  {}",
-		"format-icons": {
-			"default": ["󰔏"]
-		},
-		"tooltip": false
+		"format": "󰔏  {}",
+		"tooltip": true
 	},
 	
 	"custom/temperature-gpu": {
 		"interval": 5,
 		"return-type": "json",
 		"exec": "bash ~/.config/waybar/temperature-gpu.sh",
-		"format": "{icon}  {}",
-		"format-icons": {
-			"default": ["󰢮"]
-		},
-		"tooltip": false
+		"format": "󰢮  {}",
+		"tooltip": true
 	},
 	
 	"disk#media": {
@@ -105,21 +99,36 @@
 		"path": "/mnt/media/"
 	},
 	
-	// Custom arrow colors for temperature modules
-	"custom/left-arrow-cpu-before": {
-		"format": "",
+	// Temperature-aware arrow modules
+	"custom/left-arrow-temp-cpu-before": {
+		"interval": 5,
+		"exec": "bash ~/.config/waybar/arrow-cpu-before.sh",
+		"return-type": "json",
+		"format": "{}",
 		"tooltip": false
 	},
-	"custom/left-arrow-cpu-after": {
-		"format": "",
+	
+	"custom/left-arrow-temp-cpu-after": {
+		"interval": 5,
+		"exec": "bash ~/.config/waybar/arrow-cpu-after.sh",
+		"return-type": "json",
+		"format": "{}",
 		"tooltip": false
 	},
-	"custom/left-arrow-gpu-before": {
-		"format": "",
+	
+	"custom/left-arrow-temp-gpu-before": {
+		"interval": 5,
+		"exec": "bash ~/.config/waybar/arrow-gpu-before.sh",
+		"return-type": "json",
+		"format": "{}",
 		"tooltip": false
 	},
-	"custom/left-arrow-gpu-after": {
-		"format": "",
+	
+	"custom/left-arrow-temp-gpu-after": {
+		"interval": 5,
+		"exec": "bash ~/.config/waybar/arrow-gpu-after.sh",
+		"return-type": "json",
+		"format": "{}",
 		"tooltip": false
 	}
 }

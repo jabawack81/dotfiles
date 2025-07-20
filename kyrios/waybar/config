@@ -24,10 +24,19 @@
 	],
 	"modules-right": [
 		"custom/left-arrow-dark",
+		"custom/network-status",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
 		"pulseaudio",
 		"custom/left-arrow-light",
 		"custom/left-arrow-dark",
+		"memory",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
 		"cpu",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"custom/temperature-cpu",
 		"custom/left-arrow-light",
 		"custom/left-arrow-dark",
 		"battery",
@@ -50,10 +59,27 @@
 			"warning": 30,
 			"critical": 15
 		},
-		"format": " {capacity}%",
-		"format-charging": " {capacity}%",
-		"format-plugged": " {capacity}%",
-		"format-full": " {capacity}%",
-		"max-length": 25
+		"format": "{icon}  {capacity}%",
+		"format-charging": "󰂄  {capacity}%",
+		"format-plugged": "󰚥  {capacity}%",
+		"format-full": "󰁹  {capacity}%",
+		"format-icons": ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
+		"tooltip-format": "{timeTo}\n{power}W"
+	},
+	
+	"custom/network-status": {
+		"format": "{}",
+		"interval": 60,
+		"exec": "$HOME/.config/waybar/network-status.rb",
+		"return-type": "json",
+		"tooltip": true
+	},
+	
+	"custom/temperature-cpu": {
+		"interval": 5,
+		"return-type": "json",
+		"exec": "bash ~/.config/waybar/temperature-cpu.sh",
+		"format": "󰔏  {}",
+		"tooltip": true
 	}
 }

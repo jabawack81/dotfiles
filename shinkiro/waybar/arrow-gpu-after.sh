@@ -1,3 +1,3 @@
 #!/bin/bash
-# GPU arrow after wrapper
-exec "$(dirname "$0")/temperature-common.sh" gpu arrow-after
+# GPU temperature arrow after
+exec ~/.config/waybar/temperature-common.sh gpu arrow-after

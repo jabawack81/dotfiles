@@ -1,3 +1,3 @@
 #!/bin/bash
-# CPU arrow before wrapper
-exec "$(dirname "$0")/temperature-common.sh" cpu arrow-before
+# CPU temperature arrow before
+exec ~/.config/waybar/temperature-common.sh cpu arrow-before
