@@ -1,0 +1,239 @@
+/* Thunar GTK3/4 theme configuration */
+/* Matches the waybar dark theme color scheme */
+
+@define-color base_color #292b2e;
+@define-color bg_color #1a1a1a;
+@define-color fg_color #fdf6e3;
+@define-color text_color #fdf6e3;
+@define-color selected_bg_color #268bd2;
+@define-color selected_fg_color #ffffff;
+@define-color tooltip_bg_color #1a1a1a;
+@define-color tooltip_fg_color #fdf6e3;
+@define-color insensitive_bg_color #292b2e;
+@define-color insensitive_fg_color #5d5653;
+@define-color menubar_bg_color #1a1a1a;
+@define-color menubar_fg_color #fdf6e3;
+
+/* Global menubar styling - affects all GTK apps */
+menubar {
+    background-color: @menubar_bg_color;
+    color: @menubar_fg_color;
+    border: none;
+    box-shadow: none;
+}
+
+menubar > menuitem {
+    background-color: transparent;
+    color: @menubar_fg_color;
+    padding: 6px 12px;
+    border-radius: 4px;
+    margin: 2px;
+}
+
+menubar > menuitem:hover {
+    background-color: @selected_bg_color;
+    color: @selected_fg_color;
+}
+
+/* Main window background */
+.thunar window {
+    background-color: @bg_color;
+    color: @fg_color;
+}
+
+/* Thunar-specific menubar styling */
+.thunar menubar {
+    background-color: @menubar_bg_color;
+    color: @menubar_fg_color;
+    border-bottom: 1px solid #3c3c3c;
+}
+
+.thunar menubar > menuitem {
+    padding: 6px 12px;
+}
+
+.thunar menubar > menuitem:hover {
+    background-color: @selected_bg_color;
+    color: @selected_fg_color;
+}
+
+/* Toolbar styling */
+.thunar toolbar {
+    background-color: @base_color;
+    border-bottom: 1px solid #3c3c3c;
+}
+
+.thunar toolbar button {
+    background-color: transparent;
+    color: @fg_color;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+}
+
+.thunar toolbar button:hover {
+    background-color: #268bd2;
+    color: @selected_fg_color;
+}
+
+/* Location bar */
+.thunar .location-bar {
+    background-color: @bg_color;
+    border: 1px solid #3c3c3c;
+    border-radius: 4px;
+}
+
+.thunar .location-bar entry {
+    background-color: @base_color;
+    color: @text_color;
+    border: none;
+    padding: 6px 12px;
+}
+
+/* Tree view (side panel) */
+.thunar treeview {
+    background-color: @bg_color;
+    color: @fg_color;
+    border-right: 1px solid #3c3c3c;
+}
+
+.thunar treeview:selected {
+    background-color: @selected_bg_color;
+    color: @selected_fg_color;
+}
+
+/* Icon view (main file area) */
+.thunar iconview {
+    background-color: @bg_color;
+    color: @fg_color;
+}
+
+.thunar iconview:selected {
+    background-color: @selected_bg_color;
+    color: @selected_fg_color;
+    border-radius: 4px;
+}
+
+/* List view */
+.thunar treeview.view {
+    background-color: @bg_color;
+    color: @fg_color;
+}
+
+.thunar treeview.view:selected {
+    background-color: @selected_bg_color;
+    color: @selected_fg_color;
+}
+
+/* Status bar */
+.thunar statusbar {
+    background-color: @base_color;
+    color: @fg_color;
+    border-top: 1px solid #3c3c3c;
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+/* Scrollbars */
+.thunar scrollbar {
+    background-color: @base_color;
+    border-radius: 6px;
+}
+
+.thunar scrollbar slider {
+    background-color: #5d5653;
+    border-radius: 6px;
+    min-width: 8px;
+    min-height: 8px;
+}
+
+.thunar scrollbar slider:hover {
+    background-color: #268bd2;
+}
+
+/* Context menus and dropdown menus */
+menu,
+.thunar menu {
+    background-color: @base_color;
+    color: @fg_color;
+    border: 1px solid #3c3c3c;
+    border-radius: 4px;
+    padding: 4px 0;
+}
+
+menuitem,
+.thunar menuitem {
+    padding: 6px 12px;
+    background-color: transparent;
+    color: @fg_color;
+}
+
+menuitem:hover,
+.thunar menuitem:hover {
+    background-color: @selected_bg_color;
+    color: @selected_fg_color;
+}
+
+/* Separators in menus */
+separator {
+    background-color: #3c3c3c;
+    margin: 4px 0;
+    min-height: 1px;
+}
+
+/* Tooltips */
+.thunar tooltip {
+    background-color: @tooltip_bg_color;
+    color: @tooltip_fg_color;
+    border: 1px solid #3c3c3c;
+    border-radius: 4px;
+    padding: 6px 8px;
+    font-size: 12px;
+}
+
+/* Path bar buttons */
+.thunar .path-bar button {
+    background-color: transparent;
+    color: @fg_color;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+}
+
+.thunar .path-bar button:hover {
+    background-color: #268bd2;
+    color: @selected_fg_color;
+}
+
+/* Entry fields */
+.thunar entry {
+    background-color: @base_color;
+    color: @text_color;
+    border: 1px solid #3c3c3c;
+    border-radius: 4px;
+    padding: 6px 12px;
+}
+
+.thunar entry:focus {
+    border-color: @selected_bg_color;
+    outline: none;
+}
+
+/* Buttons */
+.thunar button {
+    background-color: @base_color;
+    color: @fg_color;
+    border: 1px solid #3c3c3c;
+    border-radius: 4px;
+    padding: 6px 12px;
+}
+
+.thunar button:hover {
+    background-color: #268bd2;
+    color: @selected_fg_color;
+    border-color: #268bd2;
+}
+
+.thunar button:active {
+    background-color: #1e6ba8;
+}

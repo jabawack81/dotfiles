@@ -1,0 +1,57 @@
+# Thunar GTK2 theme configuration
+# Matches the waybar dark theme color scheme
+
+gtk-color-scheme = "base_color:#292b2e\nfg_color:#fdf6e3\ntooltip_fg_color:#fdf6e3\nselected_bg_color:#268bd2\nselected_fg_color:#ffffff\ntooltip_bg_color:#1a1a1a\ntext_color:#fdf6e3\nbg_color:#1a1a1a\ninsensitive_bg_color:#292b2e\ninsensitive_fg_color:#5d5653"
+
+style "thunar-window" {
+    bg[NORMAL] = "#1a1a1a"
+    fg[NORMAL] = "#fdf6e3"
+    text[NORMAL] = "#fdf6e3"
+    base[NORMAL] = "#292b2e"
+}
+
+style "thunar-toolbar" {
+    bg[NORMAL] = "#292b2e"
+    fg[NORMAL] = "#fdf6e3"
+}
+
+style "thunar-location-bar" {
+    bg[NORMAL] = "#1a1a1a"
+    fg[NORMAL] = "#fdf6e3"
+    text[NORMAL] = "#fdf6e3"
+    base[NORMAL] = "#292b2e"
+}
+
+style "thunar-tree-view" {
+    bg[NORMAL] = "#1a1a1a"
+    fg[NORMAL] = "#fdf6e3"
+    text[NORMAL] = "#fdf6e3"
+    base[NORMAL] = "#292b2e"
+    bg[SELECTED] = "#268bd2"
+    fg[SELECTED] = "#ffffff"
+    text[SELECTED] = "#ffffff"
+    base[SELECTED] = "#268bd2"
+}
+
+style "thunar-icon-view" {
+    bg[NORMAL] = "#1a1a1a"
+    fg[NORMAL] = "#fdf6e3"
+    text[NORMAL] = "#fdf6e3"
+    base[NORMAL] = "#292b2e"
+    bg[SELECTED] = "#268bd2"
+    fg[SELECTED] = "#ffffff"
+    text[SELECTED] = "#ffffff"
+    base[SELECTED] = "#268bd2"
+}
+
+style "thunar-status-bar" {
+    bg[NORMAL] = "#292b2e"
+    fg[NORMAL] = "#fdf6e3"
+}
+
+widget_class "*ThunarWindow*" style "thunar-window"
+widget_class "*ThunarToolbar*" style "thunar-toolbar"
+widget_class "*ThunarLocationBar*" style "thunar-location-bar"
+widget_class "*ThunarTreeView*" style "thunar-tree-view"
+widget_class "*ThunarIconView*" style "thunar-icon-view"
+widget_class "*ThunarStatusbar*" style "thunar-status-bar"

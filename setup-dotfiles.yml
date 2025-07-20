@@ -1,0 +1,267 @@
+---
+- name: Setup dotfiles based on hostname
+  hosts: localhost
+  connection: local
+  vars:
+    dotfiles_dir: "{{ playbook_dir }}"
+    config_dir: "{{ ansible_env.HOME }}/.config"
+    oh_my_zsh_dir: "{{ ansible_env.HOME }}/.oh-my-zsh"
+    hostname: "{{ ansible_hostname }}"
+    is_work_machine: "{{ hostname not in ['kyrios', 'shinkiro'] }}"
+    
+    # Configs allowed on work machines
+    work_configs:
+      - ghostty
+      - nvim
+      - btop
+    
+    required_packages:
+      - zsh
+      - git
+      - waybar
+      - hyprland
+      - wofi
+      - dunst
+      - btop
+      - ghostty
+      - wlogout
+      - thunar
+      - powerline-fonts
+      
+  tasks:
+    - name: Display setup mode
+      debug:
+        msg: "Setting up {{ hostname }} as {{ 'WORK MACHINE (limited configs)' if is_work_machine else 'PERSONAL MACHINE (full configs)' }}"
+        
+    - name: Clean up broken symlinks in .config
+      shell: |
+        CONFIG_DIR="{{ config_dir }}"
+        find "$CONFIG_DIR" -type l ! -exec test -e {} \; -print -delete
+      register: cleaned_links
+      changed_when: cleaned_links.stdout != ""
+      
+    - name: Show cleaned broken links
+      debug:
+        msg: "Cleaned broken links: {{ cleaned_links.stdout_lines }}"
+      when: cleaned_links.stdout != ""
+      
+    - name: Ensure required packages are installed (Arch Linux - Personal machines)
+      pacman:
+        name: "{{ item }}"
+        state: present
+      become: yes
+      loop: "{{ required_packages }}"
+      when: 
+        - ansible_distribution == "Archlinux"
+        - hostname in ['kyrios', 'shinkiro']
+      ignore_errors: yes
+      
+    - name: Skip package installation on macOS
+      debug:
+        msg: "Skipping package installation on macOS - please install ghostty, neovim, and btop manually via Homebrew"
+      when: ansible_distribution == "MacOSX"
+      
+    - name: Check if oh-my-zsh is installed
+      stat:
+        path: "{{ oh_my_zsh_dir }}"
+      register: oh_my_zsh_installed
+      
+    - name: Install oh-my-zsh
+      shell: |
+        sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+      when: not oh_my_zsh_installed.stat.exists
+      
+    - name: Install zsh-syntax-highlighting plugin
+      git:
+        repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
+        dest: "{{ oh_my_zsh_dir }}/custom/plugins/zsh-syntax-highlighting"
+        
+    - name: Install zsh-autosuggestions plugin
+      git:
+        repo: https://github.com/zsh-users/zsh-autosuggestions
+        dest: "{{ oh_my_zsh_dir }}/custom/plugins/zsh-autosuggestions"
+        
+    - name: Link oh-my-zsh custom files
+      file:
+        src: "{{ dotfiles_dir }}/common/.oh-my-zsh/custom/{{ item }}"
+        dest: "{{ oh_my_zsh_dir }}/custom/{{ item }}"
+        state: link
+        force: yes
+      with_items:
+        - utils.zsh
+        - ruby_aliases.zsh
+      when: oh_my_zsh_installed.stat.exists
+        
+    - name: Ensure .config directory exists
+      file:
+        path: "{{ config_dir }}"
+        state: directory
+        mode: '0755'
+        
+    - name: Get list of common configs
+      find:
+        paths: "{{ dotfiles_dir }}/common"
+        file_type: directory
+        recurse: no
+      register: common_configs
+      
+    - name: Create symlinks for common configs (personal machines)
+      file:
+        src: "{{ item.path }}"
+        dest: "{{ config_dir }}/{{ item.path | basename }}"
+        state: link
+        force: yes
+      loop: "{{ common_configs.files }}"
+      when: 
+        - not is_work_machine
+        - item.path | basename not in ['hypr', 'thunar']  # handled separately
+      
+    - name: Create symlinks for common configs (work machine - limited)
+      file:
+        src: "{{ item.path }}"
+        dest: "{{ config_dir }}/{{ item.path | basename }}"
+        state: link
+        force: yes
+      loop: "{{ common_configs.files }}"
+      when: 
+        - is_work_machine
+        - item.path | basename in work_configs
+      
+    - name: Check if hostname-specific directory exists
+      stat:
+        path: "{{ dotfiles_dir }}/{{ hostname }}"
+      register: hostname_dir
+      
+    - name: Get list of hostname-specific configs
+      find:
+        paths: "{{ dotfiles_dir }}/{{ hostname }}"
+        file_type: directory
+        recurse: no
+      register: hostname_configs
+      when: hostname_dir.stat.exists
+      
+    - name: Create symlinks for hostname-specific configs
+      file:
+        src: "{{ item.path }}"
+        dest: "{{ config_dir }}/{{ item.path | basename }}"
+        state: link
+        force: yes
+      loop: "{{ hostname_configs.files }}"
+      when: hostname_dir.stat.exists
+      
+    - name: Link .tmux.conf to home directory
+      file:
+        src: "{{ dotfiles_dir }}/.tmux.conf"
+        dest: "{{ ansible_env.HOME }}/.tmux.conf"
+        state: link
+        force: yes
+      when: ansible_env.HOME is defined
+      
+    - name: Ensure .zshrc exists
+      file:
+        path: "{{ ansible_env.HOME }}/.zshrc"
+        state: touch
+        mode: '0644'
+      when: ansible_env.HOME is defined
+      
+    - name: Set oh-my-zsh theme to agnoster
+      lineinfile:
+        path: "{{ ansible_env.HOME }}/.zshrc"
+        regexp: '^ZSH_THEME='
+        line: 'ZSH_THEME="agnoster"'
+        state: present
+      when: ansible_env.HOME is defined
+      
+    - name: Configure oh-my-zsh plugins
+      replace:
+        path: "{{ ansible_env.HOME }}/.zshrc"
+        regexp: 'plugins=\([^)]*\)'
+        replace: 'plugins=(git zsh-autosuggestions zsh-syntax-highlighting)'
+      when: ansible_env.HOME is defined
+      
+    - name: Create symlink for hypr common.conf in machine-specific directories
+      file:
+        src: "../../common/hypr/common.conf"
+        dest: "{{ dotfiles_dir }}/{{ item }}/hypr/common.conf"
+        state: link
+        force: yes
+      loop:
+        - kyrios
+        - shinkiro
+      when: 
+        - item == hostname
+        - not is_work_machine
+        
+    - name: Ensure gtk-3.0 directory exists
+      file:
+        path: "{{ config_dir }}/gtk-3.0"
+        state: directory
+        mode: '0755'
+      when: not is_work_machine
+        
+    - name: Link GTK3 CSS for system-wide theming
+      file:
+        src: "{{ dotfiles_dir }}/common/thunar/gtk.css"
+        dest: "{{ config_dir }}/gtk-3.0/gtk.css"
+        state: link
+        force: yes
+      when: not is_work_machine
+        
+    - name: Ensure Thunar directory exists (capital T)
+      file:
+        path: "{{ config_dir }}/Thunar"
+        state: directory
+        mode: '0755'
+      when: not is_work_machine
+        
+    - name: Link GTK files to Thunar directory
+      file:
+        src: "{{ dotfiles_dir }}/common/thunar/{{ item }}"
+        dest: "{{ config_dir }}/Thunar/{{ item }}"
+        state: link
+        force: yes
+      loop:
+        - gtk.css
+        - gtkrc-2.0
+      when: not is_work_machine
+        
+    - name: Special handling for waybar (modular config)
+      block:
+        - name: Check if hostname has waybar config
+          stat:
+            path: "{{ dotfiles_dir }}/{{ hostname }}/waybar"
+          register: hostname_waybar
+          
+        - name: Remove existing waybar directory if exists
+          file:
+            path: "{{ config_dir }}/waybar"
+            state: absent
+          when: hostname_waybar.stat.exists
+          
+        - name: Create waybar directory
+          file:
+            path: "{{ config_dir }}/waybar"
+            state: directory
+            mode: '0755'
+          when: hostname_waybar.stat.exists
+            
+        - name: Symlink common waybar files
+          file:
+            src: "{{ dotfiles_dir }}/common/waybar/{{ item }}"
+            dest: "{{ config_dir }}/waybar/{{ item }}"
+            state: link
+            force: yes
+          loop:
+            - modules.jsonc
+            - style.css
+          when: hostname_waybar.stat.exists
+            
+        - name: Symlink machine-specific waybar files
+          file:
+            src: "{{ item }}"
+            dest: "{{ config_dir }}/waybar/{{ item | basename }}"
+            state: link
+            force: yes
+          with_fileglob:
+            - "{{ dotfiles_dir }}/{{ hostname }}/waybar/*"
+          when: hostname_waybar.stat.exists

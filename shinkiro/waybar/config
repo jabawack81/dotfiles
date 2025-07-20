@@ -1,6 +1,9 @@
-// -*- mode: json -*-
-
+// Shinkiro (Desktop) specific waybar configuration
 {
+	"include": [
+		"~/.config/waybar/modules.jsonc"
+	],
+	
 	"layer": "top",
 	"position": "top",
 
@@ -54,172 +57,69 @@
 		"tray"
 	],
 
-	"custom/left-arrow-dark": {
-		"format": "",
+	// Desktop-specific modules
+	"custom/media": {
+		"format": "{}",
+		"return-type": "json",
+		"interval": 1,
+		"exec": "$HOME/.config/waybar/mediaplayer.rb --icon-size 18",
+		"on-click": "playerctl play-pause",
+		"on-scroll-up": "playerctl next",
+		"on-scroll-down": "playerctl previous",
 		"tooltip": false
 	},
-	"custom/left-arrow-light": {
-		"format": "",
+	
+	"custom/network-status": {
+		"format": "{}",
+		"interval": 60,
+		"exec": "$HOME/.config/waybar/network-status.rb",
+		"return-type": "json",
 		"tooltip": false
 	},
-	"custom/right-arrow-dark": {
-		"format": "",
-		"tooltip": false
-	},
-	"custom/right-arrow-light": {
-		"format": "",
-		"tooltip": false
-	},
-	"clock#1": {
-		"format": "{:%a}",
-		"tooltip-format": "<tt><small>{calendar}</small></tt>",
-		"calendar": {
-			"mode": "year",
-			"mode-mon-col": 3,
-			"weeks-pos": "right",
-			"on-scroll": 1,
-			"on-click-right": "mode",
-			"format": {
-				"months": "<span color='#ffead3'><b>{}</b></span>",
-				"days": "<span color='#ecc6d9'><b>{}</b></span>",
-				"weeks": "<span color='#99ffdd'><b>W{}</b></span>",
-				"weekdays": "<span color='#ffcc66'><b>{}</b></span>",
-				"today": "<span color='#ff6699'><b><u>{}</u></b></span>"
-			}
-		}
-	},
-	"clock#2": {
-		"format": "{:%H:%M}",
-		"tooltip-format": "{:%Y-%m-%d | %H:%M:%S}",
-		"interval": 1
-	},
-	"clock#3": {
-		"format": "{:%m-%d}",
-		"tooltip-format": "<span size='12pt' font='monospace'>{:%B %d, %Y}</span>"
-	},
-
-	"pulseaudio": {
-		"format": "󰕾  {volume:2}%",
-		"format-bluetooth": "{icon}  {volume}%",
-		"format-muted": "MUTE",
+	
+	"custom/temperature-cpu": {
+		"interval": 5,
+		"return-type": "json",
+		"exec": "bash ~/.config/waybar/temperature-cpu.sh",
+		"format": "{icon}  {}",
 		"format-icons": {
-			"headphones": "",
-			"default": [
-				"",
-				""
-			]
+			"default": ["󰔏"]
 		},
-		"scroll-step": 5,
-		"on-click": "pamixer -t",
-		"on-click-right": "pavucontrol"
-	},
-	"memory": {
-		"interval": 5,
-		"format": "󰍛  {}%"
-	},
-	"cpu": {
-		"interval": 5,
-		"format": "󰻠  {usage:2}%"
-	},
-	"temperature#cpu": {
-		"hwmon-path": "/sys/class/hwmon/hwmon3/temp1_input",
-		"interval": 2,
-		"format": "󰔏  {temperatureC}°C",
-		"critical-threshold": 80,
-		"format-critical": "🔥 {temperatureC}°C",
 		"tooltip": false
 	},
-	"temperature#gpu": {
-		"hwmon-path": "/sys/class/hwmon/hwmon6/temp1_input",
-		"interval": 2,
-		"format": "󰢮  {temperatureC}°C",
-		"critical-threshold": 80,
-		"format-critical": "🔥 {temperatureC}°C",
+	
+	"custom/temperature-gpu": {
+		"interval": 5,
+		"return-type": "json",
+		"exec": "bash ~/.config/waybar/temperature-gpu.sh",
+		"format": "{icon}  {}",
+		"format-icons": {
+			"default": ["󰢮"]
+		},
 		"tooltip": false
 	},
-	"disk": {
-		"interval": 5,
-		"format": "󰋊  {percentage_free:2}%",
-		"path": "/home/"
-	},
+	
 	"disk#media": {
 		"interval": 5,
 		"format": "󰉓  {percentage_free:2}%",
 		"path": "/mnt/media/"
 	},
-	"tray": {
-		"icon-size": 15,
-    "spacing": 5,
-	},
-
-	"custom/power": {
-		"format": "⏻",
-		"tooltip": false,
-		"on-click": "wlogout"
-	},
-	"custom/temperature-cpu": {
-		"exec": "$HOME/dotfiles/shinkiro/waybar/temperature-cpu.sh",
-		"return-type": "json",
-		"interval": 2
-	},
-	"custom/temperature-gpu": {
-		"exec": "$HOME/dotfiles/shinkiro/waybar/temperature-gpu.sh",
-		"return-type": "json",
-		"interval": 2
-	},
-	"custom/left-arrow-gpu-before": {
-		"exec": "$HOME/dotfiles/shinkiro/waybar/arrow-gpu-before.sh",
-		"return-type": "json",
-		"interval": 2
-	},
-	"custom/left-arrow-gpu-after": {
-		"exec": "$HOME/dotfiles/shinkiro/waybar/arrow-gpu-after.sh",
-		"return-type": "json",
-		"interval": 2
-	},
+	
+	// Custom arrow colors for temperature modules
 	"custom/left-arrow-cpu-before": {
-		"exec": "$HOME/dotfiles/shinkiro/waybar/arrow-cpu-before.sh",
-		"return-type": "json",
-		"interval": 2
+		"format": "",
+		"tooltip": false
 	},
 	"custom/left-arrow-cpu-after": {
-		"exec": "$HOME/dotfiles/shinkiro/waybar/arrow-cpu-after.sh",
-		"return-type": "json",
-		"interval": 2
+		"format": "",
+		"tooltip": false
 	},
-	"network": {
-		"format-wifi": "󰖩  {essid} ({signalStrength}%)",
-		"format-ethernet": "󰈀  {ipaddr}",
-		"format-linked": "󰈀  {ifname} (No IP)",
-		"format-disconnected": "󰖪  Disconnected",
-		"format-alt": "󰈀  {ifname}: {ipaddr}/{cidr}",
-		"tooltip-format": "󰈀  {ifname} via {gwaddr}",
-		"tooltip-format-wifi": "󰖩  {essid} ({signalStrength}%)\n{ipaddr}/{cidr}\n⬆ {bandwidthUpBytes} ⬇ {bandwidthDownBytes}",
-		"tooltip-format-ethernet": "󰈀  {ifname}\n{ipaddr}/{cidr}\n⬆ {bandwidthUpBytes} ⬇ {bandwidthDownBytes}",
-		"tooltip-format-disconnected": "Disconnected",
-		"interval": 5,
-		"on-click": "nm-connection-editor"
+	"custom/left-arrow-gpu-before": {
+		"format": "",
+		"tooltip": false
 	},
-	"custom/media": {
-		"format": "{text}",
-		"escape": true,
-		"return-type": "json",
-		"max-length": 40,
-		"interval": 2,
-		"on-click": "playerctl play-pause",
-		"on-click-middle": "playerctl position 0",
-		"on-click-right": "playerctl stop",
-		"on-scroll-up": "playerctl next",
-		"on-scroll-down": "playerctl previous",
-		"exec": "$HOME/dotfiles/shinkiro/waybar/mediaplayer.rb",
-		"exec-if": "which playerctl"
-	},
-	"custom/network-status": {
-		"format": "{text}",
-		"escape": true,
-		"return-type": "json",
-		"exec": "$HOME/dotfiles/shinkiro/waybar/network-status.rb",
-		"interval": 5,
-		"on-click": "nm-connection-editor"
+	"custom/left-arrow-gpu-after": {
+		"format": "",
+		"tooltip": false
 	}
 }

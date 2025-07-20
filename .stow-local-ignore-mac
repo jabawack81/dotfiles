@@ -1,8 +1,0 @@
-.git
-.gitignore
-README.md
-.DS_Store
-.config/hypr
-.config/kitty
-.config/waybar
-.config/wofi
