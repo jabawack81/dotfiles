@@ -1,0 +1,1358 @@
+---
+- name: Setup dotfiles based on hostname
+  hosts: localhost
+  connection: local
+  vars:
+    dotfiles_dir: "{{ playbook_dir }}"
+    # Auto-detect target user - if run with sudo, use SUDO_USER, otherwise current user
+    target_user: "{{ ansible_env.SUDO_USER | default(ansible_env.USER) }}"
+    target_home: "{% if target_user == 'root' %}/root{% elif ansible_os_family == 'Darwin' %}/Users/{{ target_user }}{% else %}/home/{{ target_user }}{% endif %}"
+    home_dir: "{{ target_home }}"  # Added for compatibility
+    config_dir: "{{ target_home }}/.config"
+    oh_my_zsh_dir: "{{ target_home }}/.oh-my-zsh"
+    hostname: "{{ ansible_hostname }}"
+    is_personal_machine: "{{ hostname in ['kyrios', 'shinkiro'] }}"
+    running_as_root: "{{ ansible_user_id == 'root' }}"
+    
+    # Load private configuration if available
+    private_config_file: "{{ dotfiles_dir }}/private-config/config.yml"
+    
+    # kyrios and shinkiro are personal Arch Linux machines
+    # any other hostname is a work machine (currently macOS)
+    
+    # Configs allowed on work machines
+    work_configs:
+      - ghostty
+      - nvim
+      - btop
+      - broot
+      - lazygit
+      - git
+      - rbenv
+      - nodenv
+      - fastfetch
+    
+    required_packages:
+      # Core utilities
+      - zsh
+      - git
+      - github-cli
+      - neovim
+      - lazygit
+      - jq
+      - ripgrep
+      - fzf
+      - bat
+      - htop
+      - btop
+      - tmux
+      - rsync
+      - unzip
+      - broot
+      - zip
+      - wget
+      - wl-clipboard
+      - xdg-utils
+      
+      # Desktop environment
+      - hyprland
+      - hyprlock
+      - waybar
+      - fuzzel
+      - dunst
+      - swww
+      - grim
+      - slurp
+      - playerctl
+      - pamixer
+      - brightnessctl
+      - xdg-desktop-portal-hyprland
+      - polkit-kde-agent
+      - qt5-wayland
+      - qt6-wayland
+      
+      # Audio
+      - pipewire
+      - pipewire-alsa
+      - pipewire-jack
+      - pipewire-pulse
+      - pavucontrol
+      
+      # Fonts
+      - powerline-fonts
+      - ttf-jetbrains-mono-nerd
+      - ttf-nerd-fonts-symbols
+      - noto-fonts-emoji
+      
+      # Applications
+      - ghostty
+      - thunar
+      - firefox
+      - obsidian
+      - telegram-desktop
+      - steam
+      
+      # Hardware monitoring
+      - nvtop
+      - smartmontools
+      
+    aur_packages:
+      - discord
+      - slack-desktop
+      - 1password
+      - 1password-cli
+      - wlogout
+      
+    # Machine-specific packages
+    shinkiro_packages:  # Desktop with AMD GPU
+      - radeontop
+      - corectrl
+      - vulkan-radeon
+      - xf86-video-amdgpu
+    
+    kyrios_packages:  # Laptop with Intel CPU/GPU
+      - intel-ucode
+      - intel-media-driver
+      - libva-intel-driver
+      - vulkan-intel
+      - fprintd
+      - libfprint
+      - networkmanager
+      - network-manager-applet
+      - bluez
+      - bluez-utils
+      
+  tasks:
+    - name: Check if private config exists
+      stat:
+        path: "{{ private_config_file }}"
+      register: private_config_stat
+      
+    - name: Load private configuration
+      include_vars: "{{ private_config_file }}"
+      when: private_config_stat.stat.exists
+      
+    - name: Display execution context
+      debug:
+        msg: |
+          Running as: {{ ansible_user_id }}
+          Target user: {{ target_user }}
+          Target home: {{ target_home }}
+          Root execution: {{ running_as_root }}
+          Private config loaded: {{ private_config_stat.stat.exists }}
+          
+    - name: Create backup directory with timestamp
+      set_fact:
+        backup_dir: "{{ dotfiles_dir }}/backups/{{ ansible_date_time.epoch }}"
+        
+    - name: Ensure backup directory exists
+      file:
+        path: "{{ backup_dir }}"
+        state: directory
+        mode: '0755'
+        owner: "{{ target_user }}"
+        group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+
+    - name: Display setup mode
+      debug:
+        msg: "Setting up {{ hostname }} as {{ 'PERSONAL MACHINE (Arch Linux - full configs)' if is_personal_machine else 'WORK MACHINE (macOS - limited configs)' }}"
+        
+    - name: Clean up broken symlinks in .config
+      shell: |
+        CONFIG_DIR="{{ config_dir }}"
+        find "$CONFIG_DIR" -type l ! -exec test -e {} \; -print -delete
+      register: cleaned_links
+      changed_when: cleaned_links.stdout != ""
+      become: no
+      
+    - name: Show cleaned broken links
+      debug:
+        msg: "Cleaned broken links: {{ cleaned_links.stdout_lines }}"
+      when: cleaned_links.stdout != ""
+      
+    - name: Ensure required packages are installed (Personal machines)
+      pacman:
+        name: "{{ item }}"
+        state: present
+      become: "{{ not running_as_root }}"
+      loop: "{{ required_packages }}"
+      when: is_personal_machine
+      
+    - name: Skip package installation on work machines (macOS)
+      debug:
+        msg: |
+          Skipping package installation on macOS. Please install these packages manually via Homebrew:
+          
+          Terminal apps:
+          brew install ghostty neovim lazygit jq ripgrep fzf bat htop btop gh broot
+          
+          GUI apps:
+          brew install --cask firefox obsidian discord slack telegram
+          
+          Note: nvtop, grim, swww, waybar, hyprland, etc. are Linux-only
+      when: not is_personal_machine
+      
+    - name: Check if yay is installed
+      command: which yay
+      register: yay_check
+      ignore_errors: yes
+      changed_when: false
+      when: is_personal_machine
+        
+    - name: Install yay dependencies
+      pacman:
+        name:
+          - base-devel
+          - git
+        state: present
+      become: "{{ not running_as_root }}"
+      when:
+        - is_personal_machine
+        - yay_check.rc != 0
+        
+    - name: Clone yay repository
+      git:
+        repo: https://aur.archlinux.org/yay.git
+        dest: /tmp/yay
+        force: yes
+      when:
+        - is_personal_machine
+        - yay_check.rc != 0
+        
+    - name: Build and install yay
+      shell: |
+        cd /tmp/yay
+        makepkg -si --noconfirm
+      args:
+        creates: /usr/bin/yay
+      when:
+        - is_personal_machine
+        - yay_check.rc != 0
+        
+    # Audio packages are installed after the main packages
+    # This handles both clean installs and systems with existing audio stacks
+    - name: Install PipeWire audio compatibility layers
+      pacman:
+        name:
+          - pipewire-pulse
+          - pipewire-jack
+        state: present
+      become: "{{ not running_as_root }}"
+      when: is_personal_machine
+      # This will either:
+      # - Install cleanly on new systems
+      # - Prompt to replace pulseaudio/jack2 on existing systems
+      # - Do nothing if already installed
+      
+    - name: Configure sudo for target user (when running as root)
+      lineinfile:
+        path: /etc/sudoers.d/ansible-aur
+        line: "{{ target_user }} ALL=(ALL) NOPASSWD: ALL"
+        create: yes
+        mode: '0440'
+        validate: 'visudo -cf %s'
+      when: 
+        - running_as_root
+        - is_personal_machine
+        
+    - name: Install AUR packages with yay
+      shell: |
+        export SUDO_ASKPASS=/usr/bin/false
+        yay -S --noconfirm --norebuild --noredownload {{ item }} || true
+      loop: "{{ aur_packages }}"
+      when: is_personal_machine
+      become: "{{ running_as_root }}"
+      become_user: "{{ target_user if running_as_root else omit }}"
+      
+    - name: Remove temporary sudo configuration
+      file:
+        path: /etc/sudoers.d/ansible-aur
+        state: absent
+      when: 
+        - running_as_root
+        - is_personal_machine
+      
+    - name: Install shinkiro-specific packages (AMD GPU tools)
+      pacman:
+        name: "{{ item }}"
+        state: present
+      become: "{{ not running_as_root }}"
+      loop: "{{ shinkiro_packages }}"
+      when: hostname == 'shinkiro'
+      ignore_errors: yes
+      
+    - name: Install kyrios-specific packages (Intel CPU/GPU tools)
+      pacman:
+        name: "{{ item }}"
+        state: present
+      become: "{{ not running_as_root }}"
+      loop: "{{ kyrios_packages }}"
+      when: hostname == 'kyrios'
+      ignore_errors: yes
+      
+    - name: Ensure zsh is installed on personal machines
+      pacman:
+        name: zsh
+        state: present
+      become: "{{ not running_as_root }}"
+      when: is_personal_machine
+      
+    - name: Check if oh-my-zsh is installed
+      stat:
+        path: "{{ oh_my_zsh_dir }}"
+      register: oh_my_zsh_installed
+      become: "{{ running_as_root }}"
+      become_user: "{{ target_user if running_as_root else omit }}"
+      
+    - name: Install oh-my-zsh
+      shell: |
+        sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+      when: not oh_my_zsh_installed.stat.exists
+      become: "{{ running_as_root }}"
+      become_user: "{{ target_user if running_as_root else omit }}"
+      
+    - name: Check current shell
+      shell: echo $SHELL
+      register: current_shell
+      changed_when: false
+      
+    - name: Get zsh path
+      shell: which zsh
+      register: zsh_path
+      changed_when: false
+      
+    - name: Set zsh as default shell on personal machines
+      user:
+        name: "{{ target_user }}"
+        shell: "{{ zsh_path.stdout }}"
+      become: "{{ not running_as_root }}"
+      when: 
+        - is_personal_machine
+        - current_shell.stdout != zsh_path.stdout
+        
+    - name: Set zsh as default shell on work machines (macOS)
+      shell: chsh -s "{{ zsh_path.stdout }}"
+      when:
+        - not is_personal_machine
+        - current_shell.stdout != zsh_path.stdout
+      
+    - name: Install zsh-syntax-highlighting plugin
+      git:
+        repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
+        dest: "{{ oh_my_zsh_dir }}/custom/plugins/zsh-syntax-highlighting"
+      become: "{{ running_as_root }}"
+      become_user: "{{ target_user if running_as_root else omit }}"
+        
+    - name: Install zsh-autosuggestions plugin
+      git:
+        repo: https://github.com/zsh-users/zsh-autosuggestions
+        dest: "{{ oh_my_zsh_dir }}/custom/plugins/zsh-autosuggestions"
+      become: "{{ running_as_root }}"
+      become_user: "{{ target_user if running_as_root else omit }}"
+        
+    - name: Link oh-my-zsh custom files
+      file:
+        src: "{{ dotfiles_dir }}/common/.oh-my-zsh/custom/{{ item }}"
+        dest: "{{ oh_my_zsh_dir }}/custom/{{ item }}"
+        state: link
+        force: yes
+      with_items:
+        - utils.zsh
+        - ruby_aliases.zsh
+        - bedtime-prompt.zsh
+      when: oh_my_zsh_installed.stat.exists
+      become: "{{ running_as_root }}"
+      become_user: "{{ target_user if running_as_root else omit }}"
+
+    - name: Create scripts directory in PATH
+      file:
+        path: "{{ home_dir }}/.local/bin"
+        state: directory
+        mode: '0755'
+        owner: "{{ target_user }}"
+        group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+
+    - name: Link tmux-claude script to PATH
+      file:
+        src: "{{ dotfiles_dir }}/common/scripts/tmux-claude.sh"
+        dest: "{{ home_dir }}/.local/bin/tmux-claude.sh"
+        state: link
+        force: yes
+      become: "{{ running_as_root }}"
+      become_user: "{{ target_user if running_as_root else omit }}"
+        
+    - name: Ensure .config directory exists
+      file:
+        path: "{{ config_dir }}"
+        state: directory
+        mode: '0755'
+        owner: "{{ target_user }}"
+        group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+        
+    - name: Get list of common configs
+      find:
+        paths: "{{ dotfiles_dir }}/common"
+        file_type: directory
+        recurse: no
+      register: common_configs
+      
+    - name: Debug - Show common configs found
+      debug:
+        msg: "Found configs: {{ common_configs.files | map(attribute='path') | map('basename') | list }}"
+      when: is_personal_machine
+      
+    - name: Handle common configs with backup
+      block:
+        - name: Check existing configs
+          stat:
+            path: "{{ config_dir }}/{{ item.path | basename }}"
+          register: config_stat
+          loop: "{{ common_configs.files }}"
+          when: 
+            - is_personal_machine
+            - item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr']  # handled separately
+            
+        - name: Backup existing configs that aren't symlinks
+          command: mv "{{ config_dir }}/{{ item.item.path | basename }}" "{{ backup_dir }}/{{ item.item.path | basename }}-backup"
+          loop: "{{ config_stat.results }}"
+          when:
+            - is_personal_machine
+            - item.stat is defined
+            - item.stat.exists
+            - not item.stat.islnk
+            - item.item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'git']
+          loop_control:
+            label: "{{ item.item.path | basename }}"
+            
+        - name: Create symlinks for common configs
+          file:
+            src: "{{ item.path }}"
+            dest: "{{ config_dir }}/{{ item.path | basename }}"
+            state: link
+            force: yes
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+          loop: "{{ common_configs.files }}"
+          when: 
+            - is_personal_machine
+            - item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'git']  # handled separately
+            
+        - name: Link nvim .neoconf.json file
+          file:
+            src: "{{ dotfiles_dir }}/common/nvim/dot_neoconf.json"
+            dest: "{{ config_dir }}/nvim/.neoconf.json"
+            state: link
+            force: yes
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+          when: is_personal_machine
+      
+    - name: Create symlinks for common configs (work machine - limited)
+      file:
+        src: "{{ item.path }}"
+        dest: "{{ config_dir }}/{{ item.path | basename }}"
+        state: link
+        force: yes
+      loop: "{{ common_configs.files }}"
+      when: 
+        - not is_personal_machine
+        - item.path | basename in work_configs
+        
+    - name: Link nvim .neoconf.json file (work machine)
+      file:
+        src: "{{ dotfiles_dir }}/common/nvim/dot_neoconf.json"
+        dest: "{{ config_dir }}/nvim/.neoconf.json"
+        state: link
+        force: yes
+      when: not is_personal_machine
+      
+    - name: Check if hostname-specific directory exists
+      stat:
+        path: "{{ dotfiles_dir }}/{{ hostname }}"
+      register: hostname_dir
+      
+    - name: Get list of hostname-specific configs
+      find:
+        paths: "{{ dotfiles_dir }}/{{ hostname }}"
+        file_type: directory
+        recurse: no
+      register: hostname_configs
+      when: hostname_dir.stat.exists
+      
+    - name: Create symlinks for hostname-specific configs
+      file:
+        src: "{{ item.path }}"
+        dest: "{{ config_dir }}/{{ item.path | basename }}"
+        state: link
+        force: yes
+      loop: "{{ hostname_configs.files }}"
+      when: 
+        - hostname_dir.stat.exists
+        - item.path | basename not in ['waybar', 'hypr', 'eww']  # These are handled specially
+      
+    - name: Link .tmux.conf to home directory
+      file:
+        src: "{{ dotfiles_dir }}/dot_tmux.conf"
+        dest: "{{ target_home }}/.tmux.conf"
+        state: link
+        force: yes
+        owner: "{{ target_user }}"
+        group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+        
+      
+    - name: Ensure .zshrc exists
+      file:
+        path: "{{ ansible_env.HOME }}/.zshrc"
+        state: touch
+        mode: '0644'
+      when: ansible_env.HOME is defined
+      
+    - name: Set oh-my-zsh theme to agnoster
+      lineinfile:
+        path: "{{ ansible_env.HOME }}/.zshrc"
+        regexp: '^ZSH_THEME='
+        line: 'ZSH_THEME="agnoster"'
+        state: present
+      when: ansible_env.HOME is defined
+      
+    - name: Configure oh-my-zsh plugins
+      replace:
+        path: "{{ ansible_env.HOME }}/.zshrc"
+        regexp: 'plugins=\([^)]*\)'
+        replace: 'plugins=(git zsh-autosuggestions zsh-syntax-highlighting)'
+      when: ansible_env.HOME is defined
+      
+    - name: Setup Hyprland with clean symlink structure
+      block:
+        - name: Check existing hypr directories
+          stat:
+            path: "{{ item }}"
+          register: hypr_checks
+          loop:
+            - "{{ config_dir }}/hypr"
+            - "{{ config_dir }}/hypr_common"
+            
+        - name: Backup old hypr setup if needed
+          command: mv "{{ config_dir }}/hypr" "{{ backup_dir }}/hypr-old-backup"
+          when:
+            - hypr_checks.results[0].stat.exists
+            - not hypr_checks.results[0].stat.islnk
+            
+        - name: Remove old hypr symlinks/directories
+          file:
+            path: "{{ item }}"
+            state: absent
+          loop:
+            - "{{ config_dir }}/hypr"
+            - "{{ config_dir }}/hypr_common"
+          when: is_personal_machine
+            
+        - name: Create hypr symlink to machine-specific directory
+          file:
+            src: "{{ dotfiles_dir }}/{{ hostname }}/hypr"
+            dest: "{{ config_dir }}/hypr"
+            state: link
+            force: yes
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+          when: 
+            - is_personal_machine
+            - hostname in ['kyrios', 'shinkiro']
+            
+        - name: Create hypr_common symlink to common directory
+          file:
+            src: "{{ dotfiles_dir }}/common/hypr"
+            dest: "{{ config_dir }}/hypr_common"
+            state: link
+            force: yes
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+          when: is_personal_machine
+        
+    - name: Ensure gtk-3.0 directory exists
+      file:
+        path: "{{ config_dir }}/gtk-3.0"
+        state: directory
+        mode: '0755'
+      when: is_personal_machine
+        
+    - name: Link GTK3 CSS for system-wide theming
+      file:
+        src: "{{ dotfiles_dir }}/common/thunar/gtk.css"
+        dest: "{{ config_dir }}/gtk-3.0/gtk.css"
+        state: link
+        force: yes
+      when: is_personal_machine
+        
+    - name: Ensure Thunar directory exists (capital T)
+      file:
+        path: "{{ config_dir }}/Thunar"
+        state: directory
+        mode: '0755'
+      when: is_personal_machine
+        
+    - name: Link GTK files to Thunar directory
+      file:
+        src: "{{ dotfiles_dir }}/common/thunar/{{ item }}"
+        dest: "{{ config_dir }}/Thunar/{{ item }}"
+        state: link
+        force: yes
+      loop:
+        - gtk.css
+        - gtkrc-2.0
+      when: is_personal_machine
+        
+    - name: Setup Waybar with clean symlink structure
+      block:
+        - name: Check existing waybar directories
+          stat:
+            path: "{{ item }}"
+          register: waybar_checks
+          loop:
+            - "{{ config_dir }}/waybar"
+            - "{{ config_dir }}/waybar_common"
+            
+        - name: Backup old waybar setup if needed
+          command: mv "{{ config_dir }}/waybar" "{{ backup_dir }}/waybar-old-backup"
+          when:
+            - waybar_checks.results[0].stat.exists
+            - not waybar_checks.results[0].stat.islnk
+            
+        - name: Remove old waybar symlinks/directories
+          file:
+            path: "{{ item }}"
+            state: absent
+          loop:
+            - "{{ config_dir }}/waybar"
+            - "{{ config_dir }}/waybar_common"
+          when: is_personal_machine
+            
+        - name: Create waybar symlink to machine-specific directory
+          file:
+            src: "{{ dotfiles_dir }}/{{ hostname }}/waybar"
+            dest: "{{ config_dir }}/waybar"
+            state: link
+            force: yes
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+          when: 
+            - is_personal_machine
+            - hostname in ['kyrios', 'shinkiro']
+            
+        - name: Create waybar_common symlink to common directory
+          file:
+            src: "{{ dotfiles_dir }}/common/waybar"
+            dest: "{{ config_dir }}/waybar_common"
+            state: link
+            force: yes
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+          when: is_personal_machine
+            
+            
+    - name: Setup bedtime reminder system
+      block:
+        - name: Remove old bedtime directory if exists
+          file:
+            path: "{{ config_dir }}/bedtime"
+            state: absent
+          when: is_personal_machine
+            
+        - name: Symlink bedtime directory
+          file:
+            src: "{{ dotfiles_dir }}/common/bedtime"
+            dest: "{{ config_dir }}/bedtime"
+            state: link
+            force: yes
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+          when: is_personal_machine
+            
+        - name: Create systemd user directory
+          file:
+            path: "{{ ansible_env.HOME }}/.config/systemd/user"
+            state: directory
+            mode: '0755'
+          when: is_personal_machine
+            
+        - name: Install bedtime systemd files
+          file:
+            src: "{{ dotfiles_dir }}/common/bedtime/{{ item }}"
+            dest: "{{ ansible_env.HOME }}/.config/systemd/user/{{ item }}"
+            state: link
+            force: yes
+          loop:
+            - bedtime-reminder.service
+            - bedtime-reminder.timer
+          when: is_personal_machine
+            
+        - name: Enable bedtime reminder timer (when not root)
+          systemd:
+            name: bedtime-reminder.timer
+            enabled: yes
+            daemon_reload: yes
+            scope: user
+          when: 
+            - is_personal_machine
+            - not running_as_root
+          ignore_errors: yes
+          
+        - name: Check if bedtime timer is already enabled
+          stat:
+            path: "{{ target_home }}/.config/systemd/user/timers.target.wants/bedtime-reminder.timer"
+          register: bedtime_timer_enabled
+          when: is_personal_machine
+          
+        - name: Enable bedtime reminder timer as target user (when root)
+          shell: |
+            echo "Note: Cannot enable user systemd services when running as root."
+            echo "Please run as your user: systemctl --user enable --now bedtime-reminder.timer"
+          when: 
+            - is_personal_machine
+            - running_as_root
+            - not bedtime_timer_enabled.stat.exists
+          
+        - name: Show bedtime timer status
+          debug:
+            msg: |
+              {% if bedtime_timer_enabled.stat.exists %}
+              Bedtime reminder timer is already enabled ✓
+              {% else %}
+              To enable bedtime timer, run as your user (not root):
+              systemctl --user enable --now bedtime-reminder.timer
+              {% endif %}
+          when: is_personal_machine
+            
+    - name: Setup eww widget system
+      block:
+        - name: Create local bin directory
+          file:
+            path: "{{ ansible_env.HOME }}/.local/bin"
+            state: directory
+            mode: '0755'
+          when: is_personal_machine
+            
+        - name: Symlink eww binary
+          file:
+            src: "{{ dotfiles_dir }}/common/bin/eww"
+            dest: "{{ ansible_env.HOME }}/.local/bin/eww"
+            state: link
+            force: yes
+          when: is_personal_machine
+            
+        - name: Create eww config directory
+          file:
+            path: "{{ config_dir }}/eww"
+            state: directory
+            mode: '0755'
+          when: is_personal_machine
+            
+        - name: Symlink machine-specific eww files
+          file:
+            src: "{{ item }}"
+            dest: "{{ config_dir }}/eww/{{ item | basename }}"
+            state: link
+            force: yes
+          with_fileglob:
+            - "{{ dotfiles_dir }}/{{ hostname }}/eww/*"
+          when: is_personal_machine
+            
+    - name: Setup broot file browser
+      block:
+        - name: Remove old broot config if exists
+          file:
+            path: "{{ config_dir }}/broot"
+            state: absent
+            
+        - name: Symlink broot directory
+          file:
+            src: "{{ dotfiles_dir }}/common/broot"
+            dest: "{{ config_dir }}/broot"
+            state: link
+            force: yes
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+            
+        - name: Create broot skins directory if missing
+          file:
+            path: "{{ dotfiles_dir }}/common/broot/skins"
+            state: directory
+            mode: '0755'
+            
+    - name: Setup lazygit configuration
+      block:
+        - name: Remove old lazygit config if exists
+          file:
+            path: "{{ config_dir }}/lazygit"
+            state: absent
+            
+        - name: Symlink lazygit directory
+          file:
+            src: "{{ dotfiles_dir }}/common/lazygit"
+            dest: "{{ config_dir }}/lazygit"
+            state: link
+            force: yes
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+            
+    - name: Configure GitHub CLI with 1Password (all machines)
+      block:
+        - name: Check if gh is installed
+          command: which gh
+          register: gh_installed
+          ignore_errors: yes
+          changed_when: false
+          
+        - name: Check if op (1Password CLI) is installed
+          command: which op
+          register: op_installed
+          ignore_errors: yes
+          changed_when: false
+          
+        - name: Ensure gh config directory exists
+          file:
+            path: "{{ ansible_env.HOME }}/.config/gh"
+            state: directory
+            mode: '0755'
+          when:
+            - gh_installed.rc == 0
+            - op_installed.rc == 0
+            
+        - name: Configure gh to use SSH protocol
+          command: gh config set git_protocol ssh --host github.com
+          when:
+            - gh_installed.rc == 0
+            - op_installed.rc == 0
+          changed_when: true
+          
+        - name: Create gh hosts.yml for 1Password integration
+          copy:
+            content: |
+              github.com:
+                user: {{ ansible_user_id }}
+                git_protocol: ssh
+                oauth_token: op://Personal/GitHub Personal Access Token/credential
+            dest: "{{ ansible_env.HOME }}/.config/gh/hosts.yml"
+            mode: '0600'
+          when:
+            - gh_installed.rc == 0
+            - op_installed.rc == 0
+          
+        - name: Show 1Password CLI installation instructions
+          debug:
+            msg: |
+              1Password CLI not found. To integrate gh with 1Password:
+              
+              Personal machines (Arch):
+              yay -S 1password-cli
+              
+              Work machines (macOS):
+              brew install 1password-cli
+              
+              Note: On personal machines, 1password-cli is installed automatically via AUR
+              
+              After installation:
+              1. Run: op signin
+              2. Create a GitHub Personal Access Token in 1Password named "GitHub Personal Access Token"
+              3. Run the playbook again
+          when: 
+            - gh_installed.rc == 0
+            - op_installed.rc != 0
+            
+    - name: Configure Git with 1Password SSH signing (all machines)
+      block:
+        - name: Ensure .gitconfig has correct ownership
+          file:
+            path: "{{ ansible_env.HOME }}/.gitconfig"
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+            state: touch
+            mode: '0644'
+          when: running_as_root
+            
+        - name: Set Git user name
+          git_config:
+            name: user.name
+            value: "{{ git_user_name | default('Paolo Fabbri') }}"
+            scope: global
+            
+        - name: Set Git user email
+          git_config:
+            name: user.email
+            value: "{{ git_user_email | default('jabawack81@gmail.com') }}"
+            scope: global
+            
+        - name: Set default branch to main
+          git_config:
+            name: init.defaultbranch
+            value: "main"
+            scope: global
+            
+        - name: Check if 1Password is available for SSH signing
+          stat:
+            path: /opt/1Password/op-ssh-sign
+          register: op_ssh_sign
+          when: is_personal_machine
+          
+        - name: Check if 1Password app is available for SSH signing (macOS)
+          stat:
+            path: "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+          register: op_ssh_sign_mac
+          when: not is_personal_machine
+            
+        - name: Configure Git to use SSH signing with 1Password (Linux)
+          block:
+            - name: Enable commit signing
+              git_config:
+                name: commit.gpgsign
+                value: "true"
+                scope: global
+                
+            - name: Set GPG format to SSH
+              git_config:
+                name: gpg.format
+                value: "ssh"
+                scope: global
+                
+            - name: Set SSH signing program
+              git_config:
+                name: gpg.ssh.program
+                value: "/opt/1Password/op-ssh-sign"
+                scope: global
+                
+            - name: Set SSH signing key
+              git_config:
+                name: user.signingkey
+                value: "{{ ssh_signing_key | default('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN09MfqhK58cyp6YiKUEYr26izmgHBxQYqW8GZHThdjL') }}"
+                scope: global
+                
+            - name: Set global gitignore
+              git_config:
+                name: core.excludesfile
+                value: "{{ ansible_env.HOME }}/dotfiles/common/git/ignore"
+                scope: global
+          when:
+            - is_personal_machine
+            - op_ssh_sign.stat.exists
+            
+        - name: Configure Git to use SSH signing with 1Password (macOS)
+          block:
+            - name: Enable commit signing
+              git_config:
+                name: commit.gpgsign
+                value: "true"
+                scope: global
+                
+            - name: Set GPG format to SSH
+              git_config:
+                name: gpg.format
+                value: "ssh"
+                scope: global
+                
+            - name: Set SSH signing program
+              git_config:
+                name: gpg.ssh.program
+                value: "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+                scope: global
+                
+            - name: Set SSH signing key
+              git_config:
+                name: user.signingkey
+                value: "{{ ssh_signing_key | default('ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN09MfqhK58cyp6YiKUEYr26izmgHBxQYqW8GZHThdjL') }}"
+                scope: global
+                
+            - name: Set global gitignore
+              git_config:
+                name: core.excludesfile
+                value: "{{ ansible_env.HOME }}/dotfiles/common/git/ignore"
+                scope: global
+          when:
+            - not is_personal_machine
+            - op_ssh_sign_mac.stat.exists
+            
+        - name: Show SSH key setup instructions
+          debug:
+            msg: |
+              Git is configured! To complete SSH signing setup:
+              
+              1. Add your SSH key to GitHub:
+                 - Go to GitHub Settings > SSH and GPG keys
+                 - Add the same SSH key as a signing key
+                 
+              2. Make sure your SSH key is in 1Password and available to the SSH agent
+              
+              3. Test signing with: git commit -S -m "test" --allow-empty
+          when: (is_personal_machine and op_ssh_sign is defined and op_ssh_sign.stat.exists) or (not is_personal_machine and op_ssh_sign_mac is defined and op_ssh_sign_mac.stat.exists)
+            
+    - name: Install and configure development version managers (all machines)
+      block:
+        - name: Check if rbenv is installed
+          stat:
+            path: "{{ ansible_env.HOME }}/.rbenv"
+          register: rbenv_installed
+          
+        - name: Clone rbenv
+          git:
+            repo: https://github.com/rbenv/rbenv.git
+            dest: "{{ ansible_env.HOME }}/.rbenv"
+            update: no
+          when: not rbenv_installed.stat.exists
+          
+        - name: Check if ruby-build is installed
+          stat:
+            path: "{{ ansible_env.HOME }}/.rbenv/plugins/ruby-build"
+          register: ruby_build_installed
+          
+        - name: Clone ruby-build for rbenv
+          git:
+            repo: https://github.com/rbenv/ruby-build.git
+            dest: "{{ ansible_env.HOME }}/.rbenv/plugins/ruby-build"
+            update: no
+          when: not ruby_build_installed.stat.exists
+          
+        - name: Check if rbenv-default-gems is installed
+          stat:
+            path: "{{ ansible_env.HOME }}/.rbenv/plugins/rbenv-default-gems"
+          register: rbenv_default_gems_installed
+          
+        - name: Clone rbenv-default-gems plugin
+          git:
+            repo: https://github.com/rbenv/rbenv-default-gems.git
+            dest: "{{ ansible_env.HOME }}/.rbenv/plugins/rbenv-default-gems"
+            update: no
+          when: not rbenv_default_gems_installed.stat.exists
+          
+        - name: Link default-gems configuration
+          file:
+            src: "{{ dotfiles_dir }}/common/rbenv/default-gems"
+            dest: "{{ ansible_env.HOME }}/.rbenv/default-gems"
+            state: link
+            force: yes
+          
+        - name: Clean up manual nodenv entry from .zshrc
+          lineinfile:
+            path: "{{ ansible_env.HOME }}/.zshrc"
+            regexp: '^eval "\$\(nodenv init - zsh\)"$'
+            state: absent
+            
+        - name: Check if nodenv is installed
+          stat:
+            path: "{{ ansible_env.HOME }}/.nodenv"
+          register: nodenv_installed
+          
+        - name: Clone nodenv
+          git:
+            repo: https://github.com/nodenv/nodenv.git
+            dest: "{{ ansible_env.HOME }}/.nodenv"
+            update: no
+          when: not nodenv_installed.stat.exists
+            
+        - name: Check if node-build is installed
+          stat:
+            path: "{{ ansible_env.HOME }}/.nodenv/plugins/node-build"
+          register: node_build_installed
+          when: nodenv_installed.stat.exists or not nodenv_installed.stat.exists
+          
+        - name: Clone node-build for nodenv
+          git:
+            repo: https://github.com/nodenv/node-build.git
+            dest: "{{ ansible_env.HOME }}/.nodenv/plugins/node-build"
+            update: no
+          when: not node_build_installed.stat.exists
+            
+        - name: Check if nodenv-default-packages is installed
+          stat:
+            path: "{{ ansible_env.HOME }}/.nodenv/plugins/nodenv-default-packages"
+          register: nodenv_default_packages_installed
+          
+        - name: Clone nodenv-default-packages plugin
+          git:
+            repo: https://github.com/nodenv/nodenv-default-packages.git
+            dest: "{{ ansible_env.HOME }}/.nodenv/plugins/nodenv-default-packages"
+            update: no
+          when: not nodenv_default_packages_installed.stat.exists
+          
+        - name: Link default-packages configuration
+          file:
+            src: "{{ dotfiles_dir }}/common/nodenv/default-packages"
+            dest: "{{ ansible_env.HOME }}/.nodenv/default-packages"
+            state: link
+            force: yes
+            
+        - name: Add rbenv to .zshrc
+          blockinfile:
+            path: "{{ ansible_env.HOME }}/.zshrc"
+            marker: "# {mark} ANSIBLE MANAGED BLOCK - rbenv"
+            block: |
+              # rbenv configuration
+              export PATH="$HOME/.rbenv/bin:$PATH"
+              eval "$(rbenv init - zsh)"
+            
+        - name: Add nodenv to .zshrc
+          blockinfile:
+            path: "{{ ansible_env.HOME }}/.zshrc"
+            marker: "# {mark} ANSIBLE MANAGED BLOCK - nodenv"
+            block: |
+              # nodenv configuration
+              export PATH="$HOME/.nodenv/bin:$PATH"
+              eval "$(nodenv init - zsh)"
+              
+        - name: Check if Ruby is installed
+          shell: |
+            source {{ ansible_env.HOME }}/.zshrc && rbenv versions 2>/dev/null | grep -q . || echo "none"
+          register: ruby_installed
+          changed_when: false
+          
+        - name: Install latest stable Ruby
+          shell: |
+            source {{ ansible_env.HOME }}/.zshrc
+            LATEST_RUBY=$(rbenv install -l 2>/dev/null | grep -E "^[0-9]+\.[0-9]+\.[0-9]+$" | tail -1)
+            rbenv install -s $LATEST_RUBY
+            rbenv global $LATEST_RUBY
+          when: ruby_installed.stdout == "none"
+          
+        - name: Check if Node is installed
+          shell: |
+            source {{ ansible_env.HOME }}/.zshrc && nodenv versions 2>/dev/null | grep -q . || echo "none"
+          register: node_installed
+          changed_when: false
+          
+        - name: Install latest stable Node (LTS)
+          shell: |
+            source {{ ansible_env.HOME }}/.zshrc
+            LATEST_NODE=$(nodenv install -l 2>/dev/null | grep -E "^[0-9]+\.[0-9]+\.[0-9]+$" | grep -E "^20\." | tail -1)
+            nodenv install -s $LATEST_NODE
+            nodenv global $LATEST_NODE
+          when: node_installed.stdout == "none"
+          
+        - name: Show version manager setup instructions
+          debug:
+            msg: |
+              Version managers and languages installed!
+              
+              Ruby: {{ ruby_installed.stdout | default('Installing latest stable version') }}
+              Node: {{ node_installed.stdout | default('Installing latest LTS version') }}
+              
+              To manage versions:
+              - rbenv versions / nodenv versions - List installed versions
+              
+    - name: Configure fingerprint authentication on kyrios
+      block:
+        - name: Install fingerprint packages
+          pacman:
+            name:
+              - fprintd
+              - libfprint
+            state: present
+            
+        - name: Create fingerprint setup instructions
+          copy:
+            dest: "{{ ansible_env.HOME }}/fingerprint-setup-instructions.txt"
+            content: |
+              ThinkPad T460s Fingerprint Setup Instructions
+              =============================================
+              
+              Your fingerprint reader (Validity Sensors VFS7500) has been detected.
+              
+              To enable fingerprint authentication:
+              
+              1. Configure PAM for fingerprint support:
+                 sudo sed -i '3i auth       sufficient                  pam_fprintd.so' /etc/pam.d/system-auth
+              
+              2. Enroll your fingerprints:
+                 fprintd-enroll -f right-index-finger
+                 fprintd-enroll -f left-index-finger
+              
+              3. Test with sudo:
+                 sudo echo "Fingerprint test"
+              
+              4. For 1Password:
+                 - Open 1Password preferences
+                 - Go to Security settings
+                 - Enable "Unlock with system authentication"
+              
+              Note: Always have a password backup in case fingerprint fails!
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+            mode: '0644'
+      when: hostname == 'kyrios'
+              - rbenv install -l / nodenv install -l - List available versions
+              - rbenv global X.X.X / nodenv global X.X.X - Set global version
+              
+    - name: Configure common shell environment (all machines)
+      block:
+        - name: Add common PATH configurations to .zshrc
+          blockinfile:
+            path: "{{ ansible_env.HOME }}/.zshrc"
+            marker: "# {mark} ANSIBLE MANAGED BLOCK - common paths"
+            block: |
+              # Common PATH additions
+              export PATH="$PATH:$HOME/.local/bin"
+              export PATH="$PATH:$HOME/go/bin"
+              
+        - name: Add 1Password CLI plugin support
+          blockinfile:
+            path: "{{ ansible_env.HOME }}/.zshrc"
+            marker: "# {mark} ANSIBLE MANAGED BLOCK - 1password"
+            block: |
+              # 1Password CLI plugins
+              if [ -f "$HOME/.config/op/plugins.sh" ]; then
+                source "$HOME/.config/op/plugins.sh"
+              fi
+              
+        - name: Clean up manual pnpm entries from .zshrc
+          replace:
+            path: "{{ ansible_env.HOME }}/.zshrc"
+            regexp: '# pnpm\nexport PNPM_HOME[^#]+# pnpm end\n'
+            replace: ''
+            
+        - name: Install pnpm (fast npm alternative)
+          shell: |
+            curl -fsSL https://get.pnpm.io/install.sh | sh -
+          args:
+            creates: "{{ ansible_env.HOME }}/.local/share/pnpm"
+            
+        - name: Add pnpm to .zshrc
+          blockinfile:
+            path: "{{ ansible_env.HOME }}/.zshrc"
+            marker: "# {mark} ANSIBLE MANAGED BLOCK - pnpm"
+            block: |
+              # pnpm
+              export PNPM_HOME="$HOME/.local/share/pnpm"
+              case ":$PATH:" in
+                *":$PNPM_HOME:"*) ;;
+                *) export PATH="$PNPM_HOME:$PATH" ;;
+              esac
+              
+        - name: Check if SDKMAN is installed
+          stat:
+            path: "{{ ansible_env.HOME }}/.sdkman"
+          register: sdkman_installed
+          
+        - name: Clean up manual SDKMAN entries from .zshrc
+          replace:
+            path: "{{ ansible_env.HOME }}/.zshrc"
+            regexp: '#THIS MUST BE AT THE END[^#]+\[\[ -s[^]]+\]\] && source[^\n]+\n(?!# END ANSIBLE)'
+            replace: ''
+            
+        - name: Install SDKMAN (JVM version manager)
+          shell: |
+            curl -s "https://get.sdkman.io" | bash
+          args:
+            creates: "{{ ansible_env.HOME }}/.sdkman"
+          when: not sdkman_installed.stat.exists
+          
+        - name: Fix SDKMAN permissions
+          file:
+            path: "{{ ansible_env.HOME }}/.sdkman"
+            state: directory
+            recurse: yes
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+          when: 
+            - sdkman_installed.stat.exists or not sdkman_installed.stat.exists
+            - running_as_root
+            
+        - name: Add SDKMAN to .zshrc
+          blockinfile:
+            path: "{{ ansible_env.HOME }}/.zshrc"
+            marker: "# {mark} ANSIBLE MANAGED BLOCK - sdkman"
+            insertafter: EOF
+            block: |
+              #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+              export SDKMAN_DIR="$HOME/.sdkman"
+              [[ -s "$HOME/.sdkman/bin/sdkman-init.sh" ]] && source "$HOME/.sdkman/bin/sdkman-init.sh"
+              
+        - name: Check if g (Go version manager) is installed
+          stat:
+            path: "{{ ansible_env.HOME }}/go/bin/g"
+          register: g_installed
+          
+        - name: Install g (Go version manager)
+          shell: |
+            curl -sSL https://git.io/g-install | sh -s -- -y
+          when: not g_installed.stat.exists
+            
+        - name: Remove duplicate oh-my-zsh update mode lines
+          shell: |
+            # Keep only the first occurrence
+            awk '/^zstyle .:omz:update. mode reminder/ && !seen {print; seen=1; next} /^zstyle .:omz:update. mode reminder/ {next} {print}' {{ ansible_env.HOME }}/.zshrc > {{ ansible_env.HOME }}/.zshrc.tmp
+            mv {{ ansible_env.HOME }}/.zshrc.tmp {{ ansible_env.HOME }}/.zshrc
+          changed_when: false
+            
+        - name: Configure oh-my-zsh auto-update behavior
+          lineinfile:
+            path: "{{ ansible_env.HOME }}/.zshrc"
+            regexp: "^zstyle ':omz:update' mode"
+            line: "zstyle ':omz:update' mode reminder  # just remind me to update when it's time"
+            state: present
+            
+        - name: Enable completion waiting dots
+          lineinfile:
+            path: "{{ ansible_env.HOME }}/.zshrc"
+            regexp: "^# COMPLETION_WAITING_DOTS="
+            line: 'COMPLETION_WAITING_DOTS="true"'
+            insertafter: "^# COMPLETION_WAITING_DOTS="
+            
+    - name: Show backup summary
+      block:
+        - name: Check if any backups were created
+          find:
+            paths: "{{ backup_dir }}"
+            file_type: any
+          register: backup_contents
+          
+        - name: Display backup information
+          debug:
+            msg: |
+              Backup Summary:
+              ==============
+              Backup directory: {{ backup_dir }}
+              Files backed up: {{ backup_contents.files | length }}
+              
+              {% if backup_contents.files | length > 0 %}
+              Backed up items:
+              {% for item in backup_contents.files %}
+              - {{ item.path | basename }}
+              {% endfor %}
+              
+              Review these backups and delete the backup directory when satisfied.
+              {% else %}
+              No existing configs needed backing up.
+              {% endif %}
+          when: backup_contents is defined
+          
+    - name: Fix ownership of all config files
+      block:
+        - name: Ensure all config files are owned by target user
+          file:
+            path: "{{ config_dir }}"
+            state: directory
+            recurse: yes
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+          when: running_as_root
+          
+        - name: Ensure home directory files are owned by target user
+          file:
+            path: "{{ item }}"
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+          loop:
+            - "{{ target_home }}/.zshrc"
+            - "{{ target_home }}/.tmux.conf"
+            - "{{ target_home }}/.gitconfig"
+          when: running_as_root
+          ignore_errors: yes
+          
+        - name: Fix oh-my-zsh ownership
+          file:
+            path: "{{ oh_my_zsh_dir }}"
+            state: directory
+            recurse: yes
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+          when: 
+            - running_as_root
+            - oh_my_zsh_installed.stat.exists
+            

@@ -1,0 +1,25 @@
+# Default gems to install with every Ruby version
+# These gems will be automatically installed when you install a new Ruby version with rbenv
+
+# Development tools
+ruby-lsp
+solargraph
+rubocop
+reek
+fasterer
+
+# Debugging
+pry
+pry-byebug
+pry-doc
+
+# Rails development
+rails
+spring
+
+# Testing
+rspec
+minitest
+
+# Other useful gems
+bundler

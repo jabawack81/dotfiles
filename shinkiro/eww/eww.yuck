@@ -1,0 +1,551 @@
+;; **
+;; ** Widgets config for EWW
+;; ** Created by : @adi1090x
+;; ** Converted by : @tripleo1
+;; **
+
+;; ** Variables ***********************************************************************
+
+;; Profile vars
+(defvar IMAGE "images/jabawack.jpg")
+(defpoll UNAME :interval "12h" `whoami`)
+(defpoll HOST :interval "12h" `cat /etc/hostname || echo "unknown"`)
+
+;; System vars
+(defpoll UPDATES :interval "10m" `checkupdates 2>/dev/null | wc -l || echo "0"`)
+(defpoll OS :interval "5m" `lsb_release -d | cut -f2 || echo "Arch Linux"`)
+(defpoll KERNEL :interval "5m" `uname -r`)
+(defpoll UPTIME_INFO :interval "1m" `uptime -p | sed 's/up //'`)
+(defpoll PACKAGES :interval "5m" `pacman -Q | wc -l`)
+(defpoll SHELL :interval "5m" `echo $SHELL | xargs basename`)
+(defvar WM "Hyprland")
+(defpoll CPU_USAGE :interval "3s" :initial "0" `scripts/sys_info --cpu`)
+(defpoll MEM_USAGE :interval "3s" :initial "0" `scripts/sys_info --mem`)
+(defpoll DISK_ROOT :interval "5s" :initial "0" `scripts/sys_info --disk /`)
+(defpoll DISK_HOME :interval "5s" :initial "0" `scripts/sys_info --disk /home`)
+(defpoll DISK_MEDIA :interval "5s" :initial "0" `scripts/sys_info --disk /mnt/media`)
+(defpoll DISK_STEAM :interval "5s" :initial "0" `scripts/sys_info --disk /mnt/steam`)
+(defpoll TEMP_CPU :interval "3s" :initial "0" `scripts/sys_info --temp-cpu`)
+(defpoll TEMP_GPU :interval "3s" :initial "0" `scripts/sys_info --temp-gpu`)
+
+;; Time vars
+(defpoll TIME_LONDON :interval "5s" `TZ='Europe/London' date +\"%H:%M\"`)
+(defpoll TIME_BOLOGNA :interval "5s" `TZ='Europe/Rome' date +\"%H:%M\"`) 
+(defpoll TIME_MIAMI :interval "5s" `TZ='America/New_York' date +\"%H:%M\"`)
+(defpoll DAY :interval "5s" `date +\"%A, %B %d\"`)
+
+;; Uptime vars
+(defpoll UPHOUR :interval "5s" `uptime -p | awk '{print $2 \" \" $3}' | sed 's/,//g'`)
+(defpoll UPMIN :interval "5s" `uptime -p | awk '{print $4 \" \" $5}'`)
+
+;; Network vars
+(defpoll NET_ETH :interval "2s" `ip link | grep -E "^[0-9]+: (en|eth)" | grep "state UP" | head -1 | awk '{print $2}' | sed 's/://' || echo "down"`)
+(defpoll NET_WIFI :interval "2s" `ip link | grep -E "^[0-9]+: wl" | grep "state UP" | head -1 | awk '{print $2}' | sed 's/://' || echo "down"`)
+(defpoll ETH_IP :interval "5s" `if [ "$(ip link | grep -E "^[0-9]+: (en|eth)" | grep "state UP" | head -1)" ]; then ip addr show $(ip link | grep -E "^[0-9]+: (en|eth)" | grep "state UP" | head -1 | awk '{print $2}' | sed 's/://') 2>/dev/null | grep "inet " | awk '{print $2}' | cut -d'/' -f1; else echo "N/A"; fi`)
+(defpoll WIFI_IP :interval "5s" `if [ "$(ip link | grep -E "^[0-9]+: wl" | grep "state UP" | head -1)" ]; then ip addr show $(ip link | grep -E "^[0-9]+: wl" | grep "state UP" | head -1 | awk '{print $2}' | sed 's/://') 2>/dev/null | grep "inet " | awk '{print $2}' | cut -d'/' -f1; else echo "N/A"; fi`)
+(defpoll NET_STATS :interval "3s" `cat /proc/net/dev | tail -n +3 | awk '{rx+=$2; tx+=$10} END {printf "↓%.1fMB ↑%.1fMB", rx/1024/1024, tx/1024/1024}'`)
+(defpoll NET_DOWN :interval "3s" `cat /proc/net/dev | tail -n +3 | awk '{rx+=$2} END {printf "%.1fMB", rx/1024/1024}'`)
+(defpoll NET_UP :interval "3s" `cat /proc/net/dev | tail -n +3 | awk '{tx+=$10} END {printf "%.1fMB", tx/1024/1024}'`)
+
+;; VPN vars
+(defpoll VPN_STATUS :interval "3s" `scripts/vpn_info --status`)
+(defpoll VPN_REGION :interval "5s" `scripts/vpn_info --region`)
+(defpoll VPN_IP :interval "5s" `scripts/vpn_info --ip`)
+
+;; Music vars
+(defpoll SONG :interval "2s" :initial "No Song Playing" `scripts/music_info --song`)
+(defpoll ARTIST :interval "2s" :initial "No Artist" `scripts/music_info --artist`)
+(defpoll STATUS :interval "2s" :initial "▶" `scripts/music_info --status`)
+(defpoll CURRENT :interval "2s" :initial "0" `scripts/music_info --time`)
+(defpoll COVER :interval "2s" :initial "images/music.png" `scripts/music_info --cover`)
+(defpoll CTIME :interval "2s" :initial "0:00" `scripts/music_info --ctime`)
+(defpoll TTIME :interval "2s" :initial "0:00" `scripts/music_info --ttime`)
+
+;; Weather vars - real-time data
+(defpoll WEATHER_UPDATE :interval "1h" :initial "" `scripts/weather_cities --update`)
+(defpoll LONDON_TEMP :interval "5m" :initial "Loading..." `scripts/weather_cities --temp London`)
+(defpoll LONDON_COND :interval "5m" :initial "Loading..." `scripts/weather_cities --cond London`)
+(defpoll LONDON_RAIN :interval "5m" :initial "..." `scripts/weather_cities --rain London`)
+(defpoll LONDON_FOG :interval "5m" :initial "..." `scripts/weather_cities --fog London`)
+(defpoll LONDON_HIGHTEMP :interval "5m" :initial "..." `scripts/weather_cities --hightemp London`)
+(defpoll LONDON_ICON :interval "5m" :initial "?" `scripts/weather_cities --icon London`)
+(defpoll BOLOGNA_TEMP :interval "5m" :initial "Loading..." `scripts/weather_cities --temp Bologna`)
+(defpoll BOLOGNA_COND :interval "5m" :initial "Loading..." `scripts/weather_cities --cond Bologna`)
+(defpoll BOLOGNA_RAIN :interval "5m" :initial "..." `scripts/weather_cities --rain Bologna`)
+(defpoll BOLOGNA_FOG :interval "5m" :initial "..." `scripts/weather_cities --fog Bologna`)
+(defpoll BOLOGNA_HIGHTEMP :interval "5m" :initial "..." `scripts/weather_cities --hightemp Bologna`)
+(defpoll BOLOGNA_ICON :interval "5m" :initial "?" `scripts/weather_cities --icon Bologna`)
+(defpoll MIAMI_TEMP :interval "5m" :initial "Loading..." `scripts/weather_cities --temp Miami`)
+(defpoll MIAMI_COND :interval "5m" :initial "Loading..." `scripts/weather_cities --cond Miami`)
+(defpoll MIAMI_RAIN :interval "5m" :initial "..." `scripts/weather_cities --rain Miami`)
+(defpoll MIAMI_FOG :interval "5m" :initial "..." `scripts/weather_cities --fog Miami`)
+(defpoll MIAMI_HIGHTEMP :interval "5m" :initial "..." `scripts/weather_cities --hightemp Miami`)
+(defpoll MIAMI_ICON :interval "5m" :initial "?" `scripts/weather_cities --icon Miami`)
+
+;; Apps vars
+
+;; Confirmation dialog vars
+(defvar show_logout_confirm false)
+(defvar show_sleep_confirm false)
+(defvar show_reboot_confirm false)
+(defvar show_poweroff_confirm false)
+(defvar show_overlay false)
+
+;; Files vars
+(defpoll FREE :interval "5s" `df -h / | awk '{print $4}' | tail -n 1 | sed 's/G/GB/'`)
+
+
+;; ** Widgets *************************************************************************
+
+
+;; background
+(defwidget bg [] 
+	(box :class "bg")
+)
+
+;; profile
+(defwidget user [] 
+	(box :class "genwin" :orientation "v" :spacing 8 :space-evenly "false" :vexpand "false" :hexpand "false"
+		(box :style "background-image: url('${IMAGE}'); background-size: cover; background-repeat: no-repeat; background-position: center;" :class "face" :halign "center")
+		(label :class "fullname" :text "${UNAME}@${HOST}")
+		(label :class "sysinfo" :text "${OS}")
+		(label :class "sysinfo" :text "${PACKAGES} packages")
+		(label :class "sysinfo" :text "${UPDATES} updates")
+		(label :class "sysinfo" :text "Kernel ${KERNEL}")))
+
+;; system
+(defwidget system [] 
+	(box :class "genwin" :vexpand "false" :hexpand "false" 
+		(box :orientation "v" :spacing 18 :halign "center" :valign "center" :space-evenly "false" :vexpand "false" :hexpand "false" 
+			(box :class "cpu_bar" :orientation "h" :spacing 20 :space-evenly "false" :vexpand "false" :hexpand "false" 
+				(label :class "iconcpu" :text "󰻠")
+				(scale :min 0 :max 100 :value CPU_USAGE :active "false"))
+			(box :class "mem_bar" :orientation "h" :spacing 20 :space-evenly "false" :vexpand "false" :hexpand "false" 
+				(label :class "iconmem" :text "󰍛")
+				(scale :min 0 :max 100 :value MEM_USAGE :active "false"))
+			(box :class "temp_cpu_bar" :orientation "h" :spacing 20 :space-evenly "false" :vexpand "false" :hexpand "false" 
+				(label :class "icontemp_cpu" :text "󰔏")
+				(scale :min 0 :max 100 :value TEMP_CPU :active "false"))
+			(box :class "temp_gpu_bar" :orientation "h" :spacing 20 :space-evenly "false" :vexpand "false" :hexpand "false" 
+				(label :class "icontemp_gpu" :text "󰍹")
+				(scale :min 0 :max 100 :value TEMP_GPU :active "false"))
+			(box :class "disk_root_bar" :orientation "h" :spacing 20 :space-evenly "false" :vexpand "false" :hexpand "false" 
+				(label :class "icondisk_root" :text "󰋊")
+				(scale :min 0 :max 100 :value DISK_ROOT :active "false"))
+			(box :class "disk_home_bar" :orientation "h" :spacing 20 :space-evenly "false" :vexpand "false" :hexpand "false" 
+				(label :class "icondisk_home" :text "󰋞")
+				(scale :min 0 :max 100 :value DISK_HOME :active "false"))
+			(box :class "disk_media_bar" :orientation "h" :spacing 20 :space-evenly "false" :vexpand "false" :hexpand "false" 
+				(label :class "icondisk_media" :text "󱛟")
+				(scale :min 0 :max 100 :value DISK_MEDIA :active "false"))
+			(box :class "disk_steam_bar" :orientation "h" :spacing 20 :space-evenly "false" :vexpand "false" :hexpand "false" 
+				(label :class "icondisk_steam" :text "󰓓")
+				(scale :min 0 :max 100 :value DISK_STEAM :active "false")))))
+
+;; clock
+(defwidget clock [] 
+	(box :class "genwin" :orientation "v" :spacing 0 :space-evenly false :vexpand "false" :hexpand "false" 
+		(label :class "date_label" :text DAY)
+		(box :orientation "h" :spacing 20 :halign "center"
+			(box :orientation "v" :spacing 2
+				(label :class "city_label" :text "London")
+				(label :class "time_display" :text TIME_LONDON))
+			(box :orientation "v" :spacing 2
+				(label :class "city_label" :text "Bologna")
+				(label :class "time_display" :text TIME_BOLOGNA))
+			(box :orientation "v" :spacing 2
+				(label :class "city_label" :text "Miami")
+				(label :class "time_display" :text TIME_MIAMI)))))
+
+;; uptime
+(defwidget uptime [] 
+	(box :class "genwin" :orientation "v" :spacing 2 :space-evenly false
+		(label :class "uptime-label" :halign "center" :text "Uptime")
+		(box :orientation "h" :spacing 10
+			(label :class "icontimer" :valign "center" :text "󱑍")
+			(box :orientation "v" :valign "center" :spacing 2
+				(label :class "uptime-value" :text "${UPHOUR}")
+				(label :class "uptime-value" :text "${UPMIN}")))))
+
+;; network
+(defwidget network []
+	(box :class "genwin network" :orientation "v" :spacing 2 :space-evenly false
+		(label :class "network-label" :halign "center" :text "Network")
+		(box :orientation "h" :spacing 16 :valign "center" :space-evenly false
+			(label :class "iconethernet" :text "󰈀")
+			(label :class "network-ip" :halign "start" :text "${ETH_IP}"))
+		(box :orientation "h" :spacing 16 :valign "center" :space-evenly false
+			(label :class "iconwifi" :text "󰖩")
+			(label :class "network-ip" :halign "start" :text "${WIFI_IP}"))
+		(box :orientation "h" :spacing 16 :valign "center" :space-evenly false
+			(label :class "icondownload" :text "󰦿")
+			(label :class "network-stats" :halign "start" :text "${NET_DOWN}"))
+		(box :orientation "h" :spacing 16 :valign "center" :space-evenly false
+			(label :class "iconupload" :text "󰧇")
+			(label :class "network-stats" :halign "start" :text "${NET_UP}"))))
+
+;; VPN
+(defwidget vpn []
+	(box :class "genwin vpn" :orientation "v" :spacing 12 :space-evenly false
+		(label :class "vpn-label" :halign "center" :text "Private Internet Access")
+		(box :orientation "v" :spacing 8 :halign "center"
+			(eventbox :onclick "scripts/vpn_info --toggle"
+				:width 80 :height 80
+				(box :class "vpn-toggle ${VPN_STATUS == 'connected' ? 'vpn-connected' : 'vpn-disconnected'}"
+					:width 80 :height 80
+					:space-evenly true
+					(label :class "vpn-icon" :text "${VPN_STATUS == 'connected' ? '󰦝' : '󰦞'}")))
+			(label :class "vpn-status-text" :text "${VPN_STATUS == 'connected' ? 'Protected' : 'Unprotected'}"))
+		(box :orientation "v" :spacing 6 :halign "center" :visible {VPN_STATUS == "connected"}
+			(box :orientation "h" :spacing 8 :halign "center"
+				(label :class "vpn-info-label" :text "󰖃")
+				(label :class "vpn-info" :text "${VPN_REGION}"))
+			(box :orientation "h" :spacing 8 :halign "center"
+				(label :class "vpn-info-label" :text "󰩟")
+				(label :class "vpn-info" :text "${VPN_IP}")))))
+
+;; Music (compact)
+(defwidget music [] 
+	(box :class "genwin music-widget" :orientation "h" :spacing 8 :space-evenly "false" :vexpand "false" :hexpand "false"
+		;; Album art - square on left
+		(box :class "music-album-art-compact" :style "background-image: url('${COVER}');")
+		;; Info and controls on right
+		(box :orientation "v" :spacing 0 :hexpand true :valign "center"
+			;; Song info at top
+			(box :orientation "v" :spacing 0
+				(label :class "music-song" :halign "start" :wrap "false" :limit-width 25 :text SONG)
+				(label :class "music-artist" :halign "start" :wrap "false" :limit-width 25 :text ARTIST))
+			;; Progress bar in the middle
+			(box :class "music_bar_compact" :hexpand true
+				(scale :min 0 :active "true" :max 100 :value CURRENT))
+			;; Controls at bottom
+			(box :orientation "h" :spacing 15 :halign "center"
+				(button :class "music-btn-compact" :onclick "scripts/music_info --prev" "󰒮")
+				(button :class "music-btn-compact" :onclick "scripts/music_info --toggle" STATUS)
+				(button :class "music-btn-compact" :onclick "scripts/music_info --next" "󰒭")))))
+
+
+;; social
+(defwidget social [] 
+	(box :class "genwin" :orientation "h" :spacing 10 :space-evenly true
+		(button :class "social-btn social-github" :onclick "scripts/open_links --gh" 
+			:style "background-image: url('images/icons/github_colored.png');")
+		(button :class "social-btn social-reddit" :onclick "scripts/open_links --rd" 
+			:style "background-image: url('images/icons/reddit_colored.png');")
+		(button :class "social-btn social-twitter" :onclick "scripts/open_links --tw" 
+			:style "background-image: url('images/icons/twitter_colored.png');")
+		(button :class "social-btn social-youtube" :onclick "scripts/open_links --yt" 
+			:style "background-image: url('images/icons/youtube_colored.png');")
+		(button :class "social-btn social-mastodon" :onclick "scripts/open_links --md" 
+			:style "background-image: url('images/icons/mastodon_colored.png');")
+		(button :class "social-btn social-bluesky" :onclick "scripts/open_links --bs" 
+			:style "background-image: url('images/icons/bluesky_colored.png');")))
+
+;; weather
+(defwidget weather [] 
+	(box :class "genwin" :orientation "v" :spacing 2 :space-evenly false
+		(label :class "weather-label" :halign "center" :text "Weather")
+		(box :orientation "h" :spacing 20 :halign "center" :space-evenly true
+			(box :orientation "v" :spacing 1
+				(label :class "city_label" :text "London")
+				(label :class "weather-icon" :text LONDON_ICON)
+				(label :class "weather-temp" :text LONDON_TEMP)
+				(box :width 120 :height 50
+					(label :class "weather-cond" :wrap true :text LONDON_COND))
+				(box :orientation "h" :spacing 12 :halign "center" :space-evenly false
+					(box :orientation "v" :spacing 1 :width 30
+						(label :class "weather-chance-icon" :text "󰖗")
+						(label :class "weather-chance" :text LONDON_RAIN))
+					(box :orientation "v" :spacing 1 :width 30
+						(label :class "weather-chance-icon" :text "󰖑")
+						(label :class "weather-chance" :text LONDON_FOG))
+					(box :orientation "v" :spacing 1 :width 30
+						(label :class "weather-chance-icon" :text "󰔏")
+						(label :class "weather-chance" :text LONDON_HIGHTEMP))))
+			(box :orientation "v" :spacing 1
+				(label :class "city_label" :text "Bologna")
+				(label :class "weather-icon" :text BOLOGNA_ICON)
+				(label :class "weather-temp" :text BOLOGNA_TEMP)
+				(box :width 120 :height 50
+					(label :class "weather-cond" :wrap true :text BOLOGNA_COND))
+				(box :orientation "h" :spacing 12 :halign "center" :space-evenly false
+					(box :orientation "v" :spacing 1 :width 30
+						(label :class "weather-chance-icon" :text "󰖗")
+						(label :class "weather-chance" :text BOLOGNA_RAIN))
+					(box :orientation "v" :spacing 1 :width 30
+						(label :class "weather-chance-icon" :text "󰖑")
+						(label :class "weather-chance" :text BOLOGNA_FOG))
+					(box :orientation "v" :spacing 1 :width 30
+						(label :class "weather-chance-icon" :text "󰔏")
+						(label :class "weather-chance" :text BOLOGNA_HIGHTEMP))))
+			(box :orientation "v" :spacing 1
+				(label :class "city_label" :text "Miami")
+				(label :class "weather-icon" :text MIAMI_ICON)
+				(label :class "weather-temp" :text MIAMI_TEMP)
+				(box :width 120 :height 50
+					(label :class "weather-cond" :wrap true :text MIAMI_COND))
+				(box :orientation "h" :spacing 12 :halign "center" :space-evenly false
+					(box :orientation "v" :spacing 1 :width 30
+						(label :class "weather-chance-icon" :text "󰖗")
+						(label :class "weather-chance" :text MIAMI_RAIN))
+					(box :orientation "v" :spacing 1 :width 30
+						(label :class "weather-chance-icon" :text "󰖑")
+						(label :class "weather-chance" :text MIAMI_FOG))
+					(box :orientation "v" :spacing 1 :width 30
+						(label :class "weather-chance-icon" :text "󰔏")
+						(label :class "weather-chance" :text MIAMI_HIGHTEMP)))))))
+
+;; apps
+(defwidget apps [] 
+	(box :class "genwin apps-widget" :orientation "v" :spacing 0 :style "padding: 4px;"
+		(box :orientation "h" :spacing 2 :hexpand true
+			(label :class "app-icon-tiny" :text "󰈹" :width 20)
+			(button :class "app-name-small" :onclick "scripts/open_apps --ff" :hexpand true "Firefox")
+			(label :class "app-icon-tiny" :text "󰍩" :width 20)
+			(button :class "app-name-small" :onclick "scripts/open_apps --tg" :hexpand true "Telegram")
+			(label :class "app-icon-tiny" :text "󰙯" :width 20)
+			(button :class "app-name-small" :onclick "scripts/open_apps --dc" :hexpand true "Discord"))
+		(box :orientation "h" :spacing 2 :hexpand true
+			(label :class "app-icon-tiny" :text "󱓧" :width 20)
+			(button :class "app-name-small" :onclick "scripts/open_apps --ob" :hexpand true "Obsidian")
+			(label :class "app-icon-tiny" :text "󰆍" :width 20)
+			(button :class "app-name-small" :onclick "scripts/open_apps --gt" :hexpand true "Ghostty")
+			(label :class "app-icon-tiny" :text "󰉋" :width 20)
+			(button :class "app-name-small" :onclick "scripts/open_apps --fm" :hexpand true "Thunar"))
+		(box :orientation "h" :spacing 2 :hexpand true
+			(label :class "app-icon-tiny" :text "󰓓" :width 20)
+			(button :class "app-name-small" :onclick "scripts/open_apps --steam" :hexpand true "Steam")
+			(label :class "app-icon-tiny" :text "󰊴" :width 20)
+			(button :class "app-name-small" :onclick "scripts/open_apps --gfn" :hexpand true "GeForce")
+			(label :class "app-icon-tiny" :text "󰽆" :width 20)
+			(button :class "app-name-small" :onclick "scripts/open_apps --plex" :hexpand true "Plex"))))
+
+;; power buttons
+(defwidget logout [] 
+	(box :class "genwin" :vexpand "false" :hexpand "false" 
+		(button :class "btn_logout" :onclick "eww update show_overlay=true && eww open overlay0 && eww open overlay1 && eww open logout_confirm"
+			(label :class "power_icon" :text "󰍃"))))
+(defwidget sleep [] 
+	(box :class "genwin" :vexpand "false" :hexpand "false" 
+		(button :class "btn_sleep" :onclick "eww update show_overlay=true && eww open overlay0 && eww open overlay1 && eww open sleep_confirm"
+			(label :class "power_icon" :text "󰤄"))))
+(defwidget reboot [] 
+	(box :class "genwin" :vexpand "false" :hexpand "false" 
+		(button :class "btn_reboot" :onclick "eww update show_overlay=true && eww open overlay0 && eww open overlay1 && eww open reboot_confirm"
+			(label :class "power_icon" :text "󰜉"))))
+(defwidget poweroff [] 
+	(box :class "genwin" :vexpand "false" :hexpand "false" 
+		(button :class "btn_poweroff" :onclick "eww update show_overlay=true && eww open overlay0 && eww open overlay1 && eww open poweroff_confirm"
+			(label :class "power_icon" :text "󰐥"))))
+
+;; folders
+(defwidget folders [] 
+	(box :class "genwin" :orientation "v" :spacing 8 :space-evenly false :vexpand false :hexpand false :style "min-height: 398px; min-width: 258px;"
+		;; Title
+		(label :class "folders-title" :halign "center" :text "File Explorer")
+		;; Tree structure
+		(box :orientation "v" :spacing 0 :space-evenly false :vexpand false :valign "start" :style "margin-top: 4px;"
+			;; Home root
+			(box :orientation "h" :spacing 0 :class "folder-item" :space-evenly false
+				(label :class "tree-icon" :text "󰋞" :style "margin-left: 6px;")
+				(label :class "folder-icon" :text " ")
+				(button :class "folder-name" :hexpand true :halign "start" :style "font-weight: bold;" :onclick "scripts/open_apps --fm" "Home"))
+			;; User folders
+			(box :orientation "v" :spacing 0 :space-evenly false :vexpand false :style "margin-left: 10px;"
+				(box :orientation "h" :spacing 0 :class "folder-item" :space-evenly false
+					(label :class "tree-branch" :text "├─")
+					(label :class "folder-icon" :text "󰲋")
+					(button :class "folder-name" :hexpand true :halign "start" :onclick "scripts/open_folders --dev" "Dev"))
+				(box :orientation "h" :spacing 0 :class "folder-item" :space-evenly false
+					(label :class "tree-branch" :text "├─")
+					(label :class "folder-icon" :text "󰉋")
+					(button :class "folder-name" :hexpand true :halign "start" :onclick "scripts/open_folders --docs" "Documents"))
+				(box :orientation "h" :spacing 0 :class "folder-item" :space-evenly false
+					(label :class "tree-branch" :text "├─")
+					(label :class "folder-icon" :text "󰉍")
+					(button :class "folder-name" :hexpand true :halign "start" :onclick "scripts/open_folders --dl" "Downloads"))
+				(box :orientation "h" :spacing 0 :class "folder-item" :space-evenly false
+					(label :class "tree-branch" :text "├─")
+					(label :class "folder-icon" :text "󰎈")
+					(button :class "folder-name" :hexpand true :halign "start" :onclick "scripts/open_folders --music" "Music"))
+				(box :orientation "h" :spacing 0 :class "folder-item" :space-evenly false
+					(label :class "tree-branch" :text "└─")
+					(label :class "folder-icon" :text "󰉏")
+					(button :class "folder-name" :hexpand true :halign "start" :onclick "scripts/open_folders --pics" "Pictures")))
+			;; Config folders
+			(box :orientation "h" :spacing 0 :class "folder-item" :style "margin-top: 12px;" :space-evenly false
+				(label :class "tree-icon" :text "󰒓" :style "margin-left: 6px;")
+				(label :class "folder-icon" :text " ")
+				(label :class "folder-name" :halign "start" :style "font-weight: bold;" :text "Config"))
+			(box :orientation "v" :spacing 0 :space-evenly false :vexpand false :style "margin-left: 10px;"
+				(box :orientation "h" :spacing 0 :class "folder-item" :space-evenly false
+					(label :class "tree-branch" :text "├─")
+					(label :class "folder-icon" :text "󱁿")
+					(button :class "folder-name" :hexpand true :halign "start" :onclick "scripts/open_folders --cfg" ".config"))
+				(box :orientation "h" :spacing 0 :class "folder-item" :space-evenly false
+					(label :class "tree-branch" :text "└─")
+					(label :class "folder-icon" :text "󱁿")
+					(button :class "folder-name" :hexpand true :halign "start" :onclick "scripts/open_folders --local" ".local")))
+			;; Drives section
+			(box :orientation "h" :spacing 0 :class "folder-item" :style "margin-top: 12px;" :space-evenly false
+				(label :class "tree-icon" :text "󰋊" :style "margin-left: 6px;")
+				(label :class "folder-icon" :text " ")
+				(label :class "folder-name" :halign "start" :style "font-weight: bold;" :text "Drives"))
+			(box :orientation "v" :spacing 0 :space-evenly false :vexpand false :style "margin-left: 10px;"
+				(box :orientation "h" :spacing 0 :class "folder-item" :space-evenly false
+					(label :class "tree-branch" :text "├─")
+					(label :class "folder-icon" :text "󱛟")
+					(button :class "folder-name" :hexpand true :halign "start" :onclick "scripts/open_folders --media" "Media"))
+				(box :orientation "h" :spacing 0 :class "folder-item" :space-evenly false
+					(label :class "tree-branch" :text "└─")
+					(label :class "folder-icon" :text "󰓓")
+					(button :class "folder-name" :hexpand true :halign "start" :onclick "scripts/open_folders --steam" "Steam"))))
+		;; Spacer to fill remaining height
+		(box :vexpand true)))
+
+;; overlay
+(defwidget modal_overlay []
+	(box :class "overlay"))
+
+;; confirmation dialogs
+(defwidget confirm_dialog [action title message window_name] 
+	(box :class "confirm_dialog" :orientation "v" :spacing 20 :space-evenly false
+		(label :class "confirm_title" :text title)
+		(label :class "confirm_message" :text message :wrap true)
+		(box :orientation "h" :spacing 20 :halign "center"
+			(button :class "confirm_yes" :onclick "${action} && eww close overlay0 && eww close overlay1" "Yes")
+			(button :class "confirm_no" :onclick "eww close ${window_name}_confirm && eww close overlay0 && eww close overlay1" "No"))))
+
+(defwidget logout_confirm_widget []
+	(confirm_dialog :action "openbox --exit" 
+					:title "Logout"
+					:message "Are you sure you want to logout?"
+					:window_name "logout"))
+
+(defwidget sleep_confirm_widget []
+	(confirm_dialog :action "systemctl suspend && eww close sleep_confirm" 
+					:title "Sleep"
+					:message "Are you sure you want to suspend?"
+					:window_name "sleep"))
+
+(defwidget reboot_confirm_widget []
+	(confirm_dialog :action "systemctl reboot" 
+					:title "Reboot"
+					:message "Are you sure you want to reboot?"
+					:window_name "reboot"))
+
+(defwidget poweroff_confirm_widget []
+	(confirm_dialog :action "systemctl poweroff" 
+					:title "Power Off"
+					:message "Are you sure you want to power off?"
+					:window_name "poweroff"))
+
+;; ** Windows *************************************************************************
+
+
+;; background
+(defwindow background :stacking "bg" :focusable "false" :monitor 0 
+	    :geometry (geometry :x 0 :y 0 :width "2560px" :height "1440px")
+					(bg))
+
+;; profile
+(defwindow profile :stacking "bg" :focusable "false" :monitor 0 
+	    :geometry (geometry :x 490 :y 300 :width 300 :height 300)
+					(user))
+
+;; system
+(defwindow system :stacking "bg" :focusable "false" :monitor 0 
+	    :geometry (geometry :x 490 :y 620 :width 300 :height 460)
+					(system))
+
+;; clock
+(defwindow clock :stacking "bg" :focusable "false" :monitor 0 
+	    :geometry (geometry :x 810 :y 300 :width 460 :height 140)
+					(clock))
+
+;; music (moved up and made compact)
+(defwindow music :stacking "bg" :focusable "false" :monitor 0 
+	    :geometry (geometry :x 810 :y 460 :width 460 :height 140)
+					(music))
+
+;; uptime (moved down)
+(defwindow uptime :stacking "bg" :focusable "false" :monitor 0 
+	    :geometry (geometry :x 810 :y 620 :width 220 :height 140)
+					(uptime))
+
+;; network (moved down)
+(defwindow network :stacking "bg" :focusable "false" :monitor 0 
+	    :geometry (geometry :x 810 :y 780 :width 220 :height 140)
+					(network))
+
+;; vpn (new widget)
+(defwindow vpn :stacking "bg" :focusable "false" :monitor 0 
+	    :geometry (geometry :x 1050 :y 620 :width 220 :height 300)
+					(vpn))
+
+;; social
+(defwindow social :stacking "bg" :focusable "false" :monitor 0 
+	    :geometry (geometry :x 810 :y 940 :width 930 :height 140)
+					(social))
+
+;; weather
+(defwindow weather :stacking "bg" :focusable "false" :monitor 0 
+	    :geometry (geometry :x 1290 :y 300 :width 450 :height 300)
+					(weather))
+
+;; apps
+(defwindow apps :stacking "bg" :focusable "false" :monitor 0 
+	    :geometry (geometry :x 1290 :y 620 :width 450 :height 300)
+					(apps))
+
+;; logout
+(defwindow logout :stacking "bg" :focusable "false" :monitor 0 
+	    :geometry (geometry :x 1760 :y 300 :width 140 :height 140)
+					(logout))
+
+;; sleep
+(defwindow sleep :stacking "bg" :focusable "false" :monitor 0 
+	    :geometry (geometry :x 1920 :y 300 :width 140 :height 140)
+					(sleep))
+
+;; reboot
+(defwindow reboot :stacking "bg" :focusable "false" :monitor 0 
+	    :geometry (geometry :x 1760 :y 460 :width 140 :height 140)
+					(reboot))
+
+;; poweroff
+(defwindow poweroff :stacking "bg" :focusable "false" :monitor 0 
+	    :geometry (geometry :x 1920 :y 460 :width 140 :height 140)
+					(poweroff))
+
+;; folders
+(defwindow folders :stacking "bg" :focusable "false" :monitor 0 
+	    :geometry (geometry :x 1760 :y 620 :width 300 :height 460)
+					(folders))
+
+;; overlay windows
+(defwindow overlay0 :stacking "bg" :focusable "false" :monitor 0
+	    :geometry (geometry :x 0 :y 0 :width "100%" :height "100%")
+					(modal_overlay))
+
+(defwindow overlay1 :stacking "bg" :focusable "false" :monitor 1
+	    :geometry (geometry :x 0 :y 0 :width "100%" :height "100%")
+					(modal_overlay))
+
+;; confirmation dialogs
+(defwindow logout_confirm :stacking "overlay" :focusable "true" :monitor 0
+	    :geometry (geometry :x 1280 :y 720 :width 400 :height 200 :anchor "center")
+					(logout_confirm_widget))
+
+(defwindow sleep_confirm :stacking "overlay" :focusable "true" :monitor 0
+	    :geometry (geometry :x 1280 :y 720 :width 400 :height 200 :anchor "center")
+					(sleep_confirm_widget))
+
+(defwindow reboot_confirm :stacking "overlay" :focusable "true" :monitor 0
+	    :geometry (geometry :x 1280 :y 720 :width 400 :height 200 :anchor "center")
+					(reboot_confirm_widget))
+
+(defwindow poweroff_confirm :stacking "overlay" :focusable "true" :monitor 0
+	    :geometry (geometry :x 1280 :y 720 :width 400 :height 200 :anchor "center")
+					(poweroff_confirm_widget))
+

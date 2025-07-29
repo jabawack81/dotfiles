@@ -1,0 +1,94 @@
+###############################################################
+# Custom verbs for broot
+###############################################################
+
+verbs: [
+    # Edit with neovim
+    {
+        invocation: edit
+        shortcut: e
+        execution: "nvim {file}"
+        leave_broot: false
+    }
+    
+    # Open with default application (Linux)
+    {
+        invocation: open
+        shortcut: o
+        execution: "xdg-open {file}"
+        leave_broot: false
+        os_family: "unix"
+    }
+    
+    # Open with default application (macOS)
+    {
+        invocation: open
+        shortcut: o
+        execution: "open {file}"
+        leave_broot: false
+        os_family: "macos"
+    }
+    
+    # Create a new file
+    {
+        invocation: create {new_file}
+        execution: "touch {directory}/{new_file}"
+        leave_broot: false
+    }
+    
+    # Create a new directory  
+    {
+        invocation: mkdir {new_dir}
+        execution: "mkdir -p {directory}/{new_dir}"
+        leave_broot: false
+    }
+    
+    # Git status in directory
+    {
+        invocation: "git status"
+        shortcut: gs
+        execution: "git -C {directory} status"
+        leave_broot: false
+    }
+    
+    # Copy path to clipboard (Linux)
+    {
+        invocation: "copy path"
+        shortcut: cp
+        execution: "echo -n {file} | wl-copy"
+        leave_broot: false
+        os_family: "unix"
+    }
+    
+    # Copy path to clipboard (macOS)
+    {
+        invocation: "copy path"
+        shortcut: cp  
+        execution: "echo -n {file} | pbcopy"
+        leave_broot: false
+        os_family: "macos"
+    }
+    
+    # View in bat with syntax highlighting
+    {
+        invocation: view
+        shortcut: v
+        execution: "bat {file}"
+        leave_broot: false
+    }
+    
+    # Open terminal in directory
+    {
+        invocation: terminal
+        shortcut: t
+        execution: "ghostty --working-directory {directory}"
+        leave_broot: false
+    }
+    
+    # Search file contents with ripgrep
+    {
+        invocation: "rg {pattern}"
+        execution: "rg -i {pattern} {directory}"
+        leave_broot: false
+    }
+]

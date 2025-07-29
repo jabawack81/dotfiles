@@ -1,0 +1,188 @@
+#!/bin/bash
+
+# Default cover image
+DEFAULT_COVER="/home/paolo/dotfiles/common/eww/images/music.png"
+COVER="/tmp/.music_cover.jpg"
+
+## Get status
+get_status() {
+    status=$(playerctl status 2>/dev/null)
+    position=$(playerctl position 2>/dev/null)
+    duration=$(playerctl metadata mpris:length 2>/dev/null)
+    player=$(playerctl -l 2>/dev/null | head -1)
+    
+    if [[ "$status" == "Playing" ]]; then
+        # Check if it's a finished YouTube video
+        if [[ "$player" == "firefox"* ]] && [[ -n "$duration" ]] && [[ -n "$position" ]]; then
+            duration_sec=$((duration / 1000000))
+            position_int=${position%.*}
+            if (( position_int >= duration_sec )); then
+                echo "󰓛"  # Stop icon for finished video
+            else
+                echo "󰏤"
+            fi
+        else
+            echo "󰏤"
+        fi
+    elif [[ "$status" == "Paused" ]]; then
+        echo "󰐊"
+    else
+        echo "󰐊"
+    fi
+}
+
+## Get song
+get_song() {
+    song=$(playerctl metadata title 2>/dev/null)
+    if [[ -z "$song" ]]; then
+        echo "No Song Playing"
+    else
+        echo "$song"
+    fi
+}
+
+## Get artist
+get_artist() {
+    artist=$(playerctl metadata artist 2>/dev/null)
+    if [[ -z "$artist" ]]; then
+        echo "No Artist"
+    else
+        echo "$artist"
+    fi
+}
+
+## Get time percentage
+get_time() {
+    position=$(playerctl position 2>/dev/null)
+    duration=$(playerctl metadata mpris:length 2>/dev/null)
+    player=$(playerctl -l 2>/dev/null | head -1)
+    
+    if [[ -z "$position" ]] || [[ -z "$duration" ]]; then
+        echo "0"
+    else
+        # Convert from microseconds to seconds
+        duration=$((duration / 1000000))
+        
+        # YouTube workaround - if position >= duration, it's likely finished
+        if [[ "$player" == "firefox"* ]] && (( ${position%.*} >= duration )); then
+            echo "100"
+        elif [[ $duration -gt 0 ]]; then
+            percentage=$(echo "scale=2; ($position / $duration) * 100" | bc)
+            # Cap at 100%
+            if (( $(echo "$percentage > 100" | bc -l) )); then
+                echo "100"
+            else
+                echo "${percentage%.*}"
+            fi
+        else
+            echo "0"
+        fi
+    fi
+}
+
+## Get current time
+get_ctime() {
+    position=$(playerctl position 2>/dev/null)
+    duration=$(playerctl metadata mpris:length 2>/dev/null)
+    player=$(playerctl -l 2>/dev/null | head -1)
+    
+    if [[ -z "$position" ]]; then
+        echo "0:00"
+    else
+        # Convert from microseconds to seconds for duration check
+        duration_sec=$((duration / 1000000))
+        position_int=${position%.*}
+        
+        # YouTube workaround - show actual end time if at or past duration
+        if [[ "$player" == "firefox"* ]] && (( position_int >= duration_sec )); then
+            minutes=$((duration_sec / 60))
+            seconds=$((duration_sec % 60))
+            printf "%d:%02d\n" "$minutes" "$seconds"
+        else
+            minutes=$((position_int / 60))
+            seconds=$((position_int % 60))
+            printf "%d:%02d\n" "$minutes" "$seconds"
+        fi
+    fi
+}
+
+## Get total time
+get_ttime() {
+    duration=$(playerctl metadata mpris:length 2>/dev/null)
+    if [[ -z "$duration" ]]; then
+        echo "0:00"
+    else
+        # Convert from microseconds to seconds
+        duration=$((duration / 1000000))
+        minutes=$((duration / 60))
+        seconds=$((duration % 60))
+        printf "%d:%02d\n" "$minutes" "$seconds"
+    fi
+}
+
+## Get cover
+get_cover() {
+    art_url=$(playerctl metadata mpris:artUrl 2>/dev/null)
+    
+    if [[ -z "$art_url" ]]; then
+        echo "$DEFAULT_COVER"
+    else
+        # Handle different URL schemes
+        if [[ "$art_url" == file://* ]]; then
+            # Local file
+            local_path="${art_url#file://}"
+            if [[ -f "$local_path" ]]; then
+                echo "$local_path"
+            else
+                echo "$DEFAULT_COVER"
+            fi
+        elif [[ "$art_url" == http* ]]; then
+            # Remote URL - download it
+            curl -s "$art_url" -o "$COVER" 2>/dev/null
+            if [[ -f "$COVER" ]]; then
+                echo "$COVER"
+            else
+                echo "$DEFAULT_COVER"
+            fi
+        else
+            echo "$DEFAULT_COVER"
+        fi
+    fi
+}
+
+## Execute accordingly
+case "$1" in
+    --song)
+        get_song
+        ;;
+    --artist)
+        get_artist
+        ;;
+    --status)
+        get_status
+        ;;
+    --time)
+        get_time
+        ;;
+    --cover)
+        get_cover
+        ;;
+    --ctime)
+        get_ctime
+        ;;
+    --ttime)
+        get_ttime
+        ;;
+    --toggle)
+        playerctl play-pause
+        ;;
+    --next)
+        playerctl next
+        ;;
+    --prev)
+        playerctl previous
+        ;;
+    *)
+        echo "Usage: $0 [--song|--artist|--status|--time|--cover|--ctime|--ttime|--toggle|--next|--prev]"
+        ;;
+esac

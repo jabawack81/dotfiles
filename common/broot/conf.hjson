@@ -1,0 +1,46 @@
+###############################################################
+# Broot configuration for dotfiles
+###############################################################
+
+# Default flags - show git info by default
+default_flags: -g
+
+# Terminal title
+terminal_title: "broot: {file-name} [{git-name}]"
+reset_terminal_title_on_exit: true
+
+# Date/Time format
+date_time_format: "%Y-%m-%d %H:%M"
+
+# Modal mode - vim-like keybindings
+modal: true
+
+# Special paths
+special_paths: {
+    "/home/*/dotfiles" : "no-enter"  # Avoid entering .git heavy directories
+    "**/.git" : "hide"
+    "**/node_modules" : "hide"
+    "**/.cache" : "hide"
+}
+
+# Icons - use nerd fonts
+icon_theme: nerdfont
+
+# True colors
+true_colors: true
+
+# Show selection mark
+show_selection_mark: true
+
+# Imports
+imports: [
+    verbs.hjson
+    {
+        luma: [
+            dark
+            unknown
+        ]
+        file: skins/nord.hjson
+    }
+]
+

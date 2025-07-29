@@ -1,0 +1,99 @@
+// Common waybar module definitions
+{
+	// Arrow decorations
+	"custom/left-arrow-dark": {
+		"format": "\ue0b2",
+		"tooltip": false
+	},
+	"custom/left-arrow-light": {
+		"format": "\ue0b2",
+		"tooltip": false
+	},
+	"custom/right-arrow-dark": {
+		"format": "\ue0b0",
+		"tooltip": false
+	},
+	"custom/right-arrow-light": {
+		"format": "\ue0b0",
+		"tooltip": false
+	},
+	
+	// Clock modules
+	"clock#1": {
+		"format": "{:%a}",
+		"tooltip-format": "<tt><small>{calendar}</small></tt>",
+		"calendar": {
+			"mode": "year",
+			"mode-mon-col": 3,
+			"weeks-pos": "right",
+			"on-scroll": 1,
+			"on-click-right": "mode",
+			"format": {
+				"months": "<span color='#ffead3'><b>{}</b></span>",
+				"days": "<span color='#ecc6d9'><b>{}</b></span>",
+				"weeks": "<span color='#99ffdd'><b>W{}</b></span>",
+				"weekdays": "<span color='#ffcc66'><b>{}</b></span>",
+				"today": "<span color='#ff6699'><b><u>{}</u></b></span>"
+			}
+		}
+	},
+	"clock#2": {
+		"format": "{:%H:%M}",
+		"tooltip-format": "{:%Y-%m-%d | %H:%M:%S}",
+		"interval": 1
+	},
+	"clock#3": {
+		"format": "{:%m-%d}",
+		"tooltip-format": "<span size='12pt' font='monospace'>{:%B %d, %Y}</span>"
+	},
+	
+	// Audio
+	"pulseaudio": {
+		"format": "󰕾  {volume:2}%",
+		"format-bluetooth": "{icon}  {volume}%",
+		"format-muted": "MUTE",
+		"format-icons": {
+			"headphones": "",
+			"default": ["", ""]
+		},
+		"scroll-step": 5,
+		"on-click": "pamixer -t",
+		"on-click-right": "pavucontrol"
+	},
+	
+	// System resources
+	"memory": {
+		"interval": 5,
+		"format": "󰍛  {}%"
+	},
+	"cpu": {
+		"interval": 5,
+		"format": "󰻠  {usage:2}%"
+	},
+	"disk": {
+		"interval": 5,
+		"format": "󰋊  {percentage_free:2}%",
+		"path": "/home/"
+	},
+	
+	// Workspaces
+	"hyprland/workspaces": {
+		"format": "{name}",
+		"format-icons": {
+			"active": "",
+			"default": ""
+		}
+	},
+	
+	// Power menu
+	"custom/power": {
+		"format": "⏻",
+		"on-click": "bash ~/.config/waybar_common/power-menu.sh"
+	},
+	
+	// System tray
+	"tray": {
+		"icon-size": 20,
+		"spacing": 5
+	}
+}

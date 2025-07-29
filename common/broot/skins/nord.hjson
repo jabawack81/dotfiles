@@ -1,0 +1,106 @@
+###############################################################
+# Nord theme for broot
+# Based on the Nord color palette: https://www.nordtheme.com/
+###############################################################
+
+skin: {
+    # Base colors - Nord Polar Night
+    default: "rgb(216, 222, 233) rgb(46, 52, 64)"        # nord4 on nord0
+    tree: "rgb(136, 192, 208) none"                      # nord8 (frost blue)
+    file: "none none"
+    
+    # Directory colors - Nord Frost
+    directory: "rgb(136, 192, 208) none bold"            # nord8 (frost blue)
+    exe: "rgb(163, 190, 140) none"                       # nord14 (green)
+    link: "rgb(180, 142, 173) none"                      # nord15 (purple)
+    pruning: "rgb(76, 86, 106) none italic"              # nord3 (muted)
+    
+    # Permissions - Nord Snow Storm  
+    perm__: "rgb(216, 222, 233) none"                    # nord4
+    perm_r: "rgb(235, 203, 139) none"                    # nord13 (yellow)
+    perm_w: "rgb(208, 135, 112) none"                    # nord11 (red)
+    perm_x: "rgb(163, 190, 140) none"                    # nord14 (green)
+    
+    # Owner and dates
+    owner: "rgb(136, 192, 208) none"                     # nord8 (frost blue)
+    group: "rgb(129, 161, 193) none"                     # nord9 (frost blue)
+    dates: "rgb(143, 188, 187) none"                     # nord7 (frost green)
+    
+    # Special files
+    sparse: "rgb(208, 135, 112) none"                    # nord11 (red)
+    git_branch: "rgb(143, 188, 187) none"                # nord7 (frost green)
+    git_insertions: "rgb(163, 190, 140) none"            # nord14 (green)
+    git_deletions: "rgb(208, 135, 112) none"             # nord11 (red)
+    git_status_current: "rgb(143, 188, 187) none"        # nord7
+    git_status_modified: "rgb(235, 203, 139) none"       # nord13 (yellow)
+    git_status_new: "rgb(163, 190, 140) none bold"       # nord14 (green)
+    git_status_ignored: "rgb(76, 86, 106) none"          # nord3 (muted)
+    git_status_conflicted: "rgb(208, 135, 112) none bold" # nord11 (red)
+    git_status_other: "rgb(180, 142, 173) none bold"     # nord15 (purple)
+    
+    # Selection and matching
+    selected_line: "none rgb(59, 66, 82)"                # on nord1
+    char_match: "rgb(235, 203, 139) none underlined"     # nord13 (yellow)
+    file_error: "rgb(191, 97, 106) none italic"          # nord11 (red)
+    flag_label: "rgb(216, 222, 233) none"                # nord4
+    flag_value: "rgb(180, 142, 173) none bold"           # nord15 (purple)
+    
+    # Input
+    input: "rgb(216, 222, 233) none"                     # nord4
+    status_error: "rgb(216, 222, 233) rgb(191, 97, 106)" # nord4 on nord11
+    status_job: "rgb(59, 66, 82) rgb(235, 203, 139)"     # nord1 on nord13
+    status_normal: "none rgb(59, 66, 82)"                # on nord1
+    status_italic: "rgb(180, 142, 173) rgb(59, 66, 82) italic" # nord15 on nord1
+    status_bold: "rgb(143, 188, 187) rgb(59, 66, 82) bold"     # nord7 on nord1
+    status_code: "rgb(136, 192, 208) rgb(59, 66, 82)"          # nord8 on nord1
+    status_ellipsis: "none rgb(59, 66, 82)"              # on nord1
+    
+    # Purpose and hex
+    purpose_normal: "none none"
+    purpose_italic: "rgb(180, 142, 173) none italic"     # nord15
+    purpose_bold: "rgb(180, 142, 173) none bold"         # nord15
+    purpose_ellipsis: "none none"
+    
+    # Scrollbar  
+    scrollbar_track: "rgb(59, 66, 82) none"              # nord1
+    scrollbar_thumb: "rgb(76, 86, 106) none"             # nord3
+    
+    # Help  
+    help_paragraph: "none none"
+    help_bold: "rgb(235, 203, 139) none bold"            # nord13
+    help_italic: "rgb(180, 142, 173) none italic"        # nord15
+    help_code: "rgb(143, 188, 187) rgb(59, 66, 82)"      # nord7 on nord1
+    help_headers: "rgb(235, 203, 139) none"              # nord13
+    help_table_border: "rgb(76, 86, 106) none"           # nord3
+    
+    # Preview area
+    preview_title: "rgb(216, 222, 233) rgb(46, 52, 64)"  # nord4 on nord0
+    preview: "rgb(216, 222, 233) rgb(46, 52, 64)"        # nord4 on nord0
+    preview_line_number: "rgb(76, 86, 106) none"         # nord3
+    preview_match: "rgb(235, 203, 139) none underlined"  # nord13
+    
+    # Hex preview
+    hex_null: "rgb(76, 86, 106) none"                    # nord3
+    hex_ascii_graphic: "rgb(143, 188, 187) none"         # nord7
+    hex_ascii_whitespace: "rgb(163, 190, 140) none"      # nord14
+    hex_ascii_other: "rgb(180, 142, 173) none"           # nord15
+    hex_non_ascii: "rgb(208, 135, 112) none"             # nord11
+    
+    # Staging area
+    staging_area_title: "rgb(216, 222, 233) rgb(46, 52, 64) bold" # nord4 on nord0
+    
+    # Mode indications
+    mode_command_mark: "rgb(208, 135, 112) none bold"    # nord11
+    
+    # Good to bad colors  
+    good_to_bad_0: "rgb(163, 190, 140) none"             # nord14 (green)
+    good_to_bad_1: "rgb(143, 188, 187) none"             # nord7
+    good_to_bad_2: "rgb(136, 192, 208) none"             # nord8
+    good_to_bad_3: "rgb(129, 161, 193) none"             # nord9
+    good_to_bad_4: "rgb(180, 142, 173) none"             # nord15
+    good_to_bad_5: "rgb(235, 203, 139) none"             # nord13
+    good_to_bad_6: "rgb(235, 203, 139) none"             # nord13
+    good_to_bad_7: "rgb(208, 135, 112) none"             # nord11
+    good_to_bad_8: "rgb(208, 135, 112) none bold"        # nord11
+    good_to_bad_9: "rgb(191, 97, 106) none bold"         # nord11 (darker red)
+}

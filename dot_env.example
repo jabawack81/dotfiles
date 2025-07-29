@@ -1,0 +1,20 @@
+# Environment Variables for Dotfiles Setup
+# Copy this file to .env and fill in your values (or set as environment variables)
+
+# Git Configuration
+# Set these to your preferred git user name and email
+# GIT_USER_NAME="Your Name"
+# GIT_USER_EMAIL="your.email@example.com"
+
+# SSH Signing Key
+# Your SSH public key for git commit signing
+# SSH_SIGNING_KEY="ssh-ed25519 AAAAC3Nza..."
+
+# Weather API (for eww widgets on desktop)
+# Get a free API key from openweathermap.org
+# WEATHER_API_KEY="your_openweathermap_api_key"
+# WEATHER_CITY_ID="your_city_id"
+
+# Note: 
+# - If not set, the playbook will use the default values from the original configuration
+# - For sensitive values, consider using a password manager like 1Password instead

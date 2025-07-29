@@ -1,0 +1,177 @@
+#!/bin/bash
+
+## Files and Data
+PREV_TOTAL=0
+PREV_IDLE=0
+cpuFile="/tmp/.cpu_usage"
+
+## Get CPU usage
+get_cpu() {
+	if [[ -f "${cpuFile}" ]]; then
+		fileCont=$(cat "${cpuFile}")
+		PREV_TOTAL=$(echo "${fileCont}" | head -n 1)
+		PREV_IDLE=$(echo "${fileCont}" | tail -n 1)
+	fi
+
+	CPU=(`cat /proc/stat | grep '^cpu '`) # Get the total CPU statistics.
+	unset CPU[0]                          # Discard the "cpu" prefix.
+	IDLE=${CPU[4]}                        # Get the idle CPU time.
+
+	# Calculate the total CPU time.
+	TOTAL=0
+
+	for VALUE in "${CPU[@]:0:4}"; do
+		let "TOTAL=$TOTAL+$VALUE"
+	done
+
+	if [[ "${PREV_TOTAL}" != "" ]] && [[ "${PREV_IDLE}" != "" ]]; then
+		# Calculate the CPU usage since we last checked.
+		let "DIFF_IDLE=$IDLE-$PREV_IDLE"
+		let "DIFF_TOTAL=$TOTAL-$PREV_TOTAL"
+		let "DIFF_USAGE=(1000*($DIFF_TOTAL-$DIFF_IDLE)/$DIFF_TOTAL+5)/10"
+		echo "${DIFF_USAGE}"
+	else
+		echo "?"
+	fi
+
+	# Remember the total and idle CPU times for the next check.
+	echo "${TOTAL}" > "${cpuFile}"
+	echo "${IDLE}" >> "${cpuFile}"
+}
+
+## Get Used memory
+get_mem() {
+	printf "%.0f\n" $(free -m | grep Mem | awk '{print ($3/$2)*100}')
+}
+
+## Get Brightness
+get_blight() {
+	# Default to 100 for desktop systems without backlight control
+	if [[ ! -d /sys/class/backlight ]] || [[ -z "$(ls /sys/class/backlight 2>/dev/null)" ]]; then
+		echo "100"
+		return
+	fi
+	
+	CARD=`ls /sys/class/backlight | head -n 1`
+	
+	if [[ -f "/sys/class/backlight/$CARD/brightness" ]] && [[ -f "/sys/class/backlight/$CARD/max_brightness" ]]; then
+		BNESS=`cat /sys/class/backlight/$CARD/brightness`
+		MAX=`cat /sys/class/backlight/$CARD/max_brightness`
+		PERC="$(($BNESS*100/$MAX))"
+		echo "$PERC"
+	else
+		echo "100"
+	fi
+}
+
+## Get Battery 
+get_battery() {
+	# Check if battery exists (for laptops)
+	BAT=`ls /sys/class/power_supply 2>/dev/null | grep BAT | head -n 1`
+	if [[ -n "$BAT" ]] && [[ -f "/sys/class/power_supply/${BAT}/capacity" ]]; then
+		cat /sys/class/power_supply/${BAT}/capacity
+	else
+		# Return 100 for desktop systems without battery
+		echo "100"
+	fi
+}
+
+## Get Disk Usage
+get_disk() {
+	MOUNT_POINT="$2"
+	if [[ -z "$MOUNT_POINT" ]]; then
+		echo "0"
+		return
+	fi
+	
+	if mountpoint -q "$MOUNT_POINT" 2>/dev/null; then
+		df -h "$MOUNT_POINT" | tail -1 | awk '{print int($5)}'
+	else
+		echo "0"
+	fi
+}
+
+## Get CPU Temperature
+get_temp_cpu() {
+	# Use the same source as waybar for consistency
+	if [[ -f /sys/class/hwmon/hwmon3/temp1_input ]]; then
+		temp=$(cat /sys/class/hwmon/hwmon3/temp1_input 2>/dev/null)
+		if [[ -n "$temp" ]] && [[ "$temp" =~ ^[0-9]+$ ]]; then
+			echo $((temp / 1000))
+		else
+			echo "0"
+		fi
+	elif command -v sensors &> /dev/null; then
+		# Fallback to lm_sensors
+		temp=$(sensors | grep -E "(Package id 0:|Tctl:|CPU)" | head -1 | grep -oE '[0-9]+\.[0-9]+' | head -1)
+		if [[ -n "$temp" ]]; then
+			echo "${temp%.*}"
+		else
+			echo "0"
+		fi
+	elif [[ -f /sys/class/thermal/thermal_zone0/temp ]]; then
+		# Fallback to thermal zone
+		temp=$(cat /sys/class/thermal/thermal_zone0/temp)
+		echo $((temp / 1000))
+	else
+		echo "0"
+	fi
+}
+
+## Get GPU Temperature
+get_temp_gpu() {
+	# Use the same source as waybar for consistency
+	if [[ -f /sys/class/hwmon/hwmon6/temp1_input ]]; then
+		temp=$(cat /sys/class/hwmon/hwmon6/temp1_input 2>/dev/null)
+		if [[ -n "$temp" ]] && [[ "$temp" =~ ^[0-9]+$ ]]; then
+			echo $((temp / 1000))
+			return
+		fi
+	fi
+	
+	# Fallback to AMD GPU detection
+	for card in /sys/class/drm/card*/device/hwmon/hwmon*/temp*_input; do
+		if [[ -f "$card" ]]; then
+			# Check if this is an AMD GPU
+			card_dir=$(echo "$card" | grep -oE "card[0-9]+")
+			vendor=$(cat /sys/class/drm/$card_dir/device/vendor 2>/dev/null)
+			if [[ "$vendor" == "0x1002" ]]; then
+				# AMD GPU found
+				temp=$(cat "$card" 2>/dev/null)
+				if [[ -n "$temp" ]] && [[ "$temp" =~ ^[0-9]+$ ]]; then
+					echo $((temp / 1000))
+					return
+				fi
+			fi
+		fi
+	done
+	
+	# Try nvidia-smi as final fallback
+	if command -v nvidia-smi &> /dev/null; then
+		temp=$(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>/dev/null | head -1)
+		if [[ -n "$temp" ]] && [[ "$temp" =~ ^[0-9]+$ ]]; then
+			echo "$temp"
+			return
+		fi
+	fi
+	
+	# No GPU temperature found
+	echo "0"
+}
+
+## Execute accordingly
+if [[ "$1" == "--cpu" ]]; then
+	get_cpu
+elif [[ "$1" == "--mem" ]]; then
+	get_mem
+elif [[ "$1" == "--blight" ]]; then
+	get_blight
+elif [[ "$1" == "--bat" ]]; then
+	get_battery
+elif [[ "$1" == "--disk" ]]; then
+	get_disk "$@"
+elif [[ "$1" == "--temp-cpu" ]]; then
+	get_temp_cpu
+elif [[ "$1" == "--temp-gpu" ]]; then
+	get_temp_gpu
+fi

@@ -1,0 +1,10 @@
+.DS_Store
+.config/btop/btop.log
+# Claude settings (local)
+settings.local.json
+# Backup files
+backups/
+# Environment variables (contains sensitive data)
+.env
+# Private config example (template only)
+private-config-example/

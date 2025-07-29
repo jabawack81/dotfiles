@@ -1,0 +1,868 @@
+/** Global *******************************************/
+* {
+	all: unset;
+	font-family: "JetBrainsMono Nerd Font", monospace;
+	font-size: 13px;
+}
+
+window {
+	background-color: transparent;
+}
+
+tooltip {
+	background-color: #1a1a1a;
+	color: #fdf6e3;
+}
+
+box {
+	background-color: transparent;
+}
+
+scale {
+	background-color: transparent;
+}
+
+/** Generic window ***********************************/
+.genwin {
+	background-color: #1a1a1a;
+	border: 1px solid rgba(51, 204, 255, 0.3);
+	border-radius: 8px;
+	padding: 16px;
+}
+
+.music-widget {
+	padding: 12px;
+}
+
+/** Network widget compact styling *******************/
+.network .genwin {
+	padding: 16px;
+}
+
+/** Profile ******************************************/
+.face {
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-position: center;
+	min-height: 100px;
+	min-width: 100px;
+	margin: 10px 0px 0px 0px;
+	border-radius: 50px;
+	border: 2px solid #33ccff;
+}
+
+.fullname {
+	color: #fdf6e3;
+	font-size: 18px;
+	font-weight: bold;
+	margin: 5px 0px;
+}
+
+.username {
+	color: #33ccff;
+	font-size: 14px;
+	margin-bottom: 10px;
+}
+
+.sysinfo {
+	color: rgba(253, 246, 227, 0.7);
+	font-size: 12px;
+}
+
+/** System ********************************************/
+.iconcpu {
+	font-size: 24px;
+	color: #33ccff;
+}
+
+.iconmem {
+	font-size: 24px;
+	color: #00ff99;
+}
+
+.icontemp_cpu {
+	font-size: 24px;
+	color: #ff9933;
+}
+
+.icontemp_gpu {
+	font-size: 24px;
+	color: #ff6666;
+}
+
+.icondisk_root {
+	font-size: 24px;
+	color: #B48EAD;
+}
+
+.icondisk_home {
+	font-size: 24px;
+	color: #EBCB8B;
+}
+
+.icondisk_media {
+	font-size: 24px;
+	color: #BF616A;
+}
+
+.icondisk_steam {
+	font-size: 24px;
+	color: #D08770;
+}
+
+.cpu_bar scale trough,
+.mem_bar scale trough,
+.temp_cpu_bar scale trough,
+.temp_gpu_bar scale trough,
+.disk_root_bar scale trough,
+.disk_home_bar scale trough,
+.disk_media_bar scale trough,
+.disk_steam_bar scale trough {
+	background-color: rgba(255, 255, 255, 0.1);
+	border-radius: 4px;
+	min-height: 6px;
+	min-width: 200px;
+}
+
+.cpu_bar scale trough highlight {
+	background-color: #33ccff;
+	border-radius: 4px;
+}
+
+.mem_bar scale trough highlight {
+	background-color: #00ff99;
+	border-radius: 4px;
+}
+
+.temp_cpu_bar scale trough highlight {
+	background-color: #ff9933;
+	border-radius: 4px;
+}
+
+.temp_gpu_bar scale trough highlight {
+	background-color: #ff6666;
+	border-radius: 4px;
+}
+
+.disk_root_bar scale trough highlight {
+	background-color: #B48EAD;
+	border-radius: 4px;
+}
+
+.disk_home_bar scale trough highlight {
+	background-color: #EBCB8B;
+	border-radius: 4px;
+}
+
+.disk_media_bar scale trough highlight {
+	background-color: #BF616A;
+	border-radius: 4px;
+}
+
+.disk_steam_bar scale trough highlight {
+	background-color: #D08770;
+	border-radius: 4px;
+}
+
+/** Clock ********************************************/
+.date_label {
+	color: #33ccff;
+	font-size: 14px;
+	font-weight: bold;
+	margin-bottom: 10px;
+}
+
+.city_label {
+	color: rgba(253, 246, 227, 0.6);
+	font-size: 11px;
+	font-weight: normal;
+}
+
+.time_display {
+	color: #fdf6e3;
+	font-size: 28px;
+	font-weight: bold;
+}
+
+/** Uptime *******************************************/
+.icontimer {
+	color: #00ff99;
+	font-size: 72px;
+	margin-right: 10px;
+}
+
+.iconethernet {
+	color: #33ccff;
+	font-size: 16px;
+	margin: 0;
+	padding: 0;
+}
+
+.iconwifi {
+	color: #00ff99;
+	font-size: 16px;
+	margin: 0;
+	padding: 0;
+}
+
+.icondata {
+	color: #D08770;
+	font-size: 16px;
+	margin: 0;
+	padding: 0;
+}
+
+.icondownload {
+	color: #88C0D0;
+	font-size: 16px;
+	margin: 0;
+	padding: 0;
+}
+
+.iconupload {
+	color: #EBCB8B;
+	font-size: 16px;
+	margin: 0;
+	padding: 0;
+}
+
+.uptime-label {
+	color: rgba(253, 246, 227, 0.6);
+	font-size: 12px;
+	margin: -6px 0 0 0;
+}
+
+.uptime-value {
+	color: #fdf6e3;
+	font-size: 14px;
+	font-weight: bold;
+}
+
+.network-status {
+	color: #fdf6e3;
+	font-size: 9px;
+	min-width: 30px;
+	margin: 0;
+	padding: 0;
+}
+
+.network-ip {
+	color: #fdf6e3;
+	font-size: 14px;
+	font-family: inherit;
+	font-weight: bold;
+	margin: 0;
+	padding: 0;
+}
+
+.network-stats {
+	color: #fdf6e3;
+	font-size: 14px;
+	font-family: inherit;
+	font-weight: bold;
+	margin: 0;
+	padding: 0;
+}
+
+.network-label {
+	color: rgba(253, 246, 227, 0.6);
+	font-size: 12px;
+	margin: -6px 0 0 0;
+}
+
+/** Music ********************************************/
+.music-album-art {
+	min-width: 100px;
+	min-height: 100px;
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+	border-radius: 8px;
+	border: 2px solid rgba(51, 204, 255, 0.3);
+}
+
+.music-song {
+	color: #fdf6e3;
+	font-size: 14px;
+	font-weight: bold;
+}
+
+.music-artist {
+	color: rgba(253, 246, 227, 0.75);
+	font-size: 12px;
+}
+
+.music-time {
+	color: rgba(253, 246, 227, 0.6);
+	font-size: 18px;
+	font-family: monospace;
+}
+
+.music-btn {
+	color: #fdf6e3;
+	font-size: 24px;
+	min-width: 40px;
+	min-height: 40px;
+	margin: 0;
+	padding: 0;
+	background: none;
+	border: none;
+}
+
+.music-btn:hover {
+	color: #33ccff;
+}
+
+.music-btn-play {
+	font-size: 32px;
+	min-width: 50px;
+	min-height: 50px;
+}
+
+/* Original album art styling - keeping for backward compatibility */
+.album_art {
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-position: center;
+	min-height: 180px;
+	min-width: 180px;
+	margin: 20px;
+	border-radius: 8px;
+	border: 2px solid rgba(51, 204, 255, 0.3);
+}
+
+.song {
+	color: #fdf6e3;
+	font-size: 16px;
+	font-weight: bold;
+	margin: 0px 0px 0px 20px;
+}
+
+.artist {
+	color: rgba(253, 246, 227, 0.75);
+	font-size: 14px;
+	margin: 0px 0px 0px 20px;
+}
+
+.btn_prev, .btn_play, .btn_next {
+	font-size: 24px;
+	color: rgba(253, 246, 227, 0.75);
+	margin: 10px;
+}
+
+.btn_prev:hover, .btn_play:hover, .btn_next:hover {
+	color: #33ccff;
+}
+
+.music_bar scale trough {
+	background-color: rgba(255, 255, 255, 0.1);
+	min-height: 4px;
+	min-width: 350px;
+	margin: 0px 20px 20px 20px;
+}
+
+.music_bar scale trough highlight {
+	background-color: #33ccff;
+}
+
+button {
+	background-color: transparent;
+	border: none;
+	padding: 0;
+}
+
+/** Social buttons *******************************/
+button.social-btn {
+	min-width: 108px;
+	min-height: 108px;
+	border-radius: 8px;
+	background-color: transparent;
+	background-size: 72px 72px;
+	background-repeat: no-repeat;
+	background-position: center;
+}
+
+.social-github:hover {
+	background-color: rgba(36, 41, 47, 0.5);
+}
+
+.social-reddit:hover {
+	background-color: rgba(255, 69, 0, 0.3);
+}
+
+.social-twitter:hover {
+	background-color: rgba(29, 161, 242, 0.3);
+}
+
+.social-youtube:hover {
+	background-color: rgba(255, 0, 0, 0.3);
+}
+
+.social-mastodon:hover {
+	background-color: rgba(99, 100, 255, 0.3);
+}
+
+.social-bluesky:hover {
+	background-color: rgba(0, 133, 255, 0.3);
+}
+
+
+/** Weather ******************************************/
+.weather-label {
+	color: rgba(253, 246, 227, 0.6);
+	font-size: 12px;
+	margin: -6px 0 0 0;
+}
+
+.weather-icon {
+	font-size: 36px;
+	color: #fdf6e3;
+	margin: -4px 0;
+}
+
+.weather-temp {
+	color: #fdf6e3;
+	font-size: 20px;
+	font-weight: bold;
+	margin: -2px 0;
+}
+
+.weather-cond {
+	color: rgba(253, 246, 227, 0.7);
+	font-size: 12px;
+	margin: -2px 0 2px 0;
+}
+
+.weather-chance-icon {
+	font-size: 14px;
+	color: rgba(253, 246, 227, 0.7);
+	margin: 0;
+	padding: 0;
+}
+
+.weather-chance {
+	color: rgba(253, 246, 227, 0.9);
+	font-size: 12px;
+	font-weight: bold;
+	margin: 0;
+	padding: 0;
+}
+
+/** Apps *********************************************/
+.apps-widget.genwin {
+	padding: 8px;
+}
+
+.app-compact {
+	padding: 4px 8px;
+	min-width: 85px;
+}
+
+.app-compact:hover {
+	background-color: rgba(51, 204, 255, 0.1);
+	border-radius: 4px;
+}
+
+.app-icon-tiny {
+	color: #33ccff;
+	font-size: 16px;
+}
+
+.app-name-small {
+	color: #fdf6e3;
+	font-size: 11px;
+	background: none;
+	border: none;
+	padding: 0;
+	margin: 0;
+}
+
+.app-compact:hover .app-icon-tiny {
+	color: #fdf6e3;
+}
+
+.app-compact:hover .app-name-small {
+	color: #33ccff;
+}
+
+.app_fox, .app_telegram, .app_discord,
+.app_terminal, .app_files, .app_geany,
+.app_code, .app_gimp, .app_vbox {
+	background-size: 40px;
+	background-repeat: no-repeat;
+	background-position: center;
+	min-height: 60px;
+	min-width: 60px;
+	border-radius: 12px;
+	margin: 3px;
+}
+
+.app_fox {
+	background-color: #FF6611;
+}
+
+.app_telegram {
+	background-color: #2AABEE;
+}
+
+.app_discord {
+	background-color: #5865F2;
+}
+
+.app_terminal {
+	background-color: #1a1a1a;
+	border: 2px solid #33ccff;
+}
+
+.app_files {
+	background-color: #FF9800;
+}
+
+.app_geany {
+	background-color: #F57C00;
+}
+
+.app_code {
+	background-color: #007ACC;
+}
+
+.app_gimp {
+	background-color: #5C5543;
+}
+
+.app_vbox {
+	background-color: #183A5C;
+}
+
+.app_fox:hover {
+	background-color: #ff8844;
+}
+
+.app_telegram:hover {
+	background-color: #5cc3f0;
+}
+
+.app_discord:hover {
+	background-color: #7983f5;
+}
+
+.app_terminal:hover {
+	border-color: #66ddff;
+}
+
+.app_files:hover {
+	background-color: #ffb333;
+}
+
+.app_geany:hover {
+	background-color: #ff9933;
+}
+
+.app_code:hover {
+	background-color: #339bde;
+}
+
+.app_gimp:hover {
+	background-color: #7a7560;
+}
+
+.app_vbox:hover {
+	background-color: #2d5a8a;
+}
+
+/** Power buttons ************************************/
+.logout, .sleep, .reboot, .poweroff {
+	background-color: #1a1a1a;
+	border: 1px solid rgba(51, 204, 255, 0.3);
+	border-radius: 8px;
+	padding: 0;
+}
+
+.powerbutton {
+	background-color: #1a1a1a;
+	border: 1px solid rgba(51, 204, 255, 0.3);
+	border-radius: 8px;
+	padding: 0;
+	min-width: 140px;
+	min-height: 140px;
+}
+
+.btn_logout, .btn_sleep, .btn_reboot, .btn_poweroff {
+	min-width: 140px;
+	min-height: 140px;
+	margin: 0;
+	padding: 0;
+	background: none;
+	border: none;
+}
+
+.power_icon {
+	color: #fdf6e3;
+	font-size: 72px;
+}
+
+.btn_logout:hover .power_icon {
+	color: #EBCB8B;
+}
+
+.btn_sleep:hover .power_icon {
+	color: #88C0D0;
+}
+
+.btn_reboot:hover .power_icon {
+	color: #00ff99;
+}
+
+.btn_poweroff:hover .power_icon {
+	color: #BF616A;
+}
+
+/** Overlay *******************************************/
+.overlay {
+	background-color: rgba(0, 0, 0, 0.7);
+}
+
+/** Confirmation Dialogs ******************************/
+.confirm_dialog {
+	background-color: #1a1a1a;
+	border: 2px solid rgba(51, 204, 255, 0.5);
+	border-radius: 12px;
+	padding: 30px;
+}
+
+.confirm_title {
+	color: #33ccff;
+	font-size: 20px;
+	font-weight: bold;
+}
+
+.confirm_message {
+	color: #fdf6e3;
+	font-size: 16px;
+	margin: 10px 20px;
+}
+
+.confirm_yes, .confirm_no {
+	min-width: 100px;
+	min-height: 40px;
+	border-radius: 6px;
+	font-size: 16px;
+	font-weight: bold;
+	margin: 0 10px;
+}
+
+.confirm_yes {
+	background-color: #BF616A;
+	color: #fdf6e3;
+	border: 1px solid #BF616A;
+}
+
+.confirm_yes:hover {
+	background-color: #D08770;
+	border: 1px solid #D08770;
+}
+
+.confirm_no {
+	background-color: #2d2d2d;
+	color: #fdf6e3;
+	border: 1px solid rgba(51, 204, 255, 0.3);
+}
+
+.confirm_no:hover {
+	background-color: #3d3d3d;
+	border: 1px solid rgba(51, 204, 255, 0.5);
+}
+
+/** Folders ******************************************/
+.folders-title {
+	color: rgba(253, 246, 227, 0.6);
+	font-size: 12px;
+	margin: -6px 0 0 0;
+}
+
+.folder-item {
+	padding: 0;
+}
+
+.folder-item:hover {
+	background-color: rgba(51, 204, 255, 0.1);
+	border-radius: 4px;
+}
+
+.tree-icon {
+	color: #33ccff;
+	font-size: 14px;
+	min-width: 20px;
+}
+
+.tree-branch {
+	color: rgba(253, 246, 227, 0.4);
+	font-size: 25px;
+	font-family: monospace;
+	min-width: 33px;
+}
+
+.folder-icon {
+	color: #33ccff;
+	font-size: 13px;
+	min-width: 20px;
+}
+
+.folder-name {
+	color: #fdf6e3;
+	font-size: 11px;
+	background: none;
+	border: none;
+	padding: 0 0 0 4px;
+	margin: 0;
+}
+
+.folder-item:hover .folder-icon,
+.folder-item:hover .tree-icon {
+	color: #fdf6e3;
+}
+
+.folder-item:hover .folder-name {
+	color: #33ccff;
+}
+
+
+.hddicon {
+	color: #33ccff;
+	font-size: 48px;
+}
+
+.hddperc {
+	color: #fdf6e3;
+	font-size: 24px;
+	font-weight: bold;
+}
+
+.fs_sep {
+	color: rgba(253, 246, 227, 0.75);
+	font-size: 20px;
+	margin: 0px 10px;
+}
+
+.iconfolder1, .iconfolder2, .iconfolder3,
+.iconfolder4, .iconfolder5, .iconfolder6 {
+	color: #fdf6e3;
+	font-size: 36px;
+	margin: 15px;
+}
+
+.iconfolder1:hover, .iconfolder2:hover, .iconfolder3:hover,
+.iconfolder4:hover, .iconfolder5:hover, .iconfolder6:hover {
+	color: #33ccff;
+}
+
+.label_folder1, .label_folder2, .label_folder3,
+.label_folder4, .label_folder5, .label_folder6 {
+	color: rgba(253, 246, 227, 0.75);
+	font-size: 14px;
+	margin: 0px 0px 0px 10px;
+}
+
+.hdd_label {
+	color: #fdf6e3;
+	font-size: 16px;
+	margin: 0px 10px;
+}
+
+/** VPN Widget ***************************************/
+.vpn-label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #88c0d0;
+    margin-bottom: 4px;
+}
+
+.vpn-toggle {
+    border-radius: 40px;
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+
+.vpn-icon {
+    font-size: 42px;
+    margin: 0;
+    padding: 0;
+    padding-top: 2px;
+    padding-left: 2px;
+}
+
+.vpn-connected {
+    background: linear-gradient(135deg, #4cd964 0%, #5ac868 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(76, 217, 100, 0.4);
+}
+
+.vpn-connected:hover {
+    background: linear-gradient(135deg, #5ae074 0%, #6acf78 100%);
+    box-shadow: 0 6px 16px rgba(76, 217, 100, 0.5);
+}
+
+.vpn-disconnected {
+    background: linear-gradient(135deg, #ff3b30 0%, #ff5c5c 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(255, 59, 48, 0.4);
+}
+
+.vpn-disconnected:hover {
+    background: linear-gradient(135deg, #ff4b40 0%, #ff6c6c 100%);
+    box-shadow: 0 6px 16px rgba(255, 59, 48, 0.5);
+}
+
+.vpn-status-text {
+    font-size: 13px;
+    font-weight: bold;
+    color: #d8dee9;
+    margin-top: 4px;
+}
+
+.vpn-info-label {
+    font-size: 14px;
+    color: #88c0d0;
+}
+
+.vpn-info {
+    font-size: 12px;
+    color: #d8dee9;
+    font-weight: bold;
+}
+
+/** Compact Music Widget *****************************/
+.music-album-art-compact {
+    min-width: 105px;
+    min-height: 105px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.music-btn-compact {
+    color: #fdf6e3;
+    font-size: 16px;
+    min-width: 22px;
+    min-height: 22px;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.music-btn-compact:hover {
+    color: #33ccff;
+}
+
+.music_bar_compact scale trough {
+    background-color: rgba(255, 255, 255, 0.1);
+    min-height: 2px;
+    margin: 1px 0;
+}
+
+.music_bar_compact scale trough highlight {
+    background-color: #33ccff;
+}

@@ -1,0 +1,42 @@
+# Default npm packages to install with every Node.js version
+# These packages will be automatically installed when you install a new Node.js version with nodenv
+
+# Essential development tools
+@anthropic/claude-cli
+typescript
+ts-node
+nodemon
+npm-check-updates
+
+# Linting and formatting
+eslint
+prettier
+@typescript-eslint/parser
+@typescript-eslint/eslint-plugin
+
+# Build tools
+@vitejs/plugin-react
+vite
+webpack
+rollup
+
+# Testing
+jest
+vitest
+@types/jest
+@types/node
+
+# Package management
+npm
+yarn
+pnpm
+
+# Utilities
+http-server
+concurrently
+cross-env
+dotenv-cli
+
+# Development servers
+live-server
+serve

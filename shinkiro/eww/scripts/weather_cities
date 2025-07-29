@@ -1,0 +1,104 @@
+#!/bin/bash
+
+# Weather data for multiple cities
+# Uses wttr.in for simple weather queries
+
+cache_dir="$HOME/.cache/eww/weather"
+mkdir -p "$cache_dir"
+
+# Function to get weather for a city
+get_city_weather() {
+    local city=$1
+    local city_clean=$(echo $city | tr '[:upper:]' '[:lower:]' | tr ' ' '_')
+    
+    # Query wttr.in for JSON weather data
+    weather_data=$(curl -sf "https://wttr.in/${city}?format=j1" 2>/dev/null)
+    
+    if [ ! -z "$weather_data" ]; then
+        # Extract current weather data
+        temp=$(echo "$weather_data" | jq -r '.current_condition[0].temp_C' 2>/dev/null || echo "??")
+        condition=$(echo "$weather_data" | jq -r '.current_condition[0].weatherDesc[0].value' 2>/dev/null || echo "Unknown")
+        # Get various chances from the current hour's forecast
+        current_hour=$(date +%H)
+        hour_index=$((current_hour / 3))  # wttr.in provides 3-hour intervals
+        rain_chance=$(echo "$weather_data" | jq -r ".weather[0].hourly[$hour_index].chanceofrain" 2>/dev/null | cut -c1-3 | sed 's/[^0-9]//g' || echo "0")
+        fog_chance=$(echo "$weather_data" | jq -r ".weather[0].hourly[$hour_index].chanceoffog" 2>/dev/null | cut -c1-3 | sed 's/[^0-9]//g' || echo "0")
+        hightemp_chance=$(echo "$weather_data" | jq -r ".weather[0].hourly[$hour_index].chanceofhightemp" 2>/dev/null | cut -c1-3 | sed 's/[^0-9]//g' || echo "0")
+        
+        rain_percent="${rain_chance}%"
+        fog_percent="${fog_chance}%"
+        hightemp_percent="${hightemp_chance}%"
+        
+        # Determine weather icon based on condition
+        icon="?"
+        condition_lower=$(echo "$condition" | tr '[:upper:]' '[:lower:]')
+        if [[ "$condition_lower" == *"clear"* ]] || [[ "$condition_lower" == *"sunny"* ]]; then
+            icon="󰖙"  # sun icon
+        elif [[ "$condition_lower" == *"partly"* ]]; then
+            icon="󰖕"  # partly cloudy
+        elif [[ "$condition_lower" == *"cloudy"* ]] || [[ "$condition_lower" == *"overcast"* ]]; then
+            icon="󰖐"  # cloud
+        elif [[ "$condition_lower" == *"mist"* ]] || [[ "$condition_lower" == *"fog"* ]]; then
+            icon="󰖑"  # fog
+        elif [[ "$condition_lower" == *"rain"* ]] || [[ "$condition_lower" == *"drizzle"* ]]; then
+            icon="󰖗"  # rain
+        elif [[ "$condition_lower" == *"thunder"* ]] || [[ "$condition_lower" == *"storm"* ]]; then
+            icon="󰖓"  # thunder
+        elif [[ "$condition_lower" == *"snow"* ]]; then
+            icon="󰖘"  # snow
+        fi
+        
+        # Save to cache files
+        echo "${temp}°C" > "${cache_dir}/${city_clean}_temp"
+        echo "$condition" > "${cache_dir}/${city_clean}_cond"
+        echo "$rain_percent" > "${cache_dir}/${city_clean}_rain"
+        echo "$fog_percent" > "${cache_dir}/${city_clean}_fog"
+        echo "$hightemp_percent" > "${cache_dir}/${city_clean}_hightemp"
+        echo "$icon" > "${cache_dir}/${city_clean}_icon"
+    else
+        # Fallback values if weather data unavailable
+        echo "??°C" > "${cache_dir}/${city_clean}_temp"
+        echo "Unknown" > "${cache_dir}/${city_clean}_cond"
+        echo "?%" > "${cache_dir}/${city_clean}_rain"
+        echo "?%" > "${cache_dir}/${city_clean}_fog"
+        echo "?%" > "${cache_dir}/${city_clean}_hightemp"
+        echo "?" > "${cache_dir}/${city_clean}_icon"
+    fi
+}
+
+# Parse command line arguments
+case "$1" in
+    --update)
+        # Update all cities
+        get_city_weather "London"
+        get_city_weather "Bologna"
+        get_city_weather "Miami"
+        ;;
+    --temp)
+        city=$(echo $2 | tr '[:upper:]' '[:lower:]' | tr ' ' '_')
+        cat "${cache_dir}/${city}_temp" 2>/dev/null || echo "??°C"
+        ;;
+    --cond)
+        city=$(echo $2 | tr '[:upper:]' '[:lower:]' | tr ' ' '_')
+        cat "${cache_dir}/${city}_cond" 2>/dev/null || echo "Unknown"
+        ;;
+    --rain)
+        city=$(echo $2 | tr '[:upper:]' '[:lower:]' | tr ' ' '_')
+        cat "${cache_dir}/${city}_rain" 2>/dev/null || echo "?%"
+        ;;
+    --fog)
+        city=$(echo $2 | tr '[:upper:]' '[:lower:]' | tr ' ' '_')
+        cat "${cache_dir}/${city}_fog" 2>/dev/null || echo "?%"
+        ;;
+    --hightemp)
+        city=$(echo $2 | tr '[:upper:]' '[:lower:]' | tr ' ' '_')
+        cat "${cache_dir}/${city}_hightemp" 2>/dev/null || echo "?%"
+        ;;
+    --icon)
+        city=$(echo $2 | tr '[:upper:]' '[:lower:]' | tr ' ' '_')
+        cat "${cache_dir}/${city}_icon" 2>/dev/null || echo "?"
+        ;;
+    *)
+        echo "Usage: $0 [--update|--temp|--cond|--precip|--icon] [city]"
+        ;;
+esac
