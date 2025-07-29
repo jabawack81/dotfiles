@@ -1176,8 +1176,6 @@
             group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
             mode: '0644'
       when: hostname == 'kyrios'
-              - rbenv install -l / nodenv install -l - List available versions
-              - rbenv global X.X.X / nodenv global X.X.X - Set global version
               
     - name: Configure common shell environment (all machines)
       block:
