@@ -1,0 +1,211 @@
+* {
+	font-size: 13px;
+	font-family: "JetBrainsMono Nerd Font", monospace;
+}
+
+window#waybar {
+	background: #292b2e;
+	color: #fdf6e3;
+}
+
+/* Arrow elements */
+#custom-left-arrow-dark,
+#custom-left-arrow-light,
+#custom-right-arrow-dark,
+#custom-right-arrow-light {
+	font-size: 18px;
+}
+
+#custom-right-arrow-dark,
+#custom-left-arrow-dark {
+	color: #1a1a1a;
+}
+
+#custom-right-arrow-light,
+#custom-left-arrow-light {
+	color: #292b2e;
+	background: #1a1a1a;
+}
+
+
+/* All modules with dark background */
+#workspaces,
+#clock.1,
+#clock.2,
+#clock.3,
+#pulseaudio,
+#memory,
+#cpu,
+#temperature,
+#custom-temperature-cpu,
+#battery,
+#disk,
+#disk\#media,
+#network,
+#custom-network-status,
+#custom-media,
+#custom-power,
+#tray {
+	background: #1a1a1a;
+}
+
+/* All modules with padding */
+#clock,
+#pulseaudio,
+#memory,
+#cpu,
+#temperature,
+#custom-temperature-cpu,
+#battery,
+#disk,
+#disk\#media,
+#network,
+#custom-network-status,
+#custom-media,
+#custom-power,
+#custom-bedtime {
+	padding: 0 10px;
+}
+
+/* Workspace buttons */
+#workspaces button {
+	padding: 0 2px;
+	color: #5d5653;
+}
+
+#workspaces button.focused {
+	color: #268bd2;
+}
+
+#workspaces button.active {
+	color: #ffffff;
+}
+
+#workspaces button:hover {
+	color: #93a1a1;
+}
+
+/* Module colors */
+#pulseaudio {
+	color: #268bd2;
+}
+
+#memory {
+	color: #2aa198;
+}
+
+#cpu {
+	color: #6c71c4;
+}
+
+#temperature,
+#temperature#cpu,
+#temperature#gpu,
+#custom-temperature-cpu,
+#custom-temperature-gpu,
+#custom-power {
+	color: #dc322f;
+}
+
+#battery {
+	color: #859900;
+}
+
+#disk {
+	color: #b58900;
+}
+
+#network,
+#custom-network-status {
+	color: #93a1a1;
+}
+
+#network.disconnected {
+	color: #dc322f;
+}
+
+#custom-network-status.disconnected {
+	color: #dc322f;
+}
+
+#custom-network-status.connected {
+	color: #859900;
+}
+
+#custom-network-status.error {
+	color: #dc322f;
+}
+
+#custom-media {
+	color: #66cc99;
+}
+
+#custom-media.paused {
+	color: #93a1a1;
+}
+
+#custom-media.inactive {
+	color: #586e75;
+}
+
+/* Unified temperature module */
+#custom-temperature-cpu {
+	background: #1a1a1a;
+	color: #fdf6e3;
+}
+
+#custom-temperature-cpu.warning {
+	background: #dc322f;
+	color: #ffffff;
+}
+
+#custom-temperature-cpu.critical {
+	background: #ff0000;
+	color: #ffffff;
+	animation: blink 1s linear infinite;
+}
+
+@keyframes blink {
+	50% { opacity: 0.5; }
+}
+
+/* Bedtime reminder states */
+#custom-bedtime {
+	background: #1a1a1a;
+}
+
+#custom-bedtime.weekend {
+	color: #268bd2;  /* Blue for weekend */
+}
+
+#custom-bedtime.good {
+	color: #859900;  /* Green - all good */
+}
+
+#custom-bedtime.prepare {
+	color: #b58900;  /* Yellow - prepare for bed */
+}
+
+#custom-bedtime.warning {
+	color: #cb4b16;  /* Orange - should be in bed */
+}
+
+#custom-bedtime.late {
+	color: #dc322f;  /* Red - getting late */
+	animation: blink 2s infinite;
+}
+
+#custom-bedtime.critical {
+	color: #d33682;  /* Magenta - very late */
+	animation: blink 1s infinite;
+}
+
+#custom-bedtime.disaster {
+	color: #dc322f;  /* Red - disaster */
+	animation: blink 0.5s infinite;
+	font-weight: bold;
+}
+
+@keyframes blink {
+	50% { opacity: 0.5; }
+}

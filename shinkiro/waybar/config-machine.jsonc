@@ -1,0 +1,88 @@
+// Shinkiro (Desktop) specific modules
+{
+	"modules-right": [
+		"custom/left-arrow-dark",
+		"custom/media",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"custom/network-status",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"pulseaudio",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"memory",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"cpu",
+		"custom/left-arrow-light",
+		"custom/left-arrow-temp-cpu-before",
+		"custom/temperature-cpu",
+		"custom/left-arrow-temp-cpu-after",
+		"custom/left-arrow-temp-gpu-before",
+		"custom/temperature-gpu",
+		"custom/left-arrow-temp-gpu-after",
+		"custom/left-arrow-dark",
+		"disk",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"disk#media",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"custom/power",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"custom/bedtime",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"tray"
+	],
+	
+	// Desktop-specific module definitions
+	"custom/temperature-gpu": {
+		"interval": 5,
+		"return-type": "json",
+		"exec": "bash ~/.config/waybar/temperature-gpu.sh",
+		"format": "󰢮  {}",
+		"tooltip": true
+	},
+	
+	"disk#media": {
+		"interval": 5,
+		"format": "󰉓  {percentage_free:2}%",
+		"path": "/mnt/media/"
+	},
+	
+	// Temperature-aware arrow modules
+	"custom/left-arrow-temp-cpu-before": {
+		"interval": 5,
+		"exec": "bash ~/.config/waybar_common/arrow-cpu-before.sh",
+		"return-type": "json",
+		"format": "{}",
+		"tooltip": false
+	},
+	
+	"custom/left-arrow-temp-cpu-after": {
+		"interval": 5,
+		"exec": "bash ~/.config/waybar_common/arrow-cpu-after.sh",
+		"return-type": "json",
+		"format": "{}",
+		"tooltip": false
+	},
+	
+	"custom/left-arrow-temp-gpu-before": {
+		"interval": 5,
+		"exec": "bash ~/.config/waybar/arrow-gpu-before.sh",
+		"return-type": "json",
+		"format": "{}",
+		"tooltip": false
+	},
+	
+	"custom/left-arrow-temp-gpu-after": {
+		"interval": 5,
+		"exec": "bash ~/.config/waybar/arrow-gpu-after.sh",
+		"return-type": "json",
+		"format": "{}",
+		"tooltip": false
+	}
+}

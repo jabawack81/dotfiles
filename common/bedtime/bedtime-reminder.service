@@ -1,0 +1,9 @@
+[Unit]
+Description=Bedtime reminder notification
+After=graphical.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/paolo/.config/bedtime/bedtime-check.sh
+Environment="DISPLAY=:0"
+Environment="DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/%U/bus"

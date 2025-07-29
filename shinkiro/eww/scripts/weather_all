@@ -1,0 +1,93 @@
+#!/bin/bash
+
+# Cache directory
+CACHE_DIR="$HOME/.cache/eww/weather"
+mkdir -p "$CACHE_DIR"
+
+# Function to get weather data for a city
+get_weather() {
+    local city="$1"
+    local cache_file="$CACHE_DIR/${city}.json"
+    
+    # Check if cache is less than 5 minutes old
+    if [ -f "$cache_file" ] && [ $(($(date +%s) - $(stat -c %Y "$cache_file" 2>/dev/null || echo 0))) -lt 300 ]; then
+        cat "$cache_file"
+    else
+        # Fetch new data
+        local data=$(curl -s "http://wttr.in/${city}?format=j1" 2>/dev/null)
+        if [ $? -eq 0 ] && [ -n "$data" ]; then
+            echo "$data" > "$cache_file"
+            echo "$data"
+        elif [ -f "$cache_file" ]; then
+            # Use cached data if fetch fails
+            cat "$cache_file"
+        else
+            echo "{}"
+        fi
+    fi
+}
+
+# Get weather for all cities
+london_data=$(get_weather "London")
+bologna_data=$(get_weather "Bologna")
+miami_data=$(get_weather "Miami")
+
+# Extract all data and output as JSON
+cat << EOF
+{
+  "london": {
+    "temp": $(echo "$london_data" | jq -r '.current_condition[0].temp_C // "?"')°,
+    "cond": "$(echo "$london_data" | jq -r '.current_condition[0].weatherDesc[0].value // "Unknown"' | head -c 20)",
+    "rain": "$(echo "$london_data" | jq -r '.weather[0].hourly[4].chanceofrain // "?"')%",
+    "fog": "$(echo "$london_data" | jq -r '.weather[0].hourly[4].chanceoffog // "?"')%",
+    "hightemp": "$(echo "$london_data" | jq -r '.weather[0].hourly[4].chanceofhightemp // "?"')%",
+    "icon": "$(echo "$london_data" | jq -r '.current_condition[0].weatherCode // "?"' | awk '{
+      if ($1 == "113") print "☀"
+      else if ($1 == "116") print "⛅"
+      else if ($1 == "119" || $1 == "122") print "☁"
+      else if ($1 == "143" || $1 == "248" || $1 == "260") print "🌫"
+      else if ($1 == "176" || $1 == "263" || $1 == "266" || $1 == "293" || $1 == "296") print "🌦"
+      else if ($1 == "299" || $1 == "302" || $1 == "305" || $1 == "308") print "🌧"
+      else if ($1 == "200") print "⛈"
+      else if ($1 == "227" || $1 == "230" || $1 == "320" || $1 == "323" || $1 == "326" || $1 == "329" || $1 == "332" || $1 == "335" || $1 == "338" || $1 == "350" || $1 == "368" || $1 == "371" || $1 == "374" || $1 == "377") print "❄"
+      else print "?"
+    }')"
+  },
+  "bologna": {
+    "temp": $(echo "$bologna_data" | jq -r '.current_condition[0].temp_C // "?"')°,
+    "cond": "$(echo "$bologna_data" | jq -r '.current_condition[0].weatherDesc[0].value // "Unknown"' | head -c 20)",
+    "rain": "$(echo "$bologna_data" | jq -r '.weather[0].hourly[4].chanceofrain // "?"')%",
+    "fog": "$(echo "$bologna_data" | jq -r '.weather[0].hourly[4].chanceoffog // "?"')%",
+    "hightemp": "$(echo "$bologna_data" | jq -r '.weather[0].hourly[4].chanceofhightemp // "?"')%",
+    "icon": "$(echo "$bologna_data" | jq -r '.current_condition[0].weatherCode // "?"' | awk '{
+      if ($1 == "113") print "☀"
+      else if ($1 == "116") print "⛅"
+      else if ($1 == "119" || $1 == "122") print "☁"
+      else if ($1 == "143" || $1 == "248" || $1 == "260") print "🌫"
+      else if ($1 == "176" || $1 == "263" || $1 == "266" || $1 == "293" || $1 == "296") print "🌦"
+      else if ($1 == "299" || $1 == "302" || $1 == "305" || $1 == "308") print "🌧"
+      else if ($1 == "200") print "⛈"
+      else if ($1 == "227" || $1 == "230" || $1 == "320" || $1 == "323" || $1 == "326" || $1 == "329" || $1 == "332" || $1 == "335" || $1 == "338" || $1 == "350" || $1 == "368" || $1 == "371" || $1 == "374" || $1 == "377") print "❄"
+      else print "?"
+    }')"
+  },
+  "miami": {
+    "temp": $(echo "$miami_data" | jq -r '.current_condition[0].temp_C // "?"')°,
+    "cond": "$(echo "$miami_data" | jq -r '.current_condition[0].weatherDesc[0].value // "Unknown"' | head -c 20)",
+    "rain": "$(echo "$miami_data" | jq -r '.weather[0].hourly[4].chanceofrain // "?"')%",
+    "fog": "$(echo "$miami_data" | jq -r '.weather[0].hourly[4].chanceoffog // "?"')%",
+    "hightemp": "$(echo "$miami_data" | jq -r '.weather[0].hourly[4].chanceofhightemp // "?"')%",
+    "icon": "$(echo "$miami_data" | jq -r '.current_condition[0].weatherCode // "?"' | awk '{
+      if ($1 == "113") print "☀"
+      else if ($1 == "116") print "⛅"
+      else if ($1 == "119" || $1 == "122") print "☁"
+      else if ($1 == "143" || $1 == "248" || $1 == "260") print "🌫"
+      else if ($1 == "176" || $1 == "263" || $1 == "266" || $1 == "293" || $1 == "296") print "🌦"
+      else if ($1 == "299" || $1 == "302" || $1 == "305" || $1 == "308") print "🌧"
+      else if ($1 == "200") print "⛈"
+      else if ($1 == "227" || $1 == "230" || $1 == "320" || $1 == "323" || $1 == "326" || $1 == "329" || $1 == "332" || $1 == "335" || $1 == "338" || $1 == "350" || $1 == "368" || $1 == "371" || $1 == "374" || $1 == "377") print "❄"
+      else print "?"
+    }')"
+  }
+}
+EOF

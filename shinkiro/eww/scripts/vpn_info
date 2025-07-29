@@ -1,0 +1,40 @@
+#!/bin/bash
+
+case "$1" in
+    --status)
+        state=$(piactl get connectionstate)
+        if [ "$state" = "Connected" ]; then
+            echo "connected"
+        else
+            echo "disconnected"
+        fi
+        ;;
+    --region)
+        piactl get region | tr '[:lower:]' '[:upper:]' | head -c 3
+        ;;
+    --ip)
+        if [ "$(piactl get connectionstate)" = "Connected" ]; then
+            piactl get vpnip || echo "N/A"
+        else
+            echo "Not connected"
+        fi
+        ;;
+    --toggle)
+        state=$(piactl get connectionstate)
+        if [ "$state" = "Connected" ]; then
+            piactl disconnect
+        else
+            piactl connect
+        fi
+        ;;
+    --info)
+        state=$(piactl get connectionstate)
+        if [ "$state" = "Connected" ]; then
+            region=$(piactl get region)
+            ip=$(piactl get vpnip)
+            echo "{\"status\": \"connected\", \"region\": \"$region\", \"ip\": \"$ip\"}"
+        else
+            echo "{\"status\": \"disconnected\", \"region\": \"none\", \"ip\": \"none\"}"
+        fi
+        ;;
+esac
