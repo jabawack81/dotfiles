@@ -271,72 +271,72 @@ window#waybar {
 /* Bedtime arrow styling */
 #custom-left-arrow-bedtime-before.bedtime-lunch {
 	color: #b58900;
-	background: #1a1a1a;
+	background: #292b2e;
 }
 
 #custom-left-arrow-bedtime-after.bedtime-lunch {
-	color: #1a1a1a;
+	color: #292b2e;
 	background: #b58900;
 }
 
 #custom-left-arrow-bedtime-before.bedtime-work {
 	color: #268bd2;
-	background: #1a1a1a;
+	background: #292b2e;
 }
 
 #custom-left-arrow-bedtime-after.bedtime-work {
-	color: #1a1a1a;
+	color: #292b2e;
 	background: #268bd2;
 }
 
 #custom-left-arrow-bedtime-before.bedtime-weekend {
 	color: #d33682;
-	background: #1a1a1a;
+	background: #292b2e;
 }
 
 #custom-left-arrow-bedtime-after.bedtime-weekend {
-	color: #1a1a1a;
+	color: #292b2e;
 	background: #d33682;
 }
 
 #custom-left-arrow-bedtime-before.bedtime-good {
 	color: #859900;
-	background: #1a1a1a;
+	background: #292b2e;
 }
 
 #custom-left-arrow-bedtime-after.bedtime-good {
-	color: #1a1a1a;
+	color: #292b2e;
 	background: #859900;
 }
 
 #custom-left-arrow-bedtime-before.bedtime-info {
 	color: #b58900;
-	background: #1a1a1a;
+	background: #292b2e;
 }
 
 #custom-left-arrow-bedtime-after.bedtime-info {
-	color: #1a1a1a;
+	color: #292b2e;
 	background: #b58900;
 }
 
 #custom-left-arrow-bedtime-before.bedtime-warning {
 	color: #cb4b16;
-	background: #1a1a1a;
+	background: #292b2e;
 }
 
 #custom-left-arrow-bedtime-after.bedtime-warning {
-	color: #1a1a1a;
+	color: #292b2e;
 	background: #cb4b16;
 }
 
 #custom-left-arrow-bedtime-before.bedtime-critical {
 	color: #dc322f;
-	background: #1a1a1a;
+	background: #292b2e;
 	animation: blink 2s linear infinite;
 }
 
 #custom-left-arrow-bedtime-after.bedtime-critical {
-	color: #1a1a1a;
+	color: #292b2e;
 	background: #dc322f;
 	animation: blink 2s linear infinite;
 }
