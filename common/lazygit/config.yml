@@ -50,7 +50,7 @@ keybinding:
 git:
   paging:
     colorArg: always
-    pager: delta --dark --paging=never --line-numbers --hyperlinks
+    pager: delta --dark --paging=never --syntax-theme=Nord
     
   # Use delta for diffs if available
   log:
