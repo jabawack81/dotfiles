@@ -31,9 +31,9 @@
 		"custom/left-arrow-dark",
 		"custom/power",
 		"custom/left-arrow-light",
-		"custom/left-arrow-dark",
+		"custom/left-arrow-bedtime-before",
 		"custom/bedtime",
-		"custom/left-arrow-light",
+		"custom/left-arrow-bedtime-after",
 		"custom/left-arrow-dark",
 		"tray"
 	],
@@ -51,6 +51,32 @@
 		"interval": 5,
 		"format": "󰉓  {percentage_free:2}%",
 		"path": "/mnt/media/"
+	},
+	
+	// Time status module (work hours, lunch, bedtime)
+	"custom/bedtime": {
+		"interval": 30,
+		"exec": "bash ~/.config/bedtime/time-status-waybar.sh",
+		"return-type": "json",
+		"format": "{}",
+		"tooltip": true
+	},
+	
+	// Bedtime-aware arrow modules
+	"custom/left-arrow-bedtime-before": {
+		"interval": 30,
+		"exec": "bash ~/.config/waybar/arrow-bedtime-before.sh",
+		"return-type": "json",
+		"format": "{}",
+		"tooltip": false
+	},
+	
+	"custom/left-arrow-bedtime-after": {
+		"interval": 30,
+		"exec": "bash ~/.config/waybar/arrow-bedtime-after.sh",
+		"return-type": "json",
+		"format": "{}",
+		"tooltip": false
 	},
 	
 	// Temperature-aware arrow modules
