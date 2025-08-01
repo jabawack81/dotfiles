@@ -28,6 +28,7 @@
       - broot
       - lazygit
       - git
+      - git-delta
       - rbenv
       - nodenv
       - fastfetch
@@ -39,6 +40,7 @@
       - github-cli
       - neovim
       - lazygit
+      - git-delta
       - jq
       - ripgrep
       - fzf
@@ -184,7 +186,7 @@
           Skipping package installation on macOS. Please install these packages manually via Homebrew:
           
           Terminal apps:
-          brew install ghostty neovim lazygit jq ripgrep fzf bat htop btop gh broot
+          brew install ghostty neovim lazygit git-delta jq ripgrep fzf bat htop btop gh broot
           
           GUI apps:
           brew install --cask firefox obsidian discord slack telegram
