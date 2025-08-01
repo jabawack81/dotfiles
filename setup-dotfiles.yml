@@ -1331,6 +1331,17 @@
             line: 'COMPLETION_WAITING_DOTS="true"'
             insertafter: "^# COMPLETION_WAITING_DOTS="
             
+        - name: Add fastfetch to end of .zshrc
+          blockinfile:
+            path: "{{ ansible_env.HOME }}/.zshrc"
+            marker: "# {mark} ANSIBLE MANAGED BLOCK - fastfetch"
+            insertafter: EOF
+            block: |
+              # Run fastfetch on shell startup
+              if command -v fastfetch &> /dev/null; then
+                  fastfetch
+              fi
+            
     - name: Show backup summary
       block:
         - name: Check if any backups were created
