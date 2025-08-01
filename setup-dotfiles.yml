@@ -422,7 +422,7 @@
             - item.stat is defined
             - item.stat.exists
             - not item.stat.islnk
-            - item.item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'git']
+            - item.item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr']
           loop_control:
             label: "{{ item.item.path | basename }}"
             
@@ -863,15 +863,6 @@
             
     - name: Configure Git with 1Password SSH signing (all machines)
       block:
-        - name: Ensure .gitconfig has correct ownership
-          file:
-            path: "{{ ansible_env.HOME }}/.gitconfig"
-            owner: "{{ target_user }}"
-            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
-            state: touch
-            mode: '0644'
-          when: running_as_root
-            
         - name: Set Git user name
           git_config:
             name: user.name
@@ -985,6 +976,52 @@
               
               3. Test signing with: git commit -S -m "test" --allow-empty
           when: (is_personal_machine and op_ssh_sign is defined and op_ssh_sign.stat.exists) or (not is_personal_machine and op_ssh_sign_mac is defined and op_ssh_sign_mac.stat.exists)
+            
+    - name: Configure git-delta for enhanced diffs
+      block:
+        - name: Set delta as git pager
+          git_config:
+            name: core.pager
+            value: "delta"
+            scope: global
+            
+        - name: Configure delta settings
+          git_config:
+            name: "{{ item.name }}"
+            value: "{{ item.value }}"
+            scope: global
+          loop:
+            - { name: "delta.navigate", value: "true" }
+            - { name: "delta.light", value: "false" }
+            - { name: "delta.side-by-side", value: "false" }
+            - { name: "delta.syntax-theme", value: "Nord" }
+            - { name: "delta.line-numbers", value: "false" }
+            - { name: "delta.file-style", value: "bold blue" }
+            - { name: "delta.file-decoration-style", value: "none" }
+            - { name: "delta.hunk-header-style", value: "bold cyan" }
+            - { name: "delta.hunk-header-decoration-style", value: "cyan box" }
+            - { name: "delta.minus-style", value: "syntax \"#3b4252\"" }
+            - { name: "delta.minus-emph-style", value: "syntax \"#bf616a\"" }
+            - { name: "delta.plus-style", value: "syntax \"#3b4252\"" }
+            - { name: "delta.plus-emph-style", value: "syntax \"#a3be8c\"" }
+            
+        - name: Configure interactive diff filter
+          git_config:
+            name: interactive.diffFilter
+            value: "delta --color-only"
+            scope: global
+            
+        - name: Set merge conflict style
+          git_config:
+            name: merge.conflictstyle
+            value: "diff3"
+            scope: global
+            
+        - name: Enable color moved detection
+          git_config:
+            name: diff.colorMoved
+            value: "default"
+            scope: global
             
     - name: Install and configure development version managers (all machines)
       block:
