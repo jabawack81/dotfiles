@@ -16,7 +16,9 @@ window#waybar {
 #custom-left-arrow-temp-cpu-before,
 #custom-left-arrow-temp-cpu-after,
 #custom-left-arrow-temp-gpu-before,
-#custom-left-arrow-temp-gpu-after {
+#custom-left-arrow-temp-gpu-after,
+#custom-left-arrow-bedtime-before,
+#custom-left-arrow-bedtime-after {
 	font-size: 16px;
 }
 
@@ -222,4 +224,119 @@ window#waybar {
 
 @keyframes blink {
 	50% { opacity: 0.5; }
+}
+
+/* Bedtime indicator styles */
+#custom-bedtime {
+	padding: 0 10px;
+	background: #1a1a1a;  /* Default dark background */
+}
+
+#custom-bedtime.lunch {
+	color: #fdf6e3;  /* Light text */
+	background: #b58900;  /* Yellow/orange background for lunch */
+}
+
+#custom-bedtime.work {
+	color: #fdf6e3;  /* Light text */
+	background: #268bd2;  /* Blue background for work hours */
+}
+
+#custom-bedtime.weekend {
+	color: #fdf6e3;  /* Light text */
+	background: #d33682;  /* Magenta background for weekend */
+}
+
+#custom-bedtime.good {
+	color: #fdf6e3;  /* Light text */
+	background: #859900;  /* Green background when all good */
+}
+
+#custom-bedtime.info {
+	color: #fdf6e3;  /* Light text */
+	background: #b58900;  /* Yellow background for wind down */
+}
+
+#custom-bedtime.warning {
+	color: #fdf6e3;  /* Light text */
+	background: #cb4b16;  /* Orange background for bedtime */
+}
+
+#custom-bedtime.critical {
+	color: #fdf6e3;  /* Light text */
+	background: #dc322f;  /* Red background for way past bedtime */
+	animation: blink 2s linear infinite;
+}
+
+/* Bedtime arrow styling */
+#custom-left-arrow-bedtime-before.bedtime-lunch {
+	color: #b58900;
+	background: #1a1a1a;
+}
+
+#custom-left-arrow-bedtime-after.bedtime-lunch {
+	color: #1a1a1a;
+	background: #b58900;
+}
+
+#custom-left-arrow-bedtime-before.bedtime-work {
+	color: #268bd2;
+	background: #1a1a1a;
+}
+
+#custom-left-arrow-bedtime-after.bedtime-work {
+	color: #1a1a1a;
+	background: #268bd2;
+}
+
+#custom-left-arrow-bedtime-before.bedtime-weekend {
+	color: #d33682;
+	background: #1a1a1a;
+}
+
+#custom-left-arrow-bedtime-after.bedtime-weekend {
+	color: #1a1a1a;
+	background: #d33682;
+}
+
+#custom-left-arrow-bedtime-before.bedtime-good {
+	color: #859900;
+	background: #1a1a1a;
+}
+
+#custom-left-arrow-bedtime-after.bedtime-good {
+	color: #1a1a1a;
+	background: #859900;
+}
+
+#custom-left-arrow-bedtime-before.bedtime-info {
+	color: #b58900;
+	background: #1a1a1a;
+}
+
+#custom-left-arrow-bedtime-after.bedtime-info {
+	color: #1a1a1a;
+	background: #b58900;
+}
+
+#custom-left-arrow-bedtime-before.bedtime-warning {
+	color: #cb4b16;
+	background: #1a1a1a;
+}
+
+#custom-left-arrow-bedtime-after.bedtime-warning {
+	color: #1a1a1a;
+	background: #cb4b16;
+}
+
+#custom-left-arrow-bedtime-before.bedtime-critical {
+	color: #dc322f;
+	background: #1a1a1a;
+	animation: blink 2s linear infinite;
+}
+
+#custom-left-arrow-bedtime-after.bedtime-critical {
+	color: #1a1a1a;
+	background: #dc322f;
+	animation: blink 2s linear infinite;
 }

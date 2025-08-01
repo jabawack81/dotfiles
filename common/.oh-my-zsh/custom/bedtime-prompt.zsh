@@ -1,18 +1,22 @@
 # Bedtime reminder in shell prompt
 
 bedtime_prompt() {
-    local hour=$(date +%H)
-    local day=$(date +%u)  # 1=Monday, 7=Sunday
+    # Get severity info from central script
+    local result=$($HOME/.config/bedtime/time-status.sh terminal)
     
-    # Only on school nights (Sunday-Thursday nights)
-    if [[ $day -ge 1 && $day -le 4 ]] || [[ $day -eq 7 ]]; then
-        if [[ $hour -eq 22 ]]; then
-            echo "%{$fg_bold[yellow]%}[🌙 Wind down]%{$reset_color%} "
-        elif [[ $hour -eq 23 ]]; then
-            echo "%{$fg_bold[red]%}[😠 GO TO BED!]%{$reset_color%} "
-        elif [[ $hour -ge 0 && $hour -lt 6 ]]; then
-            echo "%{$fg_bold[red]%}[💀 SLEEP NOW!]%{$reset_color%} "
-        fi
+    if [[ -n "$result" ]]; then
+        # Parse the result format: "color:emoji text"
+        local color="${result%%:*}"
+        local content="${result#*:}"
+        
+        case "$color" in
+            yellow)
+                echo "%{$fg_bold[yellow]%}[$content]%{$reset_color%} "
+                ;;
+            red)
+                echo "%{$fg_bold[red]%}[$content]%{$reset_color%} "
+                ;;
+        esac
     fi
 }
 
@@ -21,29 +25,36 @@ PROMPT='$(bedtime_prompt)'$PROMPT
 
 # For agnoster theme specifically, we need to add it differently
 if [[ "$ZSH_THEME" == "agnoster" ]]; then
-    # Agnoster uses a different prompt building method
+    # Define our bedtime prompt segment
     prompt_bedtime() {
-        local hour=$(date +%H)
-        local day=$(date +%u)
+        # Get severity info from central script
+        local severity=$($HOME/.config/bedtime/time-status.sh severity)
+        local emoji=$($HOME/.config/bedtime/time-status.sh emoji)
         
-        if [[ $day -ge 1 && $day -le 4 ]] || [[ $day -eq 7 ]]; then
-            if [[ $hour -eq 22 ]]; then
-                prompt_segment yellow black "🌙"
-            elif [[ $hour -eq 23 ]]; then
-                prompt_segment red white "😠 BED!"
-            elif [[ $hour -ge 0 && $hour -lt 6 ]]; then
-                prompt_segment red white "💀 SLEEP!"
-            fi
-        fi
+        case "$severity" in
+            1)  # Wind down
+                prompt_segment yellow black "$emoji"
+                ;;
+            2)  # Go to bed
+                prompt_segment red white "$emoji BED!"
+                ;;
+            3)  # Way past bedtime
+                prompt_segment red white "$emoji SLEEP!"
+                ;;
+        esac
     }
     
-    # Add to agnoster's prompt builders
+    # Override the original build_prompt function
+    # Note: agnoster's build_prompt is sourced after custom files,
+    # so we need to ensure our function takes precedence
+    
+    # Create our new build_prompt
     build_prompt() {
         RETVAL=$?
         prompt_status
         prompt_virtualenv
         prompt_aws
-        prompt_bedtime  # Add bedtime check
+        prompt_bedtime  # Add bedtime check here
         prompt_context
         prompt_dir
         prompt_git
