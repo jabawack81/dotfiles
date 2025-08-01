@@ -1164,6 +1164,24 @@
             nodenv global $LATEST_NODE
           when: node_installed.stdout == "none"
           
+        - name: Fix rbenv ownership when running as root
+          file:
+            path: "{{ ansible_env.HOME }}/.rbenv"
+            state: directory
+            recurse: yes
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+          when: running_as_root
+          
+        - name: Fix nodenv ownership when running as root
+          file:
+            path: "{{ ansible_env.HOME }}/.nodenv"
+            state: directory
+            recurse: yes
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+          when: running_as_root
+          
         - name: Show version manager setup instructions
           debug:
             msg: |
