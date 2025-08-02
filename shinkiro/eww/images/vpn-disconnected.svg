@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="48" height="48" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield shape -->
+  <path d="M24 2 C24 2, 12 6, 12 6 C12 6, 12 18, 12 26 C12 34, 24 44, 24 44 C24 44, 36 34, 36 26 C36 18, 36 6, 36 6 C36 6, 24 2, 24 2 Z" 
+        fill="#ffffff" 
+        stroke="none"/>
+  <!-- X mark -->
+  <path d="M20 20 L28 28 M28 20 L20 28" 
+        fill="none" 
+        stroke="#ff3b30" 
+        stroke-width="3" 
+        stroke-linecap="round"/>
+</svg>
