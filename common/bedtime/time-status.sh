@@ -61,7 +61,7 @@ get_severity() {
 get_emoji() {
     local severity=$1
     case $severity in
-        -3) echo "🍽️" ;;  # Lunch time
+        -3) echo "🍝" ;;  # Lunch time
         -2) echo "💼" ;;  # Work hours
         -1) echo "🎉" ;;  # Weekend
         0)  echo "😊" ;;  # All good
