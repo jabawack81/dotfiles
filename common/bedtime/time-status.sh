@@ -8,7 +8,7 @@ DAY=${DAY:-$(date +%u)} # 1=Monday, 7=Sunday
 
 # Check if it's a school night (Sunday-Thursday nights)
 is_schoolnight() {
-    [ $DAY -ne 5 ] && [ $DAY -ne 6 ]
+    [ $DAY -eq 7 ] || [ $DAY -ge 1 ] && [ $DAY -le 4 ]
 }
 
 # Check if it's a weekday (Monday-Friday)
