@@ -785,11 +785,8 @@ button.social-btn {
 }
 
 .vpn-icon {
-    font-size: 42px;
     margin: 0;
     padding: 0;
-    padding-top: 2px;
-    padding-left: 2px;
 }
 
 .vpn-connected {

@@ -193,8 +193,11 @@
 				:width 80 :height 80
 				(box :class "vpn-toggle ${VPN_STATUS == 'connected' ? 'vpn-connected' : 'vpn-disconnected'}"
 					:width 80 :height 80
-					:space-evenly true
-					(label :class "vpn-icon" :text "${VPN_STATUS == 'connected' ? '󰦝' : '󰦞'}")))
+					:halign "center" :valign "center"
+					(image :class "vpn-icon" 
+						:path "${VPN_STATUS == 'connected' ? 'images/vpn-connected.svg' : 'images/vpn-disconnected.svg'}"
+						:image-width 48
+						:image-height 48)))
 			(label :class "vpn-status-text" :text "${VPN_STATUS == 'connected' ? 'Protected' : 'Unprotected'}"))
 		(box :orientation "v" :spacing 6 :halign "center" :visible {VPN_STATUS == "connected"}
 			(box :orientation "h" :spacing 8 :halign "center"

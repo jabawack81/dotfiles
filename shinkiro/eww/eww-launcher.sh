@@ -28,4 +28,5 @@ sleep 1
     sleep \
     reboot \
     poweroff \
-    folders
+    folders \
+    vpn
