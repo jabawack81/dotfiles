@@ -115,6 +115,21 @@ get_terminal_format() {
     esac
 }
 
+# Get ANSI background color codes matching waybar CSS
+get_terminal_background() {
+    local severity=$1
+    case $severity in
+        -3) echo "43;30" ;;  # Lunch: yellow bg (#b58900), dark text
+        -2) echo "44;37" ;;  # Work: blue bg (#268bd2), white text
+        -1) echo "45;37" ;;  # Weekend: magenta bg (#d33682), white text
+        0)  echo "42;30" ;;  # All good: green bg (#859900), dark text
+        1)  echo "43;30" ;;  # Wind down: yellow bg (#b58900), dark text
+        2)  echo "41;37" ;;  # Warning: red bg (#cb4b16), white text
+        3)  echo "41;37" ;;  # Critical: red bg (#dc322f), white text
+        *)  echo "" ;;
+    esac
+}
+
 # Get short text for terminal prompt
 get_short_text() {
     local severity=$1
@@ -171,6 +186,11 @@ case "${1:-status}" in
             3)  echo "critical" ;;
             *)  echo "none" ;;
         esac
+        ;;
+    
+    background)
+        # Return ANSI background color codes for terminal
+        get_terminal_background "$SEVERITY"
         ;;
     
     status|*)

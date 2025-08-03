@@ -1,7 +1,11 @@
 #!/bin/bash
 # Test script to display bedtime emoji table for all days and hours
 
-# Bedtime emoji table test script
+# Check if we should use colors (default: yes, unless --no-color is passed)
+USE_COLORS=true
+if [[ "$1" == "--no-color" ]]; then
+  USE_COLORS=false
+fi
 
 # Day names
 DAYS=("Mon" "Tue" "Wed" "Thu" "Fri" "Sat" "Sun")
@@ -12,6 +16,11 @@ TIME_STATUS_SCRIPT="$SCRIPT_DIR/time-status.sh"
 
 echo "🕐 Bedtime System - Complete Hour/Day Emoji Table 🕐"
 echo "======================================================"
+if [ "$USE_COLORS" = true ]; then
+  echo "(Using background colors - run with --no-color to disable)"
+else
+  echo "(Colors disabled)"
+fi
 echo
 
 # Print header with day names
@@ -20,7 +29,7 @@ for day in "${DAYS[@]}"; do
   printf "%6s" "$day"
 done
 echo
-echo "     ┌─────┬─────┬─────┬─────┬─────┬─────┬─────┐"
+echo "     ┌──────┬──────┬──────┬──────┬──────┬──────┬──────┐"
 
 # Loop through all hours (0-23)
 for hour in {0..23}; do
@@ -36,14 +45,25 @@ for hour in {0..23}; do
       emoji="❌"
     fi
 
-    # Display emoji with consistent spacing (accounting for emoji width variations)
-    printf " %s  │" "$emoji"
+    # Display emoji with optional background colors from time-status script
+    if [ "$USE_COLORS" = true ]; then
+      # Get background color from time-status script
+      bg_color=$(HOUR=$hour DAY=$day bash "$TIME_STATUS_SCRIPT" background 2>/dev/null)
+      
+      if [ -n "$bg_color" ]; then
+        printf " \033[%sm %s \033[0m │" "$bg_color" "$emoji"
+      else
+        printf " %s  │" "$emoji"
+      fi
+    else
+      printf " %s  │" "$emoji"
+    fi
   done
   echo ""
 
 done
 
-echo "     └─────┴─────┴─────┴─────┴─────┴─────┴─────┘"
+echo "     └──────┴──────┴──────┴──────┴──────┴──────┴──────┘"
 echo
 
 # Legend
