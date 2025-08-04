@@ -72,7 +72,7 @@ private-config/
 ├── config.yml                      # Main configuration file
 └── logos/                          # Company/organization logos
     ├── default_logo_raw.txt        # Default logo for unknown machines
-    ├── work_logo_raw.txt    # Logo for PaoloFabbri (work laptop)
+    ├── work_logo_raw.txt           # Logo for work machines
     ├── kyrios_logo_raw.txt         # Logo for kyrios (personal laptop)
     └── shinkiro_logo_raw.txt       # Logo for shinkiro (personal desktop)
 ```
