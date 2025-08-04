@@ -219,6 +219,7 @@ return {
       vim.api.nvim_create_autocmd("User", {
         pattern = "LazySync",
         callback = function()
+          vim.notify("LazySync event triggered!", vim.log.levels.INFO)
           -- Small delay to ensure lazy-lock.json is written
           vim.defer_fn(function()
             M.handle_sync_complete()
