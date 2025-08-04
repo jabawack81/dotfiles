@@ -5,7 +5,7 @@
 local M = {}
 
 -- Load configuration
-local config_ok, user_config = pcall(require, "plugins.lazy-auto-commit-config")
+local config_ok, user_config = pcall(require, "config.lazy-auto-commit")
 local config = config_ok and user_config or {
   enabled = true,
   auto_commit = false,
