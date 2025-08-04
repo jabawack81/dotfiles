@@ -134,6 +134,10 @@
       include_vars: "{{ private_config_file }}"
       when: private_config_stat.stat.exists
       
+    - name: Set private config loaded flag
+      set_fact:
+        private_config_loaded: "{{ private_config_stat.stat.exists | default(false) }}"
+      
     - name: Display execution context
       debug:
         msg: |
@@ -141,7 +145,7 @@
           Target user: {{ target_user }}
           Target home: {{ target_home }}
           Root execution: {{ running_as_root }}
-          Private config loaded: {{ private_config_stat.stat.exists }}
+          Private config loaded: {{ private_config_loaded }}
           
     - name: Create backup directory with timestamp
       set_fact:
@@ -365,6 +369,26 @@
       when: oh_my_zsh_installed.stat.exists
       become: "{{ running_as_root }}"
       become_user: "{{ target_user if running_as_root else omit }}"
+      
+    - name: Install private oh-my-zsh plugins (work machines)
+      block:
+        - name: Check if private oh-my-zsh plugins exist
+          stat:
+            path: "{{ dotfiles_dir }}/private-config/oh-my-zsh-plugins"
+          register: private_plugins_dir
+          
+        - name: Copy private plugins
+          copy:
+            src: "{{ dotfiles_dir }}/private-config/oh-my-zsh-plugins/"
+            dest: "{{ oh_my_zsh_dir }}/custom/plugins/"
+            mode: preserve
+            directory_mode: '0755'
+          when: private_plugins_dir.stat.exists
+      when: 
+        - not is_personal_machine
+        - private_config_loaded
+      become: "{{ running_as_root }}"
+      become_user: "{{ target_user if running_as_root else omit }}"
 
     - name: Create scripts directory in PATH
       file:
@@ -518,10 +542,38 @@
       when: ansible_env.HOME is defined
       
     - name: Configure oh-my-zsh plugins
-      replace:
-        path: "{{ ansible_env.HOME }}/.zshrc"
-        regexp: 'plugins=\([^)]*\)'
-        replace: 'plugins=(git zsh-autosuggestions zsh-syntax-highlighting)'
+      block:
+        - name: Set base plugins list
+          set_fact:
+            zsh_plugins: "git zsh-autosuggestions zsh-syntax-highlighting"
+            
+        - name: Check for private plugins
+          find:
+            paths: "{{ oh_my_zsh_dir }}/custom/plugins"
+            file_type: directory
+            excludes:
+              - zsh-autosuggestions
+              - zsh-syntax-highlighting
+              - example
+          register: private_plugins
+          when:
+            - not is_personal_machine
+            - private_config_loaded
+            
+        - name: Add private plugins to list
+          set_fact:
+            zsh_plugins: "{{ zsh_plugins }} {{ private_plugins.files | map(attribute='path') | map('basename') | join(' ') }}"
+          when:
+            - not is_personal_machine
+            - private_config_loaded
+            - private_plugins.files is defined
+            - private_plugins.files | length > 0
+            
+        - name: Update .zshrc plugins
+          replace:
+            path: "{{ ansible_env.HOME }}/.zshrc"
+            regexp: 'plugins=\([^)]*\)'
+            replace: 'plugins=({{ zsh_plugins }})'
       when: ansible_env.HOME is defined
       
     - name: Setup Hyprland with clean symlink structure
@@ -1036,6 +1088,8 @@
             dest: "{{ ansible_env.HOME }}/.rbenv"
             update: no
           when: not rbenv_installed.stat.exists
+          become: "{{ running_as_root }}"
+          become_user: "{{ target_user if running_as_root else omit }}"
           
         - name: Check if ruby-build is installed
           stat:
@@ -1048,6 +1102,8 @@
             dest: "{{ ansible_env.HOME }}/.rbenv/plugins/ruby-build"
             update: no
           when: not ruby_build_installed.stat.exists
+          become: "{{ running_as_root }}"
+          become_user: "{{ target_user if running_as_root else omit }}"
           
         - name: Check if rbenv-default-gems is installed
           stat:
@@ -1060,6 +1116,8 @@
             dest: "{{ ansible_env.HOME }}/.rbenv/plugins/rbenv-default-gems"
             update: no
           when: not rbenv_default_gems_installed.stat.exists
+          become: "{{ running_as_root }}"
+          become_user: "{{ target_user if running_as_root else omit }}"
           
         - name: Link default-gems configuration
           file:
@@ -1067,6 +1125,10 @@
             dest: "{{ ansible_env.HOME }}/.rbenv/default-gems"
             state: link
             force: yes
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+          become: "{{ running_as_root }}"
+          become_user: "{{ target_user if running_as_root else omit }}"
           
         - name: Clean up manual nodenv entry from .zshrc
           lineinfile:
@@ -1085,6 +1147,8 @@
             dest: "{{ ansible_env.HOME }}/.nodenv"
             update: no
           when: not nodenv_installed.stat.exists
+          become: "{{ running_as_root }}"
+          become_user: "{{ target_user if running_as_root else omit }}"
             
         - name: Check if node-build is installed
           stat:
@@ -1098,6 +1162,8 @@
             dest: "{{ ansible_env.HOME }}/.nodenv/plugins/node-build"
             update: no
           when: not node_build_installed.stat.exists
+          become: "{{ running_as_root }}"
+          become_user: "{{ target_user if running_as_root else omit }}"
             
         - name: Check if nodenv-default-packages is installed
           stat:
@@ -1110,6 +1176,8 @@
             dest: "{{ ansible_env.HOME }}/.nodenv/plugins/nodenv-default-packages"
             update: no
           when: not nodenv_default_packages_installed.stat.exists
+          become: "{{ running_as_root }}"
+          become_user: "{{ target_user if running_as_root else omit }}"
           
         - name: Link default-packages configuration
           file:
@@ -1117,6 +1185,10 @@
             dest: "{{ ansible_env.HOME }}/.nodenv/default-packages"
             state: link
             force: yes
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+          become: "{{ running_as_root }}"
+          become_user: "{{ target_user if running_as_root else omit }}"
             
         - name: Add rbenv to .zshrc
           blockinfile:
@@ -1138,13 +1210,18 @@
               
         - name: Check if Ruby is installed
           shell: |
-            source {{ ansible_env.HOME }}/.zshrc && rbenv versions 2>/dev/null | grep -q . || echo "none"
+            if [ -d "{{ ansible_env.HOME }}/.rbenv/versions" ] && [ "$(ls -A {{ ansible_env.HOME }}/.rbenv/versions 2>/dev/null)" ]; then
+              echo "installed"
+            else
+              echo "none"
+            fi
           register: ruby_installed
           changed_when: false
           
         - name: Install latest stable Ruby
           shell: |
-            source {{ ansible_env.HOME }}/.zshrc
+            export PATH="{{ ansible_env.HOME }}/.rbenv/bin:$PATH"
+            eval "$({{ ansible_env.HOME }}/.rbenv/bin/rbenv init -)"
             LATEST_RUBY=$(rbenv install -l 2>/dev/null | grep -E "^[0-9]+\.[0-9]+\.[0-9]+$" | tail -1)
             rbenv install -s $LATEST_RUBY
             rbenv global $LATEST_RUBY
@@ -1152,13 +1229,18 @@
           
         - name: Check if Node is installed
           shell: |
-            source {{ ansible_env.HOME }}/.zshrc && nodenv versions 2>/dev/null | grep -q . || echo "none"
+            if [ -d "{{ ansible_env.HOME }}/.nodenv/versions" ] && [ "$(ls -A {{ ansible_env.HOME }}/.nodenv/versions 2>/dev/null)" ]; then
+              echo "installed"
+            else
+              echo "none"
+            fi
           register: node_installed
           changed_when: false
           
         - name: Install latest stable Node (LTS)
           shell: |
-            source {{ ansible_env.HOME }}/.zshrc
+            export PATH="{{ ansible_env.HOME }}/.nodenv/bin:$PATH"
+            eval "$({{ ansible_env.HOME }}/.nodenv/bin/nodenv init -)"
             LATEST_NODE=$(nodenv install -l 2>/dev/null | grep -E "^[0-9]+\.[0-9]+\.[0-9]+$" | grep -E "^20\." | tail -1)
             nodenv install -s $LATEST_NODE
             nodenv global $LATEST_NODE
