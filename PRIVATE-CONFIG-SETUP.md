@@ -72,7 +72,7 @@ private-config/
 ├── config.yml                      # Main configuration file
 └── logos/                          # Company/organization logos
     ├── default_logo_raw.txt        # Default logo for unknown machines
-    ├── paolofabbri_logo_raw.txt    # Logo for PaoloFabbri (work laptop)
+    ├── work_logo_raw.txt           # Logo for work machines
     ├── kyrios_logo_raw.txt         # Logo for kyrios (personal laptop)
     └── shinkiro_logo_raw.txt       # Logo for shinkiro (personal desktop)
 ```
@@ -92,7 +92,7 @@ weather_api_key: "your_api_key"
 weather_city_id: "your_city_id"
 ```
 
-Company logos (like `boxt_logo_raw.txt`) should be ASCII art files with ANSI color codes.
+Company logos (like `work_logo_raw.txt`) should be ASCII art files with ANSI color codes.
 
 ## Usage
 
