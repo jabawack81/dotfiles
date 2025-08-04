@@ -20,7 +20,6 @@ local prompts = {
 }
 
 return {
-  { import = "plugins.extras.copilot-vim" }, -- Or use { import = "lazyvim.plugins.extras.coding.copilot" },
   {
     "folke/which-key.nvim",
     optional = true,
