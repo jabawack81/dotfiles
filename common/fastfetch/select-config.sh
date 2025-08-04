@@ -13,16 +13,22 @@ if [ -n "$TMUX" ]; then
     IN_TMUX="yes"
 fi
 
-# Only the work machine (paolofabbri) should use a custom logo
-if [ "$HOSTNAME" = "paolofabbri" ]; then
-    if [ -f "$CONFIG_DIR/config-${HOSTNAME}.jsonc" ]; then
-        # Use machine-specific config
-        exec fastfetch --config "$CONFIG_DIR/config-${HOSTNAME}.jsonc" "$@"
-    elif [ -f "$PRIVATE_LOGOS/${HOSTNAME}_logo_raw.txt" ]; then
-        # Use machine-specific logo with default config
-        exec fastfetch --logo-type file-raw --logo "$PRIVATE_LOGOS/${HOSTNAME}_logo_raw.txt" "$@"
+# Determine if this is a personal machine (kyrios or shinkiro) or work machine
+IS_PERSONAL_MACHINE=false
+if [ "$HOSTNAME" = "kyrios" ] || [ "$HOSTNAME" = "shinkiro" ]; then
+    IS_PERSONAL_MACHINE=true
+fi
+
+# Only work machines should use a custom logo from private config
+if [ "$IS_PERSONAL_MACHINE" = false ]; then
+    if [ -f "$CONFIG_DIR/config-work.jsonc" ]; then
+        # Use work machine config with company logo
+        exec fastfetch --config "$CONFIG_DIR/config-work.jsonc" "$@"
+    elif [ -f "$PRIVATE_LOGOS/work_logo_raw.txt" ]; then
+        # Use work logo with default config
+        exec fastfetch --logo-type file-raw --logo "$PRIVATE_LOGOS/work_logo_raw.txt" "$@"
     fi
 fi
 
-# All other machines (including kyrios and shinkiro) use OS logo
+# All other machines (kyrios and shinkiro) use OS logo
 exec fastfetch "$@"
