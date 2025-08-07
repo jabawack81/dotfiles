@@ -2,7 +2,6 @@
 # These packages will be automatically installed when you install a new Node.js version with nodenv
 
 # Essential development tools
-@anthropic/claude-cli
 typescript
 ts-node
 nodemon
