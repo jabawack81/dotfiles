@@ -150,30 +150,9 @@ local function confirm_commit(dotfiles_dir)
   )
 end
 
--- Check if we're in work hours (9:00-18:00 on weekdays)
-local function is_work_hours()
-  local hour = tonumber(os.date("%H"))
-  local day = tonumber(os.date("%w")) -- 0 = Sunday, 6 = Saturday
-  
-  -- Check if it's a weekday (Monday-Friday)
-  if day >= 1 and day <= 5 then
-    -- Check if it's between 9:00 and 18:00
-    if hour >= 9 and hour < 18 then
-      return true
-    end
-  end
-  return false
-end
-
 -- Main handler function
 local function handle_lazy_event()
   if not config.enabled then
-    return
-  end
-  
-  -- Skip during work hours
-  if is_work_hours() then
-    vim.notify("⏰ Skipping auto-commit during work hours (9:00-18:00)", vim.log.levels.INFO)
     return
   end
   
