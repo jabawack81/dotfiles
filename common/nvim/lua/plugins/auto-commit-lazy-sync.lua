@@ -1,7 +1,6 @@
--- Automatically commit lazy-lock.json changes after plugin sync
--- This plugin adds an autocmd that runs after Lazy.nvim sync operations
+-- Auto-commit plugin for lazy-lock.json changes
+-- This version uses a different approach to hook into Lazy events
 
--- Module for handling the auto-commit functionality
 local M = {}
 
 -- Load configuration
@@ -13,6 +12,7 @@ local config = config_ok and user_config or {
     vim.fn.expand("~/.dotfiles"),
     vim.fn.expand("~/dotfiles"),
     vim.fn.expand("~/dev/dotfiles"),
+    vim.fn.expand("~/code/dotfiles"),
   },
   messages = {
     success = "✅ Plugin updates committed and pushed successfully!",
@@ -21,6 +21,9 @@ local config = config_ok and user_config or {
     skipped = "Plugin update commit skipped",
   },
 }
+
+-- Test that plugin is loading
+vim.notify("Auto-commit plugin loaded successfully!", vim.log.levels.INFO)
 
 -- Find the dotfiles directory
 local function find_dotfiles_dir()
@@ -38,14 +41,9 @@ local function is_git_repo(path)
   return vim.fn.isdirectory(git_dir) == 1 or vim.fn.filereadable(git_dir) == 1
 end
 
--- Get the lazy-lock.json path in the dotfiles repo
-local function get_lazy_lock_path(dotfiles_dir)
-  return dotfiles_dir .. "/common/nvim/lazy-lock.json"
-end
-
 -- Check if lazy-lock.json has changes
 local function has_lock_changes(dotfiles_dir)
-  local lazy_lock_path = get_lazy_lock_path(dotfiles_dir)
+  local lazy_lock_path = dotfiles_dir .. "/common/nvim/lazy-lock.json"
   
   -- Check if file exists
   if vim.fn.filereadable(lazy_lock_path) == 0 then
@@ -53,7 +51,7 @@ local function has_lock_changes(dotfiles_dir)
   end
   
   -- Check git status for the specific file
-  local handle = io.popen("cd " .. vim.fn.shellescape(dotfiles_dir) .. " && git status --porcelain " .. vim.fn.shellescape("common/nvim/lazy-lock.json") .. " 2>/dev/null")
+  local handle = io.popen("cd " .. vim.fn.shellescape(dotfiles_dir) .. " && git status --porcelain common/nvim/lazy-lock.json 2>/dev/null")
   if not handle then
     return false
   end
@@ -69,7 +67,7 @@ local function commit_and_push(dotfiles_dir)
   local lazy_lock_path = "common/nvim/lazy-lock.json"
   local timestamp = os.date("%Y-%m-%d at %H:%M")
   
-  local commit_msg = string.format([[update: neovim plugin versions
+  local commit_msg = string.format([[chore: update neovim plugin versions
 
 Updated plugin lockfile on %s
 
@@ -101,7 +99,7 @@ end
 
 -- Show diff of changes
 local function show_changes(dotfiles_dir)
-  local handle = io.popen("cd " .. vim.fn.shellescape(dotfiles_dir) .. " && git diff --stat common/nvim/lazy-lock.json 2>/dev/null")
+  local handle = io.popen("cd " .. vim.fn.shellescape(dotfiles_dir) .. " && git diff common/nvim/lazy-lock.json 2>/dev/null")
   if not handle then
     return "Could not get diff"
   end
@@ -109,38 +107,28 @@ local function show_changes(dotfiles_dir)
   local result = handle:read("*a")
   handle:close()
   
-  return result and result:match("%S") and result or "No changes detected"
+  if result and result:match("%S") then
+    -- Try to get just the summary
+    local summary_handle = io.popen("cd " .. vim.fn.shellescape(dotfiles_dir) .. " && git diff --stat common/nvim/lazy-lock.json 2>/dev/null")
+    if summary_handle then
+      local summary = summary_handle:read("*a")
+      summary_handle:close()
+      return summary
+    end
+    return "Changes detected"
+  else
+    return "No changes detected"
+  end
 end
 
 -- User confirmation dialog
 local function confirm_commit(dotfiles_dir)
   local changes = show_changes(dotfiles_dir)
   
-  local lines = {
-    "Plugin sync completed! Changes detected in lazy-lock.json:",
-    "",
-    changes,
-    "",
-    "Would you like to commit and push these changes?",
-  }
-  
-  -- Split changes into lines and add to dialog
-  local dialog_lines = {}
-  for _, line in ipairs(lines) do
-    if line:find("\n") then
-      for subline in line:gmatch("[^\n]+") do
-        table.insert(dialog_lines, subline)
-      end
-    else
-      table.insert(dialog_lines, line)
-    end
-  end
-  
-  -- Create a simple confirmation using vim.ui.select
   vim.ui.select(
     { "Yes, commit and push", "No, skip" },
     {
-      prompt = "Commit plugin updates?",
+      prompt = "Commit plugin updates?\n\n" .. changes .. "\n",
       format_item = function(item)
         return item
       end,
@@ -162,31 +150,50 @@ local function confirm_commit(dotfiles_dir)
   )
 end
 
+-- Check if we're in work hours (9:00-18:00 on weekdays)
+local function is_work_hours()
+  local hour = tonumber(os.date("%H"))
+  local day = tonumber(os.date("%w")) -- 0 = Sunday, 6 = Saturday
+  
+  -- Check if it's a weekday (Monday-Friday)
+  if day >= 1 and day <= 5 then
+    -- Check if it's between 9:00 and 18:00
+    if hour >= 9 and hour < 18 then
+      return true
+    end
+  end
+  return false
+end
+
 -- Main handler function
-function M.handle_sync_complete()
+local function handle_lazy_event()
   if not config.enabled then
     return
   end
   
-  -- Find dotfiles directory
-  local dotfiles_dir = find_dotfiles_dir()
-  if not dotfiles_dir then
-    -- Silently skip if dotfiles not found - user might not want this feature
+  -- Skip during work hours
+  if is_work_hours() then
+    vim.notify("⏰ Skipping auto-commit during work hours (9:00-18:00)", vim.log.levels.INFO)
     return
   end
   
-  -- Check if it's a git repo
+  local dotfiles_dir = find_dotfiles_dir()
+  if not dotfiles_dir then
+    return
+  end
+  
   if not is_git_repo(dotfiles_dir) then
     return
   end
   
-  -- Check if lazy-lock.json has changes
   if not has_lock_changes(dotfiles_dir) then
+    vim.notify("No changes to lazy-lock.json", vim.log.levels.INFO)
     return
   end
   
   -- Either auto-commit or ask user
   if config.auto_commit then
+    vim.notify("Auto-committing plugin updates...", vim.log.levels.INFO)
     local success, output = commit_and_push(dotfiles_dir)
     if success then
       vim.notify(config.messages.success, vim.log.levels.INFO)
@@ -198,37 +205,26 @@ function M.handle_sync_complete()
   end
 end
 
--- Command to toggle the feature
+-- Set up the autocmd immediately when the plugin loads
+vim.api.nvim_create_autocmd("User", {
+  pattern = { "LazySync", "LazyUpdate", "LazyInstall" },
+  callback = function(ev)
+    -- Delay to ensure lazy-lock.json is written
+    vim.defer_fn(handle_lazy_event, 1000)
+  end,
+  desc = "Auto-commit lazy-lock.json changes",
+})
+
+-- Commands to control the plugin
 vim.api.nvim_create_user_command("LazyAutoCommitToggle", function()
   config.enabled = not config.enabled
   vim.notify("Lazy auto-commit " .. (config.enabled and "enabled" or "disabled"), vim.log.levels.INFO)
 end, { desc = "Toggle automatic commit after plugin sync" })
 
--- Command to toggle auto-commit mode
 vim.api.nvim_create_user_command("LazyAutoCommitAuto", function()
   config.auto_commit = not config.auto_commit
   vim.notify("Lazy auto-commit mode: " .. (config.auto_commit and "automatic" or "prompt"), vim.log.levels.INFO)
 end, { desc = "Toggle automatic commit without confirmation" })
 
--- Plugin spec for LazyVim
-return {
-  {
-    "folke/lazy.nvim",
-    opts = function(_, opts)
-      -- Add autocmd to handle post-sync actions
-      vim.api.nvim_create_autocmd("User", {
-        pattern = "LazySync",
-        callback = function()
-          vim.notify("LazySync event triggered!", vim.log.levels.INFO)
-          -- Small delay to ensure lazy-lock.json is written
-          vim.defer_fn(function()
-            M.handle_sync_complete()
-          end, 100)
-        end,
-        desc = "Handle plugin sync completion",
-      })
-      
-      return opts
-    end,
-  },
-}
+-- Return empty spec since we're just setting up autocmds
+return {}
