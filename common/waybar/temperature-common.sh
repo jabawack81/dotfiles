@@ -38,8 +38,14 @@ gpu)
     source "$TEST_FILE"
     temp="${WAYBAR_GPU_TEMP:-45000}"
   else
-    # For laptops, GPU temperature might not be available
-    temp=$(cat /sys/class/hwmon/hwmon6/temp1_input 2>/dev/null || echo "0")
+    # Find AMD GPU hwmon device
+    for hwmon in /sys/class/hwmon/hwmon*/; do
+      hwmon_name=$(cat "$hwmon/name" 2>/dev/null)
+      if [ "$hwmon_name" = "amdgpu" ]; then
+        temp=$(cat "$hwmon/temp1_input" 2>/dev/null || echo "0")
+        break
+      fi
+    done
   fi
   ;;
 *)
