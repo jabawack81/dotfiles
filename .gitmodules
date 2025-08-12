@@ -4,3 +4,6 @@
 [submodule "private-config"]
 	path = private-config
 	url = git@github.com:jabawack81/dotfiles-private-config.git
+[submodule "common/ghostty/ghostty-shaders"]
+	path = common/ghostty/ghostty-shaders
+	url = git@github.com:hackr-sh/ghostty-shaders.git
