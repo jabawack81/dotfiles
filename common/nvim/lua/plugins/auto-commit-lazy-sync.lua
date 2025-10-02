@@ -1,41 +1,74 @@
 -- Auto-commit plugin for lazy-lock.json changes
--- This version uses a different approach to hook into Lazy events
+-- Robust version with proper error handling and debouncing
 
 local M = {}
 
--- Load configuration
-local config_ok, user_config = pcall(require, "config.lazy-auto-commit")
-local config = config_ok and user_config or {
-  enabled = true,
-  auto_commit = false,
-  auto_push = true,
-  auto_pull = true,
-  dotfiles_paths = {
-    vim.fn.expand("~/.dotfiles"),
-    vim.fn.expand("~/dotfiles"),
-    vim.fn.expand("~/dev/dotfiles"),
-    vim.fn.expand("~/code/dotfiles"),
-  },
-  messages = {
-    success = "✅ Plugin updates committed successfully!",
-    push_success = "✅ Plugin updates pushed successfully!",
-    pull_success = "✅ Pulled latest dotfiles changes",
-    failure = "❌ Failed to commit plugin updates",
-    push_failure = "❌ Failed to push plugin updates",
-    pull_failure = "⚠️ Failed to pull latest changes",
-    no_changes = "No plugin changes to commit",
-    skipped = "Plugin update commit skipped",
-  },
-}
+-- Prevent multiple loads
+if _G.lazy_auto_commit_loaded then
+  return {}
+end
+_G.lazy_auto_commit_loaded = true
 
--- Test that plugin is loading
-vim.notify("Auto-commit plugin loaded successfully!", vim.log.levels.INFO)
+-- Load configuration with validation
+local function load_config()
+  local config_ok, user_config = pcall(require, "config.lazy-auto-commit")
+  local default_config = {
+    enabled = true,
+    auto_commit = false,
+    auto_push = true,
+    auto_pull = true,
+    dotfiles_paths = {
+      vim.fn.expand("~/.dotfiles"),
+      vim.fn.expand("~/dotfiles"),
+      vim.fn.expand("~/dev/dotfiles"),
+      vim.fn.expand("~/code/dotfiles"),
+    },
+    messages = {
+      success = "✅ Plugin updates committed successfully!",
+      push_success = "✅ Plugin updates pushed successfully!",
+      pull_success = "✅ Pulled latest dotfiles changes",
+      failure = "❌ Failed to commit plugin updates",
+      push_failure = "❌ Failed to push plugin updates",
+      pull_failure = "⚠️ Failed to pull latest changes",
+      no_changes = "No plugin changes to commit",
+      skipped = "Plugin update commit skipped",
+    },
+  }
+  
+  if config_ok and type(user_config) == "table" then
+    -- Merge user config with defaults
+    return vim.tbl_deep_extend("force", default_config, user_config)
+  end
+  
+  return default_config
+end
+
+local config = load_config()
+
+-- Utility: Safe shell command execution
+local function execute_command(cmd, cwd)
+  if cwd then
+    cmd = string.format("cd %s && %s", vim.fn.shellescape(cwd), cmd)
+  end
+  
+  local output = vim.fn.system(cmd)
+  local exit_code = vim.v.shell_error
+  
+  return exit_code == 0, output, exit_code
+end
 
 -- Find the dotfiles directory
 local function find_dotfiles_dir()
   for _, path in ipairs(config.dotfiles_paths) do
-    if vim.fn.isdirectory(path) == 1 and vim.fn.filereadable(path .. "/setup-dotfiles.yml") == 1 then
-      return path
+    if vim.fn.isdirectory(path) == 1 then
+      -- Check for setup-dotfiles.yml as a marker
+      if vim.fn.filereadable(path .. "/setup-dotfiles.yml") == 1 then
+        return path
+      end
+      -- Also check for .git directory as fallback
+      if vim.fn.isdirectory(path .. "/.git") == 1 then
+        return path
+      end
     end
   end
   return nil
@@ -43,12 +76,15 @@ end
 
 -- Check if we're in a git repository
 local function is_git_repo(path)
+  if not path then return false end
   local git_dir = path .. "/.git"
   return vim.fn.isdirectory(git_dir) == 1 or vim.fn.filereadable(git_dir) == 1
 end
 
 -- Check if lazy-lock.json has changes
 local function has_lock_changes(dotfiles_dir)
+  if not dotfiles_dir then return false end
+  
   local lazy_lock_path = dotfiles_dir .. "/common/nvim/lazy-lock.json"
   
   -- Check if file exists
@@ -57,96 +93,183 @@ local function has_lock_changes(dotfiles_dir)
   end
   
   -- Check git status for the specific file
-  local handle = io.popen("cd " .. vim.fn.shellescape(dotfiles_dir) .. " && git status --porcelain common/nvim/lazy-lock.json 2>/dev/null")
-  if not handle then
+  local success, output = execute_command(
+    "git status --porcelain common/nvim/lazy-lock.json 2>/dev/null",
+    dotfiles_dir
+  )
+  
+  if not success then
     return false
   end
   
-  local result = handle:read("*a")
-  handle:close()
-  
-  return result and result:match("%S") ~= nil
+  -- Check if there are any changes (output should be non-empty)
+  return output and output:match("%S") ~= nil
 end
 
 -- Create commit and optionally push
 local function commit_and_push(dotfiles_dir, push)
+  if not dotfiles_dir then
+    return false, "No dotfiles directory found"
+  end
+  
   local lazy_lock_path = "common/nvim/lazy-lock.json"
   local timestamp = os.date("%Y-%m-%d at %H:%M")
   
-  local commit_msg = string.format([[chore: update neovim plugin versions
-
-Updated plugin lockfile on %s
-
-🤖 Generated with LazyVim auto-commit
-
-Co-Authored-By: Claude <noreply@anthropic.com>]], timestamp)
+  -- Create commit message
+  local commit_msg = string.format(
+    "chore: update neovim plugin versions\n\n" ..
+    "Updated plugin lockfile on %s\n\n" ..
+    "🤖 Generated with LazyVim auto-commit\n\n" ..
+    "Co-Authored-By: Claude <noreply@anthropic.com>",
+    timestamp
+  )
   
-  -- Change to dotfiles directory and run git commands
-  local commands = {
-    "cd " .. vim.fn.shellescape(dotfiles_dir),
-    "git add " .. vim.fn.shellescape(lazy_lock_path),
-    "git commit -m " .. vim.fn.shellescape(commit_msg),
-  }
+  -- Stage the file
+  local success, output = execute_command(
+    string.format("git add %s", vim.fn.shellescape(lazy_lock_path)),
+    dotfiles_dir
+  )
   
-  -- Add push command if requested
+  if not success then
+    return false, "Failed to stage changes: " .. output
+  end
+  
+  -- Create commit
+  success, output = execute_command(
+    string.format("git commit -m %s", vim.fn.shellescape(commit_msg)),
+    dotfiles_dir
+  )
+  
+  if not success then
+    return false, "Failed to commit: " .. output
+  end
+  
+  -- Push if requested
   if push then
-    table.insert(commands, "git push")
+    success, output = execute_command("git push", dotfiles_dir)
+    if not success then
+      return false, "Commit successful but push failed: " .. output
+    end
   end
   
-  local full_command = table.concat(commands, " && ")
-  
-  -- Run the command
-  local handle = io.popen(full_command .. " 2>&1")
-  if not handle then
-    return false, "Failed to execute git commands"
-  end
-  
-  local output = handle:read("*a")
-  local success = handle:close()
-  
-  return success, output
+  return true, output
 end
 
 -- Show diff of changes
-local function show_changes(dotfiles_dir)
-  local handle = io.popen("cd " .. vim.fn.shellescape(dotfiles_dir) .. " && git diff common/nvim/lazy-lock.json 2>/dev/null")
-  if not handle then
-    return "Could not get diff"
+local function get_changes_summary(dotfiles_dir)
+  if not dotfiles_dir then
+    return "Could not determine dotfiles directory"
   end
   
-  local result = handle:read("*a")
-  handle:close()
+  -- Try to get diff stat first
+  local success, output = execute_command(
+    "git diff --stat common/nvim/lazy-lock.json 2>/dev/null",
+    dotfiles_dir
+  )
   
-  if result and result:match("%S") then
-    -- Try to get just the summary
-    local summary_handle = io.popen("cd " .. vim.fn.shellescape(dotfiles_dir) .. " && git diff --stat common/nvim/lazy-lock.json 2>/dev/null")
-    if summary_handle then
-      local summary = summary_handle:read("*a")
-      summary_handle:close()
-      return summary
-    end
-    return "Changes detected"
-  else
-    return "No changes detected"
+  if success and output:match("%S") then
+    return output
   end
+  
+  -- Check staged changes if no unstaged changes
+  success, output = execute_command(
+    "git diff --cached --stat common/nvim/lazy-lock.json 2>/dev/null",
+    dotfiles_dir
+  )
+  
+  if success and output:match("%S") then
+    return "Staged changes:\n" .. output
+  end
+  
+  return "No changes detected"
 end
 
--- User confirmation dialog
+-- User confirmation dialog (async safe)
 local function confirm_commit(dotfiles_dir)
-  local changes = show_changes(dotfiles_dir)
+  if not dotfiles_dir then
+    vim.notify("No dotfiles directory found", vim.log.levels.ERROR)
+    return
+  end
   
-  vim.ui.select(
-    { "Yes, commit and push", "No, skip" },
-    {
-      prompt = "Commit plugin updates?\n\n" .. changes .. "\n",
-      format_item = function(item)
-        return item
-      end,
-    },
-    function(choice)
-      if choice and choice:match("^Yes") then
-        vim.notify("Committing plugin updates...", vim.log.levels.INFO)
+  local changes = get_changes_summary(dotfiles_dir)
+  
+  -- Schedule UI operations to be safe
+  vim.schedule(function()
+    vim.ui.select(
+      { "Yes, commit and push", "No, skip" },
+      {
+        prompt = "Commit plugin updates?\n\n" .. changes .. "\n",
+        format_item = function(item)
+          return item
+        end,
+      },
+      function(choice)
+        if not choice then
+          -- User cancelled (pressed Esc)
+          vim.notify(config.messages.skipped, vim.log.levels.INFO)
+          return
+        end
         
+        if choice:match("^Yes") then
+          vim.notify("Committing plugin updates...", vim.log.levels.INFO)
+          
+          -- Run commit in background to avoid blocking
+          vim.defer_fn(function()
+            local success, output = commit_and_push(dotfiles_dir, config.auto_push)
+            if success then
+              if config.auto_push then
+                vim.notify(config.messages.push_success, vim.log.levels.INFO)
+              else
+                vim.notify(config.messages.success, vim.log.levels.INFO)
+              end
+            else
+              vim.notify(config.messages.failure .. ":\n" .. (output or "Unknown error"), vim.log.levels.ERROR)
+            end
+          end, 100)
+        else
+          vim.notify(config.messages.skipped, vim.log.levels.INFO)
+        end
+      end
+    )
+  end)
+end
+
+-- Main handler function with built-in debouncing
+local handle_lazy_event_timer = nil
+local function handle_lazy_event()
+  -- Cancel any pending timer
+  if handle_lazy_event_timer then
+    vim.fn.timer_stop(handle_lazy_event_timer)
+    handle_lazy_event_timer = nil
+  end
+  
+  -- Set a new timer to run the actual handler
+  handle_lazy_event_timer = vim.fn.timer_start(1500, function()
+    handle_lazy_event_timer = nil
+    
+    if not config.enabled then
+      return
+    end
+    
+    local dotfiles_dir = find_dotfiles_dir()
+    if not dotfiles_dir then
+      return -- Silently exit if not in a dotfiles directory
+    end
+    
+    if not is_git_repo(dotfiles_dir) then
+      return -- Not a git repository
+    end
+    
+    -- Check for changes in lazy-lock.json
+    if not has_lock_changes(dotfiles_dir) then
+      -- Don't notify when there are no changes
+      return
+    end
+    
+    -- Either auto-commit or ask user
+    if config.auto_commit then
+      vim.notify("Auto-committing plugin updates...", vim.log.levels.INFO)
+      vim.defer_fn(function()
         local success, output = commit_and_push(dotfiles_dir, config.auto_push)
         if success then
           if config.auto_push then
@@ -157,81 +280,75 @@ local function confirm_commit(dotfiles_dir)
         else
           vim.notify(config.messages.failure .. ":\n" .. (output or "Unknown error"), vim.log.levels.ERROR)
         end
-      else
-        vim.notify(config.messages.skipped, vim.log.levels.INFO)
-      end
-    end
-  )
-end
-
--- Main handler function
-local function handle_lazy_event()
-  if not config.enabled then
-    return
-  end
-  
-  local dotfiles_dir = find_dotfiles_dir()
-  if not dotfiles_dir then
-    return
-  end
-  
-  if not is_git_repo(dotfiles_dir) then
-    return
-  end
-  
-  if not has_lock_changes(dotfiles_dir) then
-    vim.notify("No changes to lazy-lock.json", vim.log.levels.INFO)
-    return
-  end
-  
-  -- Either auto-commit or ask user
-  if config.auto_commit then
-    vim.notify("Auto-committing plugin updates...", vim.log.levels.INFO)
-    local success, output = commit_and_push(dotfiles_dir, config.auto_push)
-    if success then
-      if config.auto_push then
-        vim.notify(config.messages.push_success, vim.log.levels.INFO)
-      else
-        vim.notify(config.messages.success, vim.log.levels.INFO)
-      end
+      end, 100)
     else
-      vim.notify(config.messages.failure .. ":\n" .. (output or "Unknown error"), vim.log.levels.ERROR)
+      confirm_commit(dotfiles_dir)
     end
-  else
-    confirm_commit(dotfiles_dir)
-  end
+  end)
 end
 
--- Set up the autocmd immediately when the plugin loads
+-- Set up autocmds with proper grouping
+local augroup = vim.api.nvim_create_augroup("LazyAutoCommit", { clear = true })
+
 vim.api.nvim_create_autocmd("User", {
   pattern = { "LazySync", "LazyUpdate", "LazyInstall" },
+  group = augroup,
   callback = function(ev)
-    -- Delay to ensure lazy-lock.json is written
-    vim.defer_fn(handle_lazy_event, 1000)
+    -- Just call the handler, it has its own debouncing
+    handle_lazy_event()
   end,
   desc = "Auto-commit lazy-lock.json changes",
 })
 
--- Commands to control the plugin
-vim.api.nvim_create_user_command("LazyAutoCommitToggle", function()
-  config.enabled = not config.enabled
-  vim.notify("Lazy auto-commit " .. (config.enabled and "enabled" or "disabled"), vim.log.levels.INFO)
-end, { desc = "Toggle automatic commit after plugin sync" })
+-- Commands to control the plugin (protected against duplicates)
+if not _G.lazy_auto_commit_commands_created then
+  _G.lazy_auto_commit_commands_created = true
+  
+  vim.api.nvim_create_user_command("LazyAutoCommitToggle", function()
+    config.enabled = not config.enabled
+    vim.notify("Lazy auto-commit " .. (config.enabled and "enabled" or "disabled"), vim.log.levels.INFO)
+  end, { desc = "Toggle automatic commit after plugin sync" })
 
-vim.api.nvim_create_user_command("LazyAutoCommitAuto", function()
-  config.auto_commit = not config.auto_commit
-  vim.notify("Lazy auto-commit mode: " .. (config.auto_commit and "automatic" or "prompt"), vim.log.levels.INFO)
-end, { desc = "Toggle automatic commit without confirmation" })
+  vim.api.nvim_create_user_command("LazyAutoCommitAuto", function()
+    config.auto_commit = not config.auto_commit
+    vim.notify("Lazy auto-commit mode: " .. (config.auto_commit and "automatic" or "prompt"), vim.log.levels.INFO)
+  end, { desc = "Toggle automatic commit without confirmation" })
 
-vim.api.nvim_create_user_command("LazyAutoCommitPush", function()
-  config.auto_push = not config.auto_push
-  vim.notify("Lazy auto-push: " .. (config.auto_push and "enabled" or "disabled"), vim.log.levels.INFO)
-end, { desc = "Toggle automatic push after commit" })
+  vim.api.nvim_create_user_command("LazyAutoCommitPush", function()
+    config.auto_push = not config.auto_push
+    vim.notify("Lazy auto-push: " .. (config.auto_push and "enabled" or "disabled"), vim.log.levels.INFO)
+  end, { desc = "Toggle automatic push after commit" })
 
-vim.api.nvim_create_user_command("LazyAutoCommitPull", function()
-  config.auto_pull = not config.auto_pull
-  vim.notify("Lazy auto-pull on startup: " .. (config.auto_pull and "enabled" or "disabled"), vim.log.levels.INFO)
-end, { desc = "Toggle automatic pull at Neovim startup" })
+  vim.api.nvim_create_user_command("LazyAutoCommitPull", function()
+    config.auto_pull = not config.auto_pull
+    vim.notify("Lazy auto-pull on startup: " .. (config.auto_pull and "enabled" or "disabled"), vim.log.levels.INFO)
+  end, { desc = "Toggle automatic pull at Neovim startup" })
+  
+  vim.api.nvim_create_user_command("LazyAutoCommitStatus", function()
+    local status_lines = {
+      "LazyAutoCommit Status:",
+      "  Enabled: " .. tostring(config.enabled),
+      "  Auto-commit: " .. tostring(config.auto_commit),
+      "  Auto-push: " .. tostring(config.auto_push),
+      "  Auto-pull: " .. tostring(config.auto_pull),
+    }
+    
+    local dotfiles_dir = find_dotfiles_dir()
+    if dotfiles_dir then
+      table.insert(status_lines, "  Dotfiles: " .. dotfiles_dir)
+      
+      if has_lock_changes(dotfiles_dir) then
+        table.insert(status_lines, "  Changes: pending")
+      else
+        table.insert(status_lines, "  Changes: none")
+      end
+    else
+      table.insert(status_lines, "  Dotfiles: not found")
+    end
+    
+    vim.notify(table.concat(status_lines, "\n"), vim.log.levels.INFO)
+  end, { desc = "Show LazyAutoCommit status" })
+end
 
 -- Auto-pull function for startup
 local function auto_pull_on_startup()
@@ -244,33 +361,35 @@ local function auto_pull_on_startup()
     return
   end
   
-  -- Run git pull in background
-  local handle = io.popen("cd " .. vim.fn.shellescape(dotfiles_dir) .. " && git pull --ff-only 2>&1")
-  if handle then
-    local output = handle:read("*a")
-    local success = handle:close()
+  -- Run git pull
+  vim.defer_fn(function()
+    local success, output = execute_command("git pull --ff-only 2>&1", dotfiles_dir)
     
     if success then
       if output:match("Already up to date") then
         -- Don't notify if already up to date
       elseif output:match("Fast%-forward") then
         vim.notify(config.messages.pull_success, vim.log.levels.INFO)
+        -- Reload lazy-lock.json if it was updated
+        vim.cmd("Lazy reload")
       else
-        vim.notify("Git pull: " .. output, vim.log.levels.INFO)
+        vim.notify("Git pull: " .. vim.trim(output), vim.log.levels.INFO)
       end
     else
-      -- Only show warning if there was an actual error (not just nothing to pull)
-      if not output:match("Already up to date") then
-        vim.notify(config.messages.pull_failure .. ": " .. output, vim.log.levels.WARN)
+      -- Only show warning if there was an actual error
+      if not output:match("Already up to date") and not output:match("No remote") then
+        vim.notify(config.messages.pull_failure .. ": " .. vim.trim(output), vim.log.levels.WARN)
       end
     end
-  end
+  end, 100)
 end
 
 -- Set up auto-pull on startup
 vim.api.nvim_create_autocmd("VimEnter", {
+  group = augroup,
+  once = true, -- Only run once
   callback = function()
-    -- Delay slightly to not interfere with startup
+    -- Delay to not interfere with startup
     vim.defer_fn(auto_pull_on_startup, 500)
   end,
   desc = "Auto-pull dotfiles on Neovim startup",
