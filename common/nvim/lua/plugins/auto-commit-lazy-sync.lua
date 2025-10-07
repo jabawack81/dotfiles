@@ -17,6 +17,7 @@ local function load_config()
     auto_commit = false,
     auto_push = true,
     auto_pull = true,
+    silent_pull_skip = true,
     dotfiles_paths = {
       vim.fn.expand("~/.dotfiles"),
       vim.fn.expand("~/dotfiles"),
@@ -324,6 +325,34 @@ if not _G.lazy_auto_commit_commands_created then
     vim.notify("Lazy auto-pull on startup: " .. (config.auto_pull and "enabled" or "disabled"), vim.log.levels.INFO)
   end, { desc = "Toggle automatic pull at Neovim startup" })
   
+  vim.api.nvim_create_user_command("LazyAutoCommitPullNow", function()
+    local dotfiles_dir = find_dotfiles_dir()
+    if not dotfiles_dir then
+      vim.notify("No dotfiles directory found", vim.log.levels.ERROR)
+      return
+    end
+    
+    vim.notify("Pulling latest dotfiles changes...", vim.log.levels.INFO)
+    
+    vim.defer_fn(function()
+      -- Force a pull without checking for local changes
+      local success, output = execute_command("git pull --no-rebase --ff-only 2>&1", dotfiles_dir)
+      
+      if success then
+        if output:match("Already up to date") then
+          vim.notify("Already up to date", vim.log.levels.INFO)
+        elseif output:match("Fast%-forward") then
+          vim.notify(config.messages.pull_success, vim.log.levels.INFO)
+          vim.cmd("Lazy reload")
+        else
+          vim.notify("Git pull: " .. vim.trim(output), vim.log.levels.INFO)
+        end
+      else
+        vim.notify("Pull failed: " .. vim.trim(output), vim.log.levels.ERROR)
+      end
+    end, 100)
+  end, { desc = "Manually pull latest dotfiles changes" })
+  
   vim.api.nvim_create_user_command("LazyAutoCommitStatus", function()
     local status_lines = {
       "LazyAutoCommit Status:",
@@ -363,7 +392,32 @@ local function auto_pull_on_startup()
   
   -- Run git pull
   vim.defer_fn(function()
-    local success, output = execute_command("git pull --ff-only 2>&1", dotfiles_dir)
+    -- First check if there are any local changes that would prevent pulling
+    local has_changes, status_output = execute_command("git status --porcelain 2>/dev/null", dotfiles_dir)
+    
+    if has_changes and status_output:match("%S") then
+      -- There are local changes, check if they're significant
+      local diff_success, diff_output = execute_command("git diff --stat 2>/dev/null", dotfiles_dir)
+      
+      -- Only skip pull if there are actual uncommitted changes (not just untracked files)
+      if diff_success and diff_output:match("%S") then
+        -- Skip pull when there are unstaged changes
+        if not config.silent_pull_skip then
+          vim.notify("Auto-pull skipped: uncommitted changes in dotfiles", vim.log.levels.INFO)
+        end
+        return
+      end
+    end
+    
+    -- Check if we need to pull at all
+    local fetch_success, fetch_output = execute_command("git fetch --dry-run 2>&1", dotfiles_dir)
+    if fetch_success and not fetch_output:match("%S") then
+      -- Nothing to fetch, skip pull silently
+      return
+    end
+    
+    -- Try to pull with rebase=false to avoid the rebase error
+    local success, output = execute_command("git pull --no-rebase --ff-only 2>&1", dotfiles_dir)
     
     if success then
       if output:match("Already up to date") then
@@ -376,9 +430,52 @@ local function auto_pull_on_startup()
         vim.notify("Git pull: " .. vim.trim(output), vim.log.levels.INFO)
       end
     else
-      -- Only show warning if there was an actual error
-      if not output:match("Already up to date") and not output:match("No remote") then
-        vim.notify(config.messages.pull_failure .. ": " .. vim.trim(output), vim.log.levels.WARN)
+      -- Conditions that should always be silent (not really errors)
+      local always_silent = {
+        "Already up to date",
+        "No remote",
+        "No upstream",
+        "no tracking information",
+      }
+      
+      -- Conditions related to local changes (honor silent_pull_skip config)
+      local change_related = {
+        "You have unstaged changes",
+        "cannot pull with rebase",
+        "Please commit or stash",
+        "Your local changes",
+        "would be overwritten",
+      }
+      
+      local should_notify = true
+      local is_change_related = false
+      
+      -- Check if it's an always-silent condition
+      for _, condition in ipairs(always_silent) do
+        if output:match(condition) then
+          should_notify = false
+          break
+        end
+      end
+      
+      -- Check if it's a change-related condition
+      if should_notify then
+        for _, condition in ipairs(change_related) do
+          if output:match(condition) then
+            is_change_related = true
+            should_notify = not config.silent_pull_skip
+            break
+          end
+        end
+      end
+      
+      -- Notify based on configuration
+      if should_notify then
+        if is_change_related then
+          vim.notify("Auto-pull skipped: " .. vim.trim(output), vim.log.levels.INFO)
+        else
+          vim.notify(config.messages.pull_failure .. ": " .. vim.trim(output), vim.log.levels.WARN)
+        end
       end
     end
   end, 100)

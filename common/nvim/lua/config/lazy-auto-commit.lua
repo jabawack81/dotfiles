@@ -15,6 +15,10 @@ return {
   -- Automatically pull latest changes at Neovim startup
   auto_pull = true,
   
+  -- Silently skip pull when there are local changes (recommended)
+  -- Set to false if you want to see warnings about why pull was skipped
+  silent_pull_skip = true,
+  
   -- Paths to search for your dotfiles repository
   -- The plugin will try these paths in order
   dotfiles_paths = {
