@@ -8,3 +8,14 @@ backups/
 .env
 # Private config example (template only)
 private-config-example/
+
+# Hyprland cache and fonts (generated locally)
+common/hypr/.cache/
+common/hypr/Fonts/
+kyrios/hypr/.cache/
+kyrios/hypr/Fonts/
+shinkiro/hypr/.cache/
+shinkiro/hypr/Fonts/
+
+# EWW binary (installed via pacman/AUR)
+common/bin/eww
