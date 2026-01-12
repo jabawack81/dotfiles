@@ -4,64 +4,54 @@ gui:
     # Polar Night backgrounds
     lightTheme: false
     activeBorderColor:
-      - "#88c0d0"  # nord8 - frost blue
+      - "#88c0d0" # nord8 - frost blue
       - bold
     inactiveBorderColor:
-      - "#4c566a"  # nord3
+      - "#4c566a" # nord3
     searchingActiveBorderColor:
-      - "#ebcb8b"  # nord13 - yellow
+      - "#ebcb8b" # nord13 - yellow
       - bold
     optionsTextColor:
-      - "#88c0d0"  # nord8
+      - "#88c0d0" # nord8
     selectedLineBgColor:
-      - "#3b4252"  # nord1
+      - "#3b4252" # nord1
     selectedRangeBgColor:
-      - "#434c5e"  # nord2
+      - "#434c5e" # nord2
     cherryPickedCommitBgColor:
-      - "#81a1c1"  # nord9
+      - "#81a1c1" # nord9
     cherryPickedCommitFgColor:
-      - "#2e3440"  # nord0
+      - "#2e3440" # nord0
     unstagedChangesColor:
-      - "#d08770"  # nord12 - orange
+      - "#d08770" # nord12 - orange
     defaultFgColor:
-      - "#d8dee9"  # nord4
-    
+      - "#d8dee9" # nord4
   # Use nerd fonts
   nerdFontsVersion: "3"
-  
   # Show icons
   showFileTree: true
   showIcons: true
-  
   # Border style
   border: rounded
-  
   # Time format
   timeFormat: "2006-01-02 15:04"
   shortTimeFormat: "15:04"
-  
 keybinding:
   universal:
     quit: 'q'
     quit-alt1: '<c-c>'
     return: '<esc>'
     confirm: '<enter>'
-    
 git:
-  paging:
-    colorArg: always
-    pager: delta --dark --paging=never --syntax-theme=Nord
-    
+  pagers:
+    - colorArg: always
+      pager: delta --dark --paging=never --syntax-theme=Nord
   # Use delta for diffs if available
   log:
     showWholeGraph: true
-    
 os:
   editPreset: 'nvim'
-  
 refresher:
   refreshInterval: 10
   fetchInterval: 60
-  
 update:
   method: never
