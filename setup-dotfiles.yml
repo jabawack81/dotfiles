@@ -32,6 +32,7 @@
       - rbenv
       - nodenv
       - fastfetch
+      - opencode
     
     required_packages:
       # Core utilities
@@ -104,6 +105,7 @@
       - 1password
       - 1password-cli
       - wlogout
+      - opencode-bin
       
     # Machine-specific packages
     shinkiro_packages:  # Desktop with AMD GPU
@@ -191,6 +193,7 @@
           
           Terminal apps:
           brew install ghostty neovim lazygit git-delta jq ripgrep fzf bat htop btop gh broot
+          brew install anomalyco/tap/opencode
           
           GUI apps:
           brew install --cask firefox obsidian discord slack telegram
