@@ -106,6 +106,7 @@
       - 1password-cli
       - wlogout
       - opencode-bin
+      - eww
       
     # Machine-specific packages
     shinkiro_packages:  # Desktop with AMD GPU
