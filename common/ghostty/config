@@ -1,3 +1,163 @@
 theme=nord
+
+# ==============================================================================
+# Background
+# ==============================================================================
+
+# Window transparency (0.0 = fully transparent, 1.0 = opaque)
 background-opacity=0.7
+
+# Blur radius for transparent background (macOS/some Linux compositors)
 background-blur-radius=30
+
+# Background image path
+background-image=~/.config/ghostty/bg.jpg
+
+# Background image transparency (0.0 = invisible, 1.0 = fully visible)
+background-image-opacity=0.3
+
+# How to fit the image: contain, cover, or stretch
+background-image-fit=cover
+
+# ==============================================================================
+# Padding
+# ==============================================================================
+
+# Space between terminal content and window edges (in pixels)
+window-padding-x=10
+window-padding-y=10
+
+# Automatically balance padding on all sides
+window-padding-balance=true
+
+# Extend background color into padding area (background, extend, extend-always)
+window-padding-color=extend
+
+# ==============================================================================
+# Cursor
+# ==============================================================================
+
+# Cursor shape: block, bar, underline, block_hollow
+cursor-style=bar
+
+# Enable cursor blinking
+cursor-style-blink=true
+
+# ==============================================================================
+# Mouse & Selection
+# ==============================================================================
+
+# Hide mouse cursor while typing
+mouse-hide-while-typing=true
+
+# Clicking a split focuses it without requiring explicit click
+focus-follows-mouse=true
+
+# Invert foreground/background colors for selection
+selection-invert-fg-bg=true
+
+# ==============================================================================
+# Tabs & Splits
+# ==============================================================================
+
+# Dim unfocused split panes (0.0-1.0)
+unfocused-split-opacity=0.85
+
+# Where new tabs appear: current (after active) or end
+window-new-tab-position=end
+
+# ==============================================================================
+# Quick Terminal (drop-down/quake-style)
+# ==============================================================================
+
+# Position: top, bottom, left, right, center
+quick-terminal-position=top
+
+# Animation speed in seconds
+quick-terminal-animation-duration=0.1
+
+# ==============================================================================
+# Accessibility
+# ==============================================================================
+
+# Minimum contrast ratio between foreground and background (1.0-21.0)
+minimum-contrast=1.1
+
+# ==============================================================================
+# macOS only (these options are ignored on Linux)
+# ==============================================================================
+
+# Titlebar style: native, hidden (no tabs), tabs (minimal with tabs), transparent
+macos-titlebar-style=tabs
+
+# Use Option key as Alt (useful for terminal shortcuts)
+macos-option-as-alt=true
+
+# ==============================================================================
+# Other UI/UX options (uncomment to enable)
+# ==============================================================================
+
+# --- Window ---
+# window-decoration=false              # Remove window borders entirely
+# window-theme=dark                    # Force dark/light theme: auto, system, light, dark, ghostty
+# window-width=120                     # Initial width in columns
+# window-height=40                     # Initial height in rows
+# window-save-state=always             # Remember window size/position: default, never, always
+# window-inherit-working-directory=true # New windows start in same directory
+# window-inherit-font-size=true        # New windows inherit font size
+# maximize=true                        # Start maximized
+# fullscreen=true                      # Start in fullscreen
+
+# --- Cursor ---
+# cursor-color=#ffffff                 # Custom cursor color
+# cursor-text=#000000                  # Text color under block cursor
+# cursor-opacity=1.0                   # Cursor transparency
+# cursor-click-to-move=true            # Alt+click to move cursor in supported apps
+
+# --- Selection ---
+# selection-foreground=#ffffff         # Custom selection text color
+# selection-background=#4c566a         # Custom selection background color
+
+# --- Mouse ---
+# mouse-scroll-multiplier=1.0          # Scroll speed multiplier
+# click-repeat-interval=300            # Double-click detection interval (ms)
+# right-click-action=context-menu      # Right-click: context-menu, paste, copy, copy-or-paste, ignore
+
+# --- Scrolling ---
+# scrollback-limit=10000               # Lines to keep in scrollback buffer
+# scroll-to-bottom=keystroke           # When to auto-scroll: keystroke, output
+
+# --- Tabs ---
+# window-show-tab-bar=auto             # Tab bar visibility: always, auto, never
+
+# --- Splits ---
+# unfocused-split-fill=#1a1a1a         # Color overlay for unfocused splits
+# split-divider-color=#4c566a          # Color of split dividers
+
+# --- Resize overlay ---
+# resize-overlay=after-first           # Show size when resizing: always, never, after-first
+# resize-overlay-position=center       # Overlay position: center, top-left, top-center, etc.
+# resize-overlay-duration=500          # How long overlay stays visible (ms)
+
+# --- Quick terminal ---
+# quick-terminal-size=0.3              # Size as fraction of screen (0.0-1.0)
+# quick-terminal-autohide=true         # Hide when focus is lost
+
+# --- Font (uncomment and customize) ---
+# font-family=JetBrainsMono Nerd Font
+# font-size=14
+# font-style=Regular
+# font-style-bold=Bold
+# font-style-italic=Italic
+
+# --- Clipboard ---
+# clipboard-read=allow                 # Allow apps to read clipboard: allow, deny, ask
+# clipboard-write=allow                # Allow apps to write clipboard: allow, deny, ask
+# clipboard-paste-protection=true      # Warn when pasting potentially dangerous content
+
+# --- Shell integration ---
+# shell-integration=detect             # Auto-inject shell integration: detect, none, bash, zsh, fish
+
+# --- Custom shaders (you have many in ghostty-shaders/) ---
+# custom-shader=~/.config/ghostty/ghostty-shaders/bloom.glsl
+# custom-shader=~/.config/ghostty/ghostty-shaders/crt.glsl
