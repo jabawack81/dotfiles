@@ -1,4 +1,4 @@
-.PHONY: help menu setup dry-run status docs clean sync validate update-nvim backup push-changes git-log view-docs test install-deps
+.PHONY: help menu setup dry-run status docs clean sync validate update-nvim clean-nvim backup push-changes git-log view-docs test install-deps
 
 # Color output
 BOLD    := \033[1m
@@ -39,6 +39,7 @@ menu:
 	@echo ""
 	@echo "$(BOLD)Maintenance:$(RESET)"
 	@echo "  $(GREEN)make update-nvim$(RESET)     Update neovim plugins"
+	@echo "  $(GREEN)make clean-nvim$(RESET)      Clean neovim (interactive options)"
 	@echo "  $(GREEN)make backup$(RESET)          Create backup of current config"
 	@echo "  $(GREEN)make clean$(RESET)           Remove old backups and cache"
 	@echo "  $(GREEN)make sync$(RESET)            Pull latest changes from remote"
@@ -159,6 +160,23 @@ update-nvim:
 	else \
 		echo "$(RED)✗ Script not found: scripts/update-nvim-plugins.sh$(RESET)"; \
 	fi
+
+clean-nvim:
+	@echo "$(BOLD)$(BLUE)Neovim Cleanup Options:$(RESET)"
+	@echo ""
+	@echo "  1) Dry run        - Preview what would be deleted"
+	@echo "  2) Standard clean - Plugins, mason, cache (reinstallable)"
+	@echo "  3) Full clean     - Also delete undo history, swap files"
+	@echo "  0) Cancel"
+	@echo ""
+	@read -p "Select option [0-3]: " choice; \
+	case $$choice in \
+		1) bash scripts/clean-nvim.sh --dry-run ;; \
+		2) bash scripts/clean-nvim.sh ;; \
+		3) bash scripts/clean-nvim.sh --state ;; \
+		0) echo "$(YELLOW)Cancelled.$(RESET)" ;; \
+		*) echo "$(RED)Invalid option$(RESET)" ;; \
+	esac
 
 backup:
 	@echo "$(BOLD)$(BLUE)Creating configuration backup...$(RESET)"
