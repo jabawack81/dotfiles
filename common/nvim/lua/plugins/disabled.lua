@@ -1,0 +1,32 @@
+-- ============================================================================
+-- Disabled Plugins
+-- ============================================================================
+-- This file disables plugins that are either:
+--   1. Causing issues/crashes
+--   2. Not needed for your workflow
+--   3. Conflicting with other plugins
+--
+-- HOW TO DISABLE A PLUGIN:
+--   Add an entry like: { "plugin-author/plugin-name", enabled = false }
+--
+-- HOW TO RE-ENABLE A PLUGIN:
+--   Remove the entry from this file (or set enabled = true)
+--
+-- NOTE:
+--   This file uses lazy.nvim's plugin spec format. The 'enabled = false'
+--   tells lazy.nvim to skip loading the plugin entirely.
+--
+-- CURRENTLY DISABLED:
+--   (none - all plugins are enabled)
+--
+-- PREVIOUSLY DISABLED (for reference):
+--   - folke/noice.nvim: Experimental UI plugin, can cause crashes with
+--     command mode (:) due to treesitter parser issues. Re-enabled after
+--     clearing corrupted parsers.
+-- ============================================================================
+
+return {
+  -- Add plugins to disable here, for example:
+  -- { "folke/noice.nvim", enabled = false },  -- Disable noice UI
+  -- { "some/plugin", enabled = false },       -- Disable another plugin
+}
