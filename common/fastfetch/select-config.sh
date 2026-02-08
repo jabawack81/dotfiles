@@ -13,9 +13,9 @@ if [ -n "$TMUX" ]; then
     IN_TMUX="yes"
 fi
 
-# Determine if this is a personal machine (kyrios or shinkiro) or work machine
+# Determine if this is a personal machine (kyrios, shinkiro, or lupus) or work machine
 IS_PERSONAL_MACHINE=false
-if [ "$HOSTNAME" = "kyrios" ] || [ "$HOSTNAME" = "shinkiro" ]; then
+if [ "$HOSTNAME" = "kyrios" ] || [ "$HOSTNAME" = "shinkiro" ] || [ "$HOSTNAME" = "lupus" ]; then
     IS_PERSONAL_MACHINE=true
 fi
 

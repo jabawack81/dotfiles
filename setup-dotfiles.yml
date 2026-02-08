@@ -5,14 +5,15 @@
   vars:
     dotfiles_dir: "{{ playbook_dir }}"
     # Auto-detect target user - if run with sudo, use SUDO_USER, otherwise current user
-    target_user: "{{ ansible_env.SUDO_USER | default(ansible_env.USER) }}"
-    target_home: "{% if target_user == 'root' %}/root{% elif ansible_os_family == 'Darwin' %}/Users/{{ target_user }}{% else %}/home/{{ target_user }}{% endif %}"
+    target_user: "{{ ansible_facts['env'].SUDO_USER | default(ansible_facts['env'].USER) }}"
+    target_home: "{% if target_user == 'root' %}/root{% elif ansible_facts['os_family'] == 'Darwin' %}/Users/{{ target_user }}{% else %}/home/{{ target_user }}{% endif %}"
     home_dir: "{{ target_home }}"  # Added for compatibility
     config_dir: "{{ target_home }}/.config"
     oh_my_zsh_dir: "{{ target_home }}/.oh-my-zsh"
-    hostname: "{{ ansible_hostname }}"
-    is_personal_machine: "{{ hostname in ['kyrios', 'shinkiro'] }}"
-    running_as_root: "{{ ansible_user_id == 'root' }}"
+    hostname: "{{ ansible_facts['hostname'] }}"
+    is_personal_machine: "{{ hostname in ['kyrios', 'shinkiro', 'lupus'] }}"
+    is_omarchy_machine: "{{ hostname == 'lupus' }}"
+    running_as_root: "{{ ansible_facts['user_id'] == 'root' }}"
     
     # Load private configuration if available
     private_config_file: "{{ dotfiles_dir }}/private-config/config.yml"
@@ -126,7 +127,15 @@
       - network-manager-applet
       - bluez
       - bluez-utils
-      
+
+    lupus_packages:  # ThinkPad T470p with NVIDIA 940MX (proprietary 580xx driver)
+      - linux-firmware-nvidia
+      - nvtop
+      - nvidia-prime
+      - dkms
+      # nvidia-580xx-dkms and nvidia-580xx-utils installed via AUR (yay -S aur/nvidia-580xx-dkms)
+      # nvidia-open does NOT support Maxwell (940MX) - must use 580xx branch
+
   tasks:
     - name: Check if private config exists
       stat:
@@ -144,7 +153,7 @@
     - name: Display execution context
       debug:
         msg: |
-          Running as: {{ ansible_user_id }}
+          Running as: {{ ansible_facts['user_id'] }}
           Target user: {{ target_user }}
           Target home: {{ target_home }}
           Root execution: {{ running_as_root }}
@@ -152,7 +161,7 @@
           
     - name: Create backup directory with timestamp
       set_fact:
-        backup_dir: "{{ dotfiles_dir }}/backups/{{ ansible_date_time.epoch }}"
+        backup_dir: "{{ dotfiles_dir }}/backups/{{ ansible_facts['date_time'].epoch }}"
         
     - name: Ensure backup directory exists
       file:
@@ -160,7 +169,7 @@
         state: directory
         mode: '0755'
         owner: "{{ target_user }}"
-        group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+        group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
 
     - name: Display setup mode
       debug:
@@ -179,14 +188,23 @@
         msg: "Cleaned broken links: {{ cleaned_links.stdout_lines }}"
       when: cleaned_links.stdout != ""
       
-    - name: Ensure required packages are installed (Personal machines)
+    - name: Ensure required packages are installed (Personal machines - non-omarchy)
       pacman:
         name: "{{ item }}"
         state: present
       become: "{{ not running_as_root }}"
       loop: "{{ required_packages }}"
-      when: is_personal_machine
-      
+      when:
+        - is_personal_machine
+        - not is_omarchy_machine
+
+    - name: Skip package installation on omarchy machines
+      debug:
+        msg: |
+          Skipping required_packages installation on omarchy machine.
+          Omarchy manages desktop packages. Only lupus-specific packages will be installed.
+      when: is_omarchy_machine
+
     - name: Skip package installation on work machines (macOS)
       debug:
         msg: |
@@ -207,8 +225,10 @@
       register: yay_check
       ignore_errors: yes
       changed_when: false
-      when: is_personal_machine
-        
+      when:
+        - is_personal_machine
+        - not is_omarchy_machine
+
     - name: Install yay dependencies
       pacman:
         name:
@@ -218,8 +238,9 @@
       become: "{{ not running_as_root }}"
       when:
         - is_personal_machine
+        - not is_omarchy_machine
         - yay_check.rc != 0
-        
+
     - name: Clone yay repository
       git:
         repo: https://aur.archlinux.org/yay.git
@@ -227,8 +248,9 @@
         force: yes
       when:
         - is_personal_machine
+        - not is_omarchy_machine
         - yay_check.rc != 0
-        
+
     - name: Build and install yay
       shell: |
         cd /tmp/yay
@@ -237,8 +259,9 @@
         creates: /usr/bin/yay
       when:
         - is_personal_machine
+        - not is_omarchy_machine
         - yay_check.rc != 0
-        
+
     # Audio packages are installed after the main packages
     # This handles both clean installs and systems with existing audio stacks
     - name: Install PipeWire audio compatibility layers
@@ -248,12 +271,14 @@
           - pipewire-jack
         state: present
       become: "{{ not running_as_root }}"
-      when: is_personal_machine
+      when:
+        - is_personal_machine
+        - not is_omarchy_machine
       # This will either:
       # - Install cleanly on new systems
       # - Prompt to replace pulseaudio/jack2 on existing systems
       # - Do nothing if already installed
-      
+
     - name: Configure sudo for target user (when running as root)
       lineinfile:
         path: /etc/sudoers.d/ansible-aur
@@ -261,26 +286,30 @@
         create: yes
         mode: '0440'
         validate: 'visudo -cf %s'
-      when: 
+      when:
         - running_as_root
         - is_personal_machine
-        
+        - not is_omarchy_machine
+
     - name: Install AUR packages with yay
       shell: |
         export SUDO_ASKPASS=/usr/bin/false
         yay -S --noconfirm --norebuild --noredownload {{ item }} || true
       loop: "{{ aur_packages }}"
-      when: is_personal_machine
+      when:
+        - is_personal_machine
+        - not is_omarchy_machine
       become: "{{ running_as_root }}"
       become_user: "{{ target_user if running_as_root else omit }}"
-      
+
     - name: Remove temporary sudo configuration
       file:
         path: /etc/sudoers.d/ansible-aur
         state: absent
-      when: 
+      when:
         - running_as_root
         - is_personal_machine
+        - not is_omarchy_machine
       
     - name: Install shinkiro-specific packages (AMD GPU tools)
       pacman:
@@ -299,7 +328,24 @@
       loop: "{{ kyrios_packages }}"
       when: hostname == 'kyrios'
       ignore_errors: yes
-      
+
+    - name: Install lupus-specific packages (NVIDIA GPU)
+      pacman:
+        name: "{{ item }}"
+        state: present
+      become: "{{ not running_as_root }}"
+      loop: "{{ lupus_packages }}"
+      when: hostname == 'lupus'
+      ignore_errors: yes
+    # NVIDIA config on lupus (ThinkPad T470p with 940MX Maxwell):
+    # - Driver: nvidia-580xx-dkms (AUR) - Maxwell requires legacy 580xx branch
+    # - EnvyControl: hybrid mode with RTD3 (sudo envycontrol -s hybrid --rtd3)
+    # - Suspend: nvidia-suspend/resume/hibernate services enabled
+    # - VRAM preservation: /etc/modprobe.d/nvidia-power.conf (NVreg_PreserveVideoMemoryAllocations=1)
+    # - Hyprland: NVD_BACKEND, LIBVA_DRIVER_NAME, __GLX_VENDOR_LIBRARY_NAME env vars + no_hardware_cursors
+    # - Fonts: GTK settings.ini (gtk-3.0/gtk-4.0) + fontconfig for proper rendering with NVIDIA GL
+    # See NVIDIA_SUSPEND_TROUBLESHOOTING.md for full documentation
+
     - name: Ensure zsh is installed on personal machines
       pacman:
         name: zsh
@@ -400,7 +446,7 @@
         state: directory
         mode: '0755'
         owner: "{{ target_user }}"
-        group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+        group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
 
     - name: Link tmux-claude script to PATH
       file:
@@ -417,7 +463,7 @@
         state: directory
         mode: '0755'
         owner: "{{ target_user }}"
-        group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+        group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
         
     - name: Get list of common configs
       find:
@@ -433,40 +479,108 @@
       
     - name: Handle common configs with backup
       block:
-        - name: Check existing configs
+        - name: Check existing configs (non-omarchy)
           stat:
             path: "{{ config_dir }}/{{ item.path | basename }}"
           register: config_stat
           loop: "{{ common_configs.files }}"
-          when: 
+          when:
             - is_personal_machine
-            - item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr']  # handled separately
-            
-        - name: Backup existing configs that aren't symlinks
+            - not is_omarchy_machine
+            - item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr']
+
+        - name: Check existing configs (omarchy)
+          stat:
+            path: "{{ config_dir }}/{{ item.path | basename }}"
+          register: config_stat_omarchy
+          loop: "{{ common_configs.files }}"
+          when:
+            - is_omarchy_machine
+            - item.path | basename not in ['hypr', 'waybar', 'dunst', 'fuzzel', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime']
+
+        - name: Backup existing configs that aren't symlinks (non-omarchy)
           command: mv "{{ config_dir }}/{{ item.item.path | basename }}" "{{ backup_dir }}/{{ item.item.path | basename }}-backup"
           loop: "{{ config_stat.results }}"
           when:
             - is_personal_machine
+            - not is_omarchy_machine
             - item.stat is defined
             - item.stat.exists
             - not item.stat.islnk
             - item.item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr']
           loop_control:
             label: "{{ item.item.path | basename }}"
-            
-        - name: Create symlinks for common configs
+
+        - name: Backup existing configs that aren't symlinks (omarchy)
+          command: mv "{{ config_dir }}/{{ item.item.path | basename }}" "{{ backup_dir }}/{{ item.item.path | basename }}-backup"
+          loop: "{{ config_stat_omarchy.results }}"
+          when:
+            - is_omarchy_machine
+            - item.stat is defined
+            - item.stat.exists
+            - not item.stat.islnk
+            - item.item.path | basename not in ['hypr', 'waybar', 'dunst', 'fuzzel', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime']
+          loop_control:
+            label: "{{ item.item.path | basename }}"
+
+        # Remove existing directories after backup (needed for symlink creation)
+        # Using file module instead of command so it works in check mode
+        - name: Remove existing config directories after backup (non-omarchy)
+          file:
+            path: "{{ config_dir }}/{{ item.item.path | basename }}"
+            state: absent
+          loop: "{{ config_stat.results }}"
+          when:
+            - is_personal_machine
+            - not is_omarchy_machine
+            - item.stat is defined
+            - item.stat.exists
+            - not item.stat.islnk
+            - item.item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr']
+          loop_control:
+            label: "{{ item.item.path | basename }}"
+
+        - name: Remove existing config directories after backup (omarchy)
+          file:
+            path: "{{ config_dir }}/{{ item.item.path | basename }}"
+            state: absent
+          loop: "{{ config_stat_omarchy.results }}"
+          when:
+            - is_omarchy_machine
+            - item.stat is defined
+            - item.stat.exists
+            - not item.stat.islnk
+            - item.item.path | basename not in ['hypr', 'waybar', 'dunst', 'fuzzel', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime']
+          loop_control:
+            label: "{{ item.item.path | basename }}"
+
+        - name: Create symlinks for common configs (non-omarchy machines)
           file:
             src: "{{ item.path }}"
             dest: "{{ config_dir }}/{{ item.path | basename }}"
             state: link
             force: yes
             owner: "{{ target_user }}"
-            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
           loop: "{{ common_configs.files }}"
-          when: 
+          when:
             - is_personal_machine
+            - not is_omarchy_machine
             - item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'git']  # handled separately
-            
+
+        - name: Create symlinks for common configs (omarchy machine)
+          file:
+            src: "{{ item.path }}"
+            dest: "{{ config_dir }}/{{ item.path | basename }}"
+            state: link
+            force: yes
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+          loop: "{{ common_configs.files }}"
+          when:
+            - is_omarchy_machine
+            - item.path | basename not in ['hypr', 'waybar', 'dunst', 'fuzzel', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime']  # omarchy manages these
+
         - name: Link nvim .neoconf.json file
           file:
             src: "{{ dotfiles_dir }}/common/nvim/dot_neoconf.json"
@@ -474,7 +588,7 @@
             state: link
             force: yes
             owner: "{{ target_user }}"
-            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
           when: is_personal_machine
       
     - name: Create symlinks for common configs (work machine - limited)
@@ -527,23 +641,23 @@
         state: link
         force: yes
         owner: "{{ target_user }}"
-        group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+        group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
         
       
     - name: Ensure .zshrc exists
       file:
-        path: "{{ ansible_env.HOME }}/.zshrc"
+        path: "{{ ansible_facts['env'].HOME }}/.zshrc"
         state: touch
         mode: '0644'
-      when: ansible_env.HOME is defined
+      when: ansible_facts['env'].HOME is defined
       
     - name: Set oh-my-zsh theme to agnoster
       lineinfile:
-        path: "{{ ansible_env.HOME }}/.zshrc"
+        path: "{{ ansible_facts['env'].HOME }}/.zshrc"
         regexp: '^ZSH_THEME='
         line: 'ZSH_THEME="agnoster"'
         state: present
-      when: ansible_env.HOME is defined
+      when: ansible_facts['env'].HOME is defined
       
     - name: Configure oh-my-zsh plugins
       block:
@@ -575,10 +689,10 @@
             
         - name: Update .zshrc plugins
           replace:
-            path: "{{ ansible_env.HOME }}/.zshrc"
+            path: "{{ ansible_facts['env'].HOME }}/.zshrc"
             regexp: 'plugins=\([^)]*\)'
             replace: 'plugins=({{ zsh_plugins }})'
-      when: ansible_env.HOME is defined
+      when: ansible_facts['env'].HOME is defined
       
     - name: Setup Hyprland with clean symlink structure
       block:
@@ -603,7 +717,9 @@
           loop:
             - "{{ config_dir }}/hypr"
             - "{{ config_dir }}/hypr_common"
-          when: is_personal_machine
+          when:
+            - is_personal_machine
+            - not is_omarchy_machine
             
         - name: Create hypr symlink to machine-specific directory
           file:
@@ -612,7 +728,7 @@
             state: link
             force: yes
             owner: "{{ target_user }}"
-            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
           when: 
             - is_personal_machine
             - hostname in ['kyrios', 'shinkiro']
@@ -624,31 +740,39 @@
             state: link
             force: yes
             owner: "{{ target_user }}"
-            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
-          when: is_personal_machine
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+          when:
+            - is_personal_machine
+            - not is_omarchy_machine
         
     - name: Ensure gtk-3.0 directory exists
       file:
         path: "{{ config_dir }}/gtk-3.0"
         state: directory
         mode: '0755'
-      when: is_personal_machine
-        
+      when:
+        - is_personal_machine
+        - not is_omarchy_machine
+
     - name: Link GTK3 CSS for system-wide theming
       file:
         src: "{{ dotfiles_dir }}/common/thunar/gtk.css"
         dest: "{{ config_dir }}/gtk-3.0/gtk.css"
         state: link
         force: yes
-      when: is_personal_machine
-        
+      when:
+        - is_personal_machine
+        - not is_omarchy_machine
+
     - name: Ensure Thunar directory exists (capital T)
       file:
         path: "{{ config_dir }}/Thunar"
         state: directory
         mode: '0755'
-      when: is_personal_machine
-        
+      when:
+        - is_personal_machine
+        - not is_omarchy_machine
+
     - name: Link GTK files to Thunar directory
       file:
         src: "{{ dotfiles_dir }}/common/thunar/{{ item }}"
@@ -658,7 +782,9 @@
       loop:
         - gtk.css
         - gtkrc-2.0
-      when: is_personal_machine
+      when:
+        - is_personal_machine
+        - not is_omarchy_machine
         
     - name: Setup Waybar with clean symlink structure
       block:
@@ -683,7 +809,9 @@
           loop:
             - "{{ config_dir }}/waybar"
             - "{{ config_dir }}/waybar_common"
-          when: is_personal_machine
+          when:
+            - is_personal_machine
+            - not is_omarchy_machine
             
         - name: Create waybar symlink to machine-specific directory
           file:
@@ -692,7 +820,7 @@
             state: link
             force: yes
             owner: "{{ target_user }}"
-            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
           when: 
             - is_personal_machine
             - hostname in ['kyrios', 'shinkiro']
@@ -704,8 +832,10 @@
             state: link
             force: yes
             owner: "{{ target_user }}"
-            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
-          when: is_personal_machine
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+          when:
+            - is_personal_machine
+            - not is_omarchy_machine
             
             
     - name: Setup bedtime reminder system
@@ -714,8 +844,7 @@
           file:
             path: "{{ config_dir }}/bedtime"
             state: absent
-          when: is_personal_machine
-            
+
         - name: Symlink bedtime directory
           file:
             src: "{{ dotfiles_dir }}/common/bedtime"
@@ -723,88 +852,80 @@
             state: link
             force: yes
             owner: "{{ target_user }}"
-            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
-          when: is_personal_machine
-            
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+
         - name: Create systemd user directory
           file:
-            path: "{{ ansible_env.HOME }}/.config/systemd/user"
+            path: "{{ ansible_facts['env'].HOME }}/.config/systemd/user"
             state: directory
             mode: '0755'
-          when: is_personal_machine
-            
+
         - name: Install bedtime systemd files
           file:
             src: "{{ dotfiles_dir }}/common/bedtime/{{ item }}"
-            dest: "{{ ansible_env.HOME }}/.config/systemd/user/{{ item }}"
+            dest: "{{ ansible_facts['env'].HOME }}/.config/systemd/user/{{ item }}"
             state: link
             force: yes
           loop:
             - bedtime-reminder.service
             - bedtime-reminder.timer
-          when: is_personal_machine
-            
+
         - name: Enable bedtime reminder timer (when not root)
           systemd:
             name: bedtime-reminder.timer
             enabled: yes
             daemon_reload: yes
             scope: user
-          when: 
-            - is_personal_machine
-            - not running_as_root
+          when: not running_as_root
           ignore_errors: yes
-          
+
         - name: Check if bedtime timer is already enabled
           stat:
             path: "{{ target_home }}/.config/systemd/user/timers.target.wants/bedtime-reminder.timer"
           register: bedtime_timer_enabled
-          when: is_personal_machine
-          
+
         - name: Enable bedtime reminder timer as target user (when root)
           shell: |
             echo "Note: Cannot enable user systemd services when running as root."
             echo "Please run as your user: systemctl --user enable --now bedtime-reminder.timer"
-          when: 
-            - is_personal_machine
+          when:
             - running_as_root
             - not bedtime_timer_enabled.stat.exists
-          
+
         - name: Show bedtime timer status
           debug:
             msg: |
               {% if bedtime_timer_enabled.stat.exists %}
-              Bedtime reminder timer is already enabled ✓
+              Bedtime reminder timer is already enabled
               {% else %}
               To enable bedtime timer, run as your user (not root):
               systemctl --user enable --now bedtime-reminder.timer
               {% endif %}
-          when: is_personal_machine
+      when:
+        - is_personal_machine
+        - not is_omarchy_machine
             
     - name: Setup eww widget system
       block:
         - name: Create local bin directory
           file:
-            path: "{{ ansible_env.HOME }}/.local/bin"
+            path: "{{ ansible_facts['env'].HOME }}/.local/bin"
             state: directory
             mode: '0755'
-          when: is_personal_machine
-            
+
         - name: Symlink eww binary
           file:
             src: "{{ dotfiles_dir }}/common/bin/eww"
-            dest: "{{ ansible_env.HOME }}/.local/bin/eww"
+            dest: "{{ ansible_facts['env'].HOME }}/.local/bin/eww"
             state: link
             force: yes
-          when: is_personal_machine
-            
+
         - name: Create eww config directory
           file:
             path: "{{ config_dir }}/eww"
             state: directory
             mode: '0755'
-          when: is_personal_machine
-            
+
         - name: Symlink machine-specific eww files
           file:
             src: "{{ item }}"
@@ -813,8 +934,10 @@
             force: yes
           with_fileglob:
             - "{{ dotfiles_dir }}/{{ hostname }}/eww/*"
-          when: is_personal_machine
-            
+      when:
+        - is_personal_machine
+        - not is_omarchy_machine
+
     - name: Setup broot file browser
       block:
         - name: Remove old broot config if exists
@@ -829,7 +952,7 @@
             state: link
             force: yes
             owner: "{{ target_user }}"
-            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
             
         - name: Create broot skins directory if missing
           file:
@@ -851,7 +974,7 @@
             state: link
             force: yes
             owner: "{{ target_user }}"
-            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
             
     - name: Configure GitHub CLI with 1Password (all machines)
       block:
@@ -869,7 +992,7 @@
           
         - name: Ensure gh config directory exists
           file:
-            path: "{{ ansible_env.HOME }}/.config/gh"
+            path: "{{ ansible_facts['env'].HOME }}/.config/gh"
             state: directory
             mode: '0755'
           when:
@@ -887,10 +1010,10 @@
           copy:
             content: |
               github.com:
-                user: {{ ansible_user_id }}
+                user: {{ ansible_facts['user_id'] }}
                 git_protocol: ssh
                 oauth_token: op://Personal/GitHub Personal Access Token/credential
-            dest: "{{ ansible_env.HOME }}/.config/gh/hosts.yml"
+            dest: "{{ ansible_facts['env'].HOME }}/.config/gh/hosts.yml"
             mode: '0600'
           when:
             - gh_installed.rc == 0
@@ -978,7 +1101,7 @@
             - name: Set global gitignore
               git_config:
                 name: core.excludesfile
-                value: "{{ ansible_env.HOME }}/dotfiles/common/git/ignore"
+                value: "{{ ansible_facts['env'].HOME }}/dotfiles/common/git/ignore"
                 scope: global
           when:
             - is_personal_machine
@@ -1013,7 +1136,7 @@
             - name: Set global gitignore
               git_config:
                 name: core.excludesfile
-                value: "{{ ansible_env.HOME }}/dotfiles/common/git/ignore"
+                value: "{{ ansible_facts['env'].HOME }}/dotfiles/common/git/ignore"
                 scope: global
           when:
             - not is_personal_machine
@@ -1083,13 +1206,13 @@
       block:
         - name: Check if rbenv is installed
           stat:
-            path: "{{ ansible_env.HOME }}/.rbenv"
+            path: "{{ ansible_facts['env'].HOME }}/.rbenv"
           register: rbenv_installed
           
         - name: Clone rbenv
           git:
             repo: https://github.com/rbenv/rbenv.git
-            dest: "{{ ansible_env.HOME }}/.rbenv"
+            dest: "{{ ansible_facts['env'].HOME }}/.rbenv"
             update: no
           when: not rbenv_installed.stat.exists
           become: "{{ running_as_root }}"
@@ -1097,13 +1220,13 @@
           
         - name: Check if ruby-build is installed
           stat:
-            path: "{{ ansible_env.HOME }}/.rbenv/plugins/ruby-build"
+            path: "{{ ansible_facts['env'].HOME }}/.rbenv/plugins/ruby-build"
           register: ruby_build_installed
           
         - name: Clone ruby-build for rbenv
           git:
             repo: https://github.com/rbenv/ruby-build.git
-            dest: "{{ ansible_env.HOME }}/.rbenv/plugins/ruby-build"
+            dest: "{{ ansible_facts['env'].HOME }}/.rbenv/plugins/ruby-build"
             update: no
           when: not ruby_build_installed.stat.exists
           become: "{{ running_as_root }}"
@@ -1111,13 +1234,13 @@
           
         - name: Check if rbenv-default-gems is installed
           stat:
-            path: "{{ ansible_env.HOME }}/.rbenv/plugins/rbenv-default-gems"
+            path: "{{ ansible_facts['env'].HOME }}/.rbenv/plugins/rbenv-default-gems"
           register: rbenv_default_gems_installed
           
         - name: Clone rbenv-default-gems plugin
           git:
             repo: https://github.com/rbenv/rbenv-default-gems.git
-            dest: "{{ ansible_env.HOME }}/.rbenv/plugins/rbenv-default-gems"
+            dest: "{{ ansible_facts['env'].HOME }}/.rbenv/plugins/rbenv-default-gems"
             update: no
           when: not rbenv_default_gems_installed.stat.exists
           become: "{{ running_as_root }}"
@@ -1126,29 +1249,29 @@
         - name: Link default-gems configuration
           file:
             src: "{{ dotfiles_dir }}/common/rbenv/default-gems"
-            dest: "{{ ansible_env.HOME }}/.rbenv/default-gems"
+            dest: "{{ ansible_facts['env'].HOME }}/.rbenv/default-gems"
             state: link
             force: yes
             owner: "{{ target_user }}"
-            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
           become: "{{ running_as_root }}"
           become_user: "{{ target_user if running_as_root else omit }}"
           
         - name: Clean up manual nodenv entry from .zshrc
           lineinfile:
-            path: "{{ ansible_env.HOME }}/.zshrc"
+            path: "{{ ansible_facts['env'].HOME }}/.zshrc"
             regexp: '^eval "\$\(nodenv init - zsh\)"$'
             state: absent
             
         - name: Check if nodenv is installed
           stat:
-            path: "{{ ansible_env.HOME }}/.nodenv"
+            path: "{{ ansible_facts['env'].HOME }}/.nodenv"
           register: nodenv_installed
           
         - name: Clone nodenv
           git:
             repo: https://github.com/nodenv/nodenv.git
-            dest: "{{ ansible_env.HOME }}/.nodenv"
+            dest: "{{ ansible_facts['env'].HOME }}/.nodenv"
             update: no
           when: not nodenv_installed.stat.exists
           become: "{{ running_as_root }}"
@@ -1156,14 +1279,14 @@
             
         - name: Check if node-build is installed
           stat:
-            path: "{{ ansible_env.HOME }}/.nodenv/plugins/node-build"
+            path: "{{ ansible_facts['env'].HOME }}/.nodenv/plugins/node-build"
           register: node_build_installed
           when: nodenv_installed.stat.exists or not nodenv_installed.stat.exists
           
         - name: Clone node-build for nodenv
           git:
             repo: https://github.com/nodenv/node-build.git
-            dest: "{{ ansible_env.HOME }}/.nodenv/plugins/node-build"
+            dest: "{{ ansible_facts['env'].HOME }}/.nodenv/plugins/node-build"
             update: no
           when: not node_build_installed.stat.exists
           become: "{{ running_as_root }}"
@@ -1171,13 +1294,13 @@
             
         - name: Check if nodenv-default-packages is installed
           stat:
-            path: "{{ ansible_env.HOME }}/.nodenv/plugins/nodenv-default-packages"
+            path: "{{ ansible_facts['env'].HOME }}/.nodenv/plugins/nodenv-default-packages"
           register: nodenv_default_packages_installed
           
         - name: Clone nodenv-default-packages plugin
           git:
             repo: https://github.com/nodenv/nodenv-default-packages.git
-            dest: "{{ ansible_env.HOME }}/.nodenv/plugins/nodenv-default-packages"
+            dest: "{{ ansible_facts['env'].HOME }}/.nodenv/plugins/nodenv-default-packages"
             update: no
           when: not nodenv_default_packages_installed.stat.exists
           become: "{{ running_as_root }}"
@@ -1186,17 +1309,17 @@
         - name: Link default-packages configuration
           file:
             src: "{{ dotfiles_dir }}/common/nodenv/default-packages"
-            dest: "{{ ansible_env.HOME }}/.nodenv/default-packages"
+            dest: "{{ ansible_facts['env'].HOME }}/.nodenv/default-packages"
             state: link
             force: yes
             owner: "{{ target_user }}"
-            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
           become: "{{ running_as_root }}"
           become_user: "{{ target_user if running_as_root else omit }}"
             
         - name: Add rbenv to .zshrc
           blockinfile:
-            path: "{{ ansible_env.HOME }}/.zshrc"
+            path: "{{ ansible_facts['env'].HOME }}/.zshrc"
             marker: "# {mark} ANSIBLE MANAGED BLOCK - rbenv"
             block: |
               # rbenv configuration
@@ -1205,7 +1328,7 @@
             
         - name: Add nodenv to .zshrc
           blockinfile:
-            path: "{{ ansible_env.HOME }}/.zshrc"
+            path: "{{ ansible_facts['env'].HOME }}/.zshrc"
             marker: "# {mark} ANSIBLE MANAGED BLOCK - nodenv"
             block: |
               # nodenv configuration
@@ -1214,7 +1337,7 @@
               
         - name: Check if Ruby is installed
           shell: |
-            if [ -d "{{ ansible_env.HOME }}/.rbenv/versions" ] && [ "$(ls -A {{ ansible_env.HOME }}/.rbenv/versions 2>/dev/null)" ]; then
+            if [ -d "{{ ansible_facts['env'].HOME }}/.rbenv/versions" ] && [ "$(ls -A {{ ansible_facts['env'].HOME }}/.rbenv/versions 2>/dev/null)" ]; then
               echo "installed"
             else
               echo "none"
@@ -1224,8 +1347,8 @@
           
         - name: Install latest stable Ruby
           shell: |
-            export PATH="{{ ansible_env.HOME }}/.rbenv/bin:$PATH"
-            eval "$({{ ansible_env.HOME }}/.rbenv/bin/rbenv init -)"
+            export PATH="{{ ansible_facts['env'].HOME }}/.rbenv/bin:$PATH"
+            eval "$({{ ansible_facts['env'].HOME }}/.rbenv/bin/rbenv init -)"
             LATEST_RUBY=$(rbenv install -l 2>/dev/null | grep -E "^[0-9]+\.[0-9]+\.[0-9]+$" | tail -1)
             rbenv install -s $LATEST_RUBY
             rbenv global $LATEST_RUBY
@@ -1233,7 +1356,7 @@
           
         - name: Check if Node is installed
           shell: |
-            if [ -d "{{ ansible_env.HOME }}/.nodenv/versions" ] && [ "$(ls -A {{ ansible_env.HOME }}/.nodenv/versions 2>/dev/null)" ]; then
+            if [ -d "{{ ansible_facts['env'].HOME }}/.nodenv/versions" ] && [ "$(ls -A {{ ansible_facts['env'].HOME }}/.nodenv/versions 2>/dev/null)" ]; then
               echo "installed"
             else
               echo "none"
@@ -1243,8 +1366,8 @@
           
         - name: Install latest stable Node (LTS)
           shell: |
-            export PATH="{{ ansible_env.HOME }}/.nodenv/bin:$PATH"
-            eval "$({{ ansible_env.HOME }}/.nodenv/bin/nodenv init -)"
+            export PATH="{{ ansible_facts['env'].HOME }}/.nodenv/bin:$PATH"
+            eval "$({{ ansible_facts['env'].HOME }}/.nodenv/bin/nodenv init -)"
             LATEST_NODE=$(nodenv install -l 2>/dev/null | grep -E "^[0-9]+\.[0-9]+\.[0-9]+$" | grep -E "^20\." | tail -1)
             nodenv install -s $LATEST_NODE
             nodenv global $LATEST_NODE
@@ -1252,20 +1375,20 @@
           
         - name: Fix rbenv ownership when running as root
           file:
-            path: "{{ ansible_env.HOME }}/.rbenv"
+            path: "{{ ansible_facts['env'].HOME }}/.rbenv"
             state: directory
             recurse: yes
             owner: "{{ target_user }}"
-            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
           when: running_as_root
           
         - name: Fix nodenv ownership when running as root
           file:
-            path: "{{ ansible_env.HOME }}/.nodenv"
+            path: "{{ ansible_facts['env'].HOME }}/.nodenv"
             state: directory
             recurse: yes
             owner: "{{ target_user }}"
-            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
           when: running_as_root
           
         - name: Show version manager setup instructions
@@ -1290,7 +1413,7 @@
             
         - name: Create fingerprint setup instructions
           copy:
-            dest: "{{ ansible_env.HOME }}/fingerprint-setup-instructions.txt"
+            dest: "{{ ansible_facts['env'].HOME }}/fingerprint-setup-instructions.txt"
             content: |
               ThinkPad T460s Fingerprint Setup Instructions
               =============================================
@@ -1316,7 +1439,7 @@
               
               Note: Always have a password backup in case fingerprint fails!
             owner: "{{ target_user }}"
-            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
             mode: '0644'
       when: hostname == 'kyrios'
               
@@ -1324,7 +1447,7 @@
       block:
         - name: Add common PATH configurations to .zshrc
           blockinfile:
-            path: "{{ ansible_env.HOME }}/.zshrc"
+            path: "{{ ansible_facts['env'].HOME }}/.zshrc"
             marker: "# {mark} ANSIBLE MANAGED BLOCK - common paths"
             block: |
               # Common PATH additions
@@ -1333,7 +1456,7 @@
               
         - name: Add 1Password CLI plugin support
           blockinfile:
-            path: "{{ ansible_env.HOME }}/.zshrc"
+            path: "{{ ansible_facts['env'].HOME }}/.zshrc"
             marker: "# {mark} ANSIBLE MANAGED BLOCK - 1password"
             block: |
               # 1Password CLI plugins
@@ -1343,7 +1466,7 @@
               
         - name: Clean up manual pnpm entries from .zshrc
           replace:
-            path: "{{ ansible_env.HOME }}/.zshrc"
+            path: "{{ ansible_facts['env'].HOME }}/.zshrc"
             regexp: '# pnpm\nexport PNPM_HOME[^#]+# pnpm end\n'
             replace: ''
             
@@ -1351,11 +1474,11 @@
           shell: |
             curl -fsSL https://get.pnpm.io/install.sh | sh -
           args:
-            creates: "{{ ansible_env.HOME }}/.local/share/pnpm"
+            creates: "{{ ansible_facts['env'].HOME }}/.local/share/pnpm"
             
         - name: Add pnpm to .zshrc
           blockinfile:
-            path: "{{ ansible_env.HOME }}/.zshrc"
+            path: "{{ ansible_facts['env'].HOME }}/.zshrc"
             marker: "# {mark} ANSIBLE MANAGED BLOCK - pnpm"
             block: |
               # pnpm
@@ -1367,12 +1490,12 @@
               
         - name: Check if SDKMAN is installed
           stat:
-            path: "{{ ansible_env.HOME }}/.sdkman"
+            path: "{{ ansible_facts['env'].HOME }}/.sdkman"
           register: sdkman_installed
           
         - name: Clean up manual SDKMAN entries from .zshrc
           replace:
-            path: "{{ ansible_env.HOME }}/.zshrc"
+            path: "{{ ansible_facts['env'].HOME }}/.zshrc"
             regexp: '#THIS MUST BE AT THE END[^#]+\[\[ -s[^]]+\]\] && source[^\n]+\n(?!# END ANSIBLE)'
             replace: ''
             
@@ -1380,23 +1503,23 @@
           shell: |
             curl -s "https://get.sdkman.io" | bash
           args:
-            creates: "{{ ansible_env.HOME }}/.sdkman"
+            creates: "{{ ansible_facts['env'].HOME }}/.sdkman"
           when: not sdkman_installed.stat.exists
           
         - name: Fix SDKMAN permissions
           file:
-            path: "{{ ansible_env.HOME }}/.sdkman"
+            path: "{{ ansible_facts['env'].HOME }}/.sdkman"
             state: directory
             recurse: yes
             owner: "{{ target_user }}"
-            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
           when: 
             - sdkman_installed.stat.exists or not sdkman_installed.stat.exists
             - running_as_root
             
         - name: Add SDKMAN to .zshrc
           blockinfile:
-            path: "{{ ansible_env.HOME }}/.zshrc"
+            path: "{{ ansible_facts['env'].HOME }}/.zshrc"
             marker: "# {mark} ANSIBLE MANAGED BLOCK - sdkman"
             insertafter: EOF
             block: |
@@ -1406,7 +1529,7 @@
               
         - name: Check if g (Go version manager) is installed
           stat:
-            path: "{{ ansible_env.HOME }}/go/bin/g"
+            path: "{{ ansible_facts['env'].HOME }}/go/bin/g"
           register: g_installed
           
         - name: Install g (Go version manager)
@@ -1417,27 +1540,27 @@
         - name: Remove duplicate oh-my-zsh update mode lines
           shell: |
             # Keep only the first occurrence
-            awk '/^zstyle .:omz:update. mode reminder/ && !seen {print; seen=1; next} /^zstyle .:omz:update. mode reminder/ {next} {print}' {{ ansible_env.HOME }}/.zshrc > {{ ansible_env.HOME }}/.zshrc.tmp
-            mv {{ ansible_env.HOME }}/.zshrc.tmp {{ ansible_env.HOME }}/.zshrc
+            awk '/^zstyle .:omz:update. mode reminder/ && !seen {print; seen=1; next} /^zstyle .:omz:update. mode reminder/ {next} {print}' {{ ansible_facts['env'].HOME }}/.zshrc > {{ ansible_facts['env'].HOME }}/.zshrc.tmp
+            mv {{ ansible_facts['env'].HOME }}/.zshrc.tmp {{ ansible_facts['env'].HOME }}/.zshrc
           changed_when: false
             
         - name: Configure oh-my-zsh auto-update behavior
           lineinfile:
-            path: "{{ ansible_env.HOME }}/.zshrc"
+            path: "{{ ansible_facts['env'].HOME }}/.zshrc"
             regexp: "^zstyle ':omz:update' mode"
             line: "zstyle ':omz:update' mode reminder  # just remind me to update when it's time"
             state: present
             
         - name: Enable completion waiting dots
           lineinfile:
-            path: "{{ ansible_env.HOME }}/.zshrc"
+            path: "{{ ansible_facts['env'].HOME }}/.zshrc"
             regexp: "^# COMPLETION_WAITING_DOTS="
             line: 'COMPLETION_WAITING_DOTS="true"'
             insertafter: "^# COMPLETION_WAITING_DOTS="
             
         - name: Add fastfetch to end of .zshrc
           blockinfile:
-            path: "{{ ansible_env.HOME }}/.zshrc"
+            path: "{{ ansible_facts['env'].HOME }}/.zshrc"
             marker: "# {mark} ANSIBLE MANAGED BLOCK - fastfetch"
             insertafter: EOF
             block: |
@@ -1482,14 +1605,14 @@
             state: directory
             recurse: yes
             owner: "{{ target_user }}"
-            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
           when: running_as_root
           
         - name: Ensure home directory files are owned by target user
           file:
             path: "{{ item }}"
             owner: "{{ target_user }}"
-            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
           loop:
             - "{{ target_home }}/.zshrc"
             - "{{ target_home }}/.tmux.conf"
@@ -1503,7 +1626,7 @@
             state: directory
             recurse: yes
             owner: "{{ target_user }}"
-            group: "{{ 'staff' if ansible_os_family == 'Darwin' else target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
           when: 
             - running_as_root
             - oh_my_zsh_installed.stat.exists

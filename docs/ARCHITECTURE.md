@@ -6,10 +6,11 @@ Architectural Documentation for AI-Assisted Development
 
 When starting a new session, ALWAYS:
 1. Run `hostname` to detect which machine we're on
-2. Check if it's kyrios (laptop), shinkiro (desktop), or a work machine
+2. Check if it's kyrios (laptop), shinkiro (desktop), lupus (laptop/omarchy), or a work machine
 3. Adapt responses based on the current environment:
    - **kyrios**: Intel laptop, no AMD GPU tools, limited screen space
    - **shinkiro**: AMD desktop, dual 4K monitors, full GPU capabilities
+   - **lupus**: ThinkPad T470p, Intel+NVIDIA hybrid GPU, Omarchy, NVIDIA 580xx driver
    - **work machines**: Limited configs, likely macOS, restricted permissions
 
 ## Executive Summary
@@ -126,6 +127,19 @@ Built-in diagnostic capabilities:
   - No battery module in waybar
   - eww widgets configured for larger screen
   - Dual monitor workspace rules
+
+### lupus (Laptop - Omarchy)
+- **Hardware**: ThinkPad T470p, Intel HD 630 iGPU + NVIDIA GeForce 940MX dGPU (Maxwell)
+- **Display**: Single 1920x1080
+- **OS**: Omarchy (Arch Linux variant) - desktop packages managed by Omarchy
+- **Special configs**:
+  - NVIDIA proprietary driver (nvidia-580xx-dkms from AUR, Maxwell not supported by nvidia-open)
+  - Hybrid GPU mode via EnvyControl with RTD3 power management
+  - NVIDIA suspend/resume/hibernate services for VRAM preservation across sleep
+  - Hyprland NVIDIA env vars (NVD_BACKEND, LIBVA_DRIVER_NAME, __GLX_VENDOR_LIBRARY_NAME)
+  - cursor { no_hardware_cursors = true } for NVIDIA Wayland compatibility
+  - GTK settings.ini and fontconfig for proper font rendering with NVIDIA GL
+  - See NVIDIA_SUSPEND_TROUBLESHOOTING.md for full GPU setup documentation
 
 ### Work Machines
 - **OS**: Typically macOS

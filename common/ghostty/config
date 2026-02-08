@@ -1,5 +1,8 @@
 theme=nord
 
+# Omarchy theme override (optional, only loads if file exists)
+config-file = ?"~/.config/omarchy/current/theme/ghostty.conf"
+
 # ==============================================================================
 # Background
 # ==============================================================================
