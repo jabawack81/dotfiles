@@ -1,0 +1,29 @@
+{
+  // Custom module definitions for lupus (ThinkPad T470p)
+  // This file is included by waybar via the "include" directive.
+  // Module definitions only - the modules-right array is patched into the main config.
+
+  "custom/gpu": {
+    "format": "{}",
+    "exec": "gpu-status",
+    "return-type": "json",
+    "interval": 10,
+    "on-click": "omarchy-launch-floating-terminal envy-tui",
+    "tooltip": true
+  },
+  "memory": {
+    "interval": 5,
+    "format": "󰘚 {percentage}% | {swapPercentage}%",
+    "tooltip-format": "RAM: {used:0.1f}GiB / {total:0.1f}GiB ({percentage}%)\nSwap: {swapUsed:0.1f}GiB / {swapTotal:0.1f}GiB ({swapPercentage}%)",
+    "on-click": "omarchy-launch-or-focus-tui btop"
+  },
+  "custom/caffeine": {
+    "format": "{}",
+    "exec": "omarchy-caffeine-status",
+    "return-type": "json",
+    "interval": 5,
+    "signal": 9,
+    "on-click": "omarchy-toggle-caffeine",
+    "tooltip": true
+  }
+}

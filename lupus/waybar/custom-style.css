@@ -1,0 +1,25 @@
+/* Custom waybar styles for lupus (ThinkPad T470p)
+ * Imported at the end of the main style.css via the apply script.
+ */
+
+#custom-gpu {
+  min-width: 12px;
+  margin: 0 7.5px;
+}
+
+#custom-gpu.warning {
+  color: #e5c07b;
+}
+
+#custom-gpu.critical {
+  color: #e06c75;
+}
+
+#custom-caffeine {
+  min-width: 12px;
+  margin: 0 13px 0 0;
+}
+
+#custom-caffeine.active {
+  color: #e5c07b;
+}

@@ -838,6 +838,48 @@
             - not is_omarchy_machine
             
             
+    - name: Apply lupus waybar customizations (Omarchy overlay)
+      block:
+        - name: Ensure gpu-status script is executable
+          file:
+            path: "{{ dotfiles_dir }}/lupus/waybar/gpu-status.sh"
+            mode: '0755'
+
+        - name: Ensure apply-customizations script is executable
+          file:
+            path: "{{ dotfiles_dir }}/lupus/waybar/apply-customizations.sh"
+            mode: '0755'
+
+        - name: Run waybar apply-customizations script
+          shell: "{{ dotfiles_dir }}/lupus/waybar/apply-customizations.sh"
+          register: waybar_apply_result
+
+        - name: Show waybar customization result
+          debug:
+            msg: "{{ waybar_apply_result.stdout }}"
+
+        - name: Ensure omarchy hooks directory exists
+          file:
+            path: "{{ config_dir }}/omarchy/hooks"
+            state: directory
+            mode: '0755'
+            owner: "{{ target_user }}"
+            group: "{{ target_user }}"
+
+        - name: Install omarchy post-update hook for waybar
+          copy:
+            content: |
+              #!/bin/bash
+              # Re-apply lupus waybar customizations after Omarchy updates.
+              # Omarchy migrations may reset waybar config, so we re-apply our patches.
+              echo "Running post-update hook: re-applying lupus waybar customizations..."
+              {{ dotfiles_dir }}/lupus/waybar/apply-customizations.sh
+            dest: "{{ config_dir }}/omarchy/hooks/post-update"
+            mode: '0755'
+            owner: "{{ target_user }}"
+            group: "{{ target_user }}"
+      when: hostname == 'lupus'
+
     - name: Setup bedtime reminder system
       block:
         - name: Remove old bedtime directory if exists
