@@ -15,6 +15,18 @@ WAYBAR_STYLE="$HOME/.config/waybar/style.css"
 
 echo "Applying lupus waybar customizations..."
 
+# --- 0. Check if Omarchy waybar config exists yet ---
+if [ ! -f "$WAYBAR_CONFIG" ]; then
+  echo "  Waybar config not found at $WAYBAR_CONFIG"
+  echo "  Omarchy may not have set up waybar yet (reboot/session restart needed)."
+  echo "  Skipping config patching - the post-update hook will re-run this later."
+  # Still link gpu-status so it's ready when waybar starts
+  mkdir -p "$HOME/.local/bin"
+  ln -sf "$LUPUS_WAYBAR/gpu-status.sh" "$HOME/.local/bin/gpu-status"
+  echo "  Linked gpu-status to ~/.local/bin/"
+  exit 0
+fi
+
 # --- 1. Symlink gpu-status script to PATH ---
 if [ ! -L "$HOME/.local/bin/gpu-status" ] || [ "$(readlink -f "$HOME/.local/bin/gpu-status")" != "$LUPUS_WAYBAR/gpu-status.sh" ]; then
   mkdir -p "$HOME/.local/bin"

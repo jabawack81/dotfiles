@@ -707,6 +707,7 @@
         - name: Backup old hypr setup if needed
           command: mv "{{ config_dir }}/hypr" "{{ backup_dir }}/hypr-old-backup"
           when:
+            - not is_omarchy_machine
             - hypr_checks.results[0].stat.exists
             - not hypr_checks.results[0].stat.islnk
             
@@ -799,6 +800,7 @@
         - name: Backup old waybar setup if needed
           command: mv "{{ config_dir }}/waybar" "{{ backup_dir }}/waybar-old-backup"
           when:
+            - not is_omarchy_machine
             - waybar_checks.results[0].stat.exists
             - not waybar_checks.results[0].stat.islnk
             
@@ -838,6 +840,21 @@
             - not is_omarchy_machine
             
             
+    - name: Configure monitor for lupus (1080p laptop screen)
+      copy:
+        content: |
+          # Lupus monitor config (ThinkPad T470p - 14" 1920x1080)
+          # Managed by dotfiles playbook - re-applied via omarchy post-update hook
+          # See https://wiki.hyprland.org/Configuring/Monitors/
+
+          env = GDK_SCALE,1
+          monitor=,highres,auto,1
+        dest: "{{ config_dir }}/hypr/monitors.conf"
+        mode: '0644'
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+      when: hostname == 'lupus'
+
     - name: Apply lupus waybar customizations (Omarchy overlay)
       block:
         - name: Ensure gpu-status script is executable
@@ -866,14 +883,29 @@
             owner: "{{ target_user }}"
             group: "{{ target_user }}"
 
-        - name: Install omarchy post-update hook for waybar
+        - name: Install omarchy post-update hook
           copy:
             content: |
               #!/bin/bash
-              # Re-apply lupus waybar customizations after Omarchy updates.
-              # Omarchy migrations may reset waybar config, so we re-apply our patches.
+              # Re-apply lupus customizations after Omarchy updates.
+              # Omarchy migrations may reset configs, so we re-apply our patches.
+
+              DOTFILES_DIR="{{ dotfiles_dir }}"
+              MONITORS_CONF="$HOME/.config/hypr/monitors.conf"
+
+              # Re-apply monitor config (1080p, scale 1)
+              echo "Running post-update hook: re-applying lupus monitor config..."
+              printf '%s\n' \
+                '# Lupus monitor config (ThinkPad T470p - 14" 1920x1080)' \
+                '# Managed by dotfiles playbook - re-applied via omarchy post-update hook' \
+                '' \
+                'env = GDK_SCALE,1' \
+                'monitor=,highres,auto,1' \
+                > "$MONITORS_CONF"
+
+              # Re-apply waybar customizations
               echo "Running post-update hook: re-applying lupus waybar customizations..."
-              {{ dotfiles_dir }}/lupus/waybar/apply-customizations.sh
+              "$DOTFILES_DIR/lupus/waybar/apply-customizations.sh"
             dest: "{{ config_dir }}/omarchy/hooks/post-update"
             mode: '0755'
             owner: "{{ target_user }}"
