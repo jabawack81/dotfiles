@@ -8,7 +8,7 @@
     "exec": "gpu-status",
     "return-type": "json",
     "interval": 10,
-    "on-click": "omarchy-launch-floating-terminal envy-tui",
+    "on-click": "omarchy-launch-floating-terminal-with-presentation envy-tui",
     "tooltip": true
   },
   "memory": {

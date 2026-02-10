@@ -9,7 +9,7 @@
 set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
-LUPUS_WAYBAR="$DOTFILES_DIR/lupus/waybar"
+export LUPUS_WAYBAR="$DOTFILES_DIR/lupus/waybar"
 WAYBAR_CONFIG="$HOME/.config/waybar/config.jsonc"
 WAYBAR_STYLE="$HOME/.config/waybar/style.css"
 
@@ -60,7 +60,7 @@ for line in lines:
 config = json.loads("".join(clean_lines))
 changed = False
 
-# Add include directive
+# Add include directive (and clean up any broken paths from previous runs)
 include_path = lupus_waybar + "/custom-modules.jsonc"
 if "include" not in config:
     # Insert include as first key by rebuilding dict
@@ -69,12 +69,19 @@ if "include" not in config:
     config = new_config
     changed = True
     print("  Added include directive for custom-modules.jsonc")
-elif include_path not in config["include"]:
-    config["include"].append(include_path)
-    changed = True
-    print("  Added include path to existing include array")
 else:
-    print("  Include directive already present")
+    # Remove any broken include paths (e.g. "/custom-modules.jsonc" from unexported var bug)
+    clean_includes = [p for p in config["include"] if p == include_path or not p.endswith("/custom-modules.jsonc")]
+    if len(clean_includes) != len(config["include"]):
+        config["include"] = clean_includes
+        changed = True
+        print("  Cleaned broken include paths")
+    if include_path not in config["include"]:
+        config["include"].append(include_path)
+        changed = True
+        print("  Added include path to existing include array")
+    else:
+        print("  Include directive already present")
 
 # Modify modules-right
 modules_right = config.get("modules-right", [])
