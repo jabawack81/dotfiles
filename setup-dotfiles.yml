@@ -136,6 +136,11 @@
       # nvidia-580xx-dkms and nvidia-580xx-utils installed via AUR (yay -S aur/nvidia-580xx-dkms)
       # nvidia-open does NOT support Maxwell (940MX) - must use 580xx branch
 
+    lupus_aur_packages:  # ThinkPad T470p AUR packages
+      - open-fprintd          # fingerprint daemon (works with python-validity)
+      - fprintd-clients-git   # fprintd client tools (enroll, verify, list)
+      - python-validity       # Validity/Synaptics fingerprint sensor driver
+
   tasks:
     - name: Check if private config exists
       stat:
@@ -345,6 +350,58 @@
     # - Hyprland: NVD_BACKEND, LIBVA_DRIVER_NAME, __GLX_VENDOR_LIBRARY_NAME env vars + no_hardware_cursors
     # - Fonts: GTK settings.ini (gtk-3.0/gtk-4.0) + fontconfig for proper rendering with NVIDIA GL
     # See NVIDIA_SUSPEND_TROUBLESHOOTING.md for full documentation
+
+    - name: Install lupus-specific AUR packages (fingerprint sensor)
+      shell: yay -S --noconfirm --needed --rebuild {{ item }}
+      loop: "{{ lupus_aur_packages }}"
+      when: hostname == 'lupus'
+      ignore_errors: yes
+
+    - name: Setup fingerprint authentication on lupus
+      block:
+        - name: Disable conflicting fprintd service
+          systemd:
+            name: fprintd.service
+            enabled: no
+            state: stopped
+          ignore_errors: yes
+
+        - name: Enable open-fprintd service
+          systemd:
+            name: open-fprintd.service
+            enabled: yes
+            state: restarted
+
+        - name: Ensure pam_fprintd is configured for sudo
+          lineinfile:
+            path: /etc/pam.d/sudo
+            line: "auth        sufficient  pam_fprintd.so"
+            insertbefore: "^auth.*pam_unix"
+            state: present
+
+        - name: Ensure pam_fprintd is configured for su
+          lineinfile:
+            path: /etc/pam.d/su
+            line: "auth        sufficient  pam_fprintd.so"
+            insertbefore: "^auth.*pam_unix"
+            state: present
+
+        - name: Ensure pam_fprintd is configured for hyprlock
+          lineinfile:
+            path: /etc/pam.d/hyprlock
+            line: "auth        sufficient  pam_fprintd.so"
+            insertbefore: "^auth.*pam_unix"
+            state: present
+
+        - name: Ensure pam_fprintd is configured for sddm
+          lineinfile:
+            path: /etc/pam.d/sddm
+            line: "auth        sufficient  pam_fprintd.so"
+            insertbefore: "^auth.*pam_unix"
+            state: present
+      become: "{{ not running_as_root }}"
+      when: hostname == 'lupus'
+      # After setup, enroll fingerprints with: fprintd-enroll
 
     - name: Ensure zsh is installed on personal machines
       pacman:
