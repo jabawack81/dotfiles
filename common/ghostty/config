@@ -93,8 +93,8 @@ minimum-contrast=1.1
 # Titlebar style: native, hidden (no tabs), tabs (minimal with tabs), transparent
 macos-titlebar-style=tabs
 
-# Use Option key as Alt (useful for terminal shortcuts)
-macos-option-as-alt=true
+# Use left Option as Alt (terminal shortcuts), right Option for macOS input (e.g. #)
+macos-option-as-alt=left
 
 # ==============================================================================
 # Other UI/UX options (uncomment to enable)
