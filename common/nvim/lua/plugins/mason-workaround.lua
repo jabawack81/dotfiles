@@ -1,47 +1,47 @@
 -- ============================================================================
--- Mason Version Pinning Workaround
+-- Mason Compatibility Shim
 -- ============================================================================
--- This file pins Mason and mason-lspconfig to v1.x versions to avoid
--- breaking changes introduced in Mason 2.0.
+-- Creates a compatibility layer for mason-lspconfig.mappings module.
 --
 -- PROBLEM:
---   Mason 2.0 (released May 2025) restructured internal modules, breaking
---   compatibility with LazyVim's LSP configuration. Specifically, the module
---   'mason-lspconfig.mappings' was removed/restructured, causing errors like:
---
---     module 'mason-lspconfig.mappings' not found
+--   LazyVim's LSP config calls: require("mason-lspconfig.mappings").get_mason_map()
+--   But mason-lspconfig v1.32.0 has mappings as a directory (mappings/server.lua,
+--   mappings/filetype.lua) without an init.lua, so the require fails.
 --
 -- SOLUTION:
---   Pin to the last stable v1.x releases until LazyVim updates to support
---   Mason 2.0. This is a temporary workaround.
+--   This shim creates the expected module structure by loading the submodules
+--   and providing the get_mason_map() function that LazyVim expects.
 --
 -- WHEN TO REMOVE:
---   Check https://github.com/LazyVim/LazyVim/issues/6039 for updates.
---   Once LazyVim adds Mason 2.0 support, you can delete this file and
---   run :Lazy sync to upgrade to the latest Mason versions.
---
--- NOTE ON PLUGIN UPDATES:
---   When Lazy shows updates available for mason.nvim or mason-lspconfig.nvim,
---   DO NOT update them while this workaround is in place. Updating will
---   override the version pins and cause errors.
---
--- RELATED FILES:
---   - This workaround replaces the need for fix-mason.lua compatibility shim
---   - The version pins ensure the correct module structure exists
+--   When LazyVim updates to properly support newer mason-lspconfig versions.
+--   Check: https://github.com/LazyVim/LazyVim/issues/6039
 -- ============================================================================
 
 return {
-  -- Pin mason.nvim to version 1.11.0 (last v1.x release)
-  -- This is the core package manager for LSP servers, linters, formatters
   {
-    "mason-org/mason.nvim",
-    version = "1.11.0", -- Pinned to avoid Mason 2.0 breaking changes
-  },
+    "neovim/nvim-lspconfig",
+    priority = 1000, -- Load early to set up the shim before LazyVim needs it
+    init = function()
+      -- Only create the shim if the mappings module doesn't exist
+      local ok = pcall(require, "mason-lspconfig.mappings")
+      if not ok then
+        -- Try to load the submodules
+        local has_server, server = pcall(require, "mason-lspconfig.mappings.server")
 
-  -- Pin mason-lspconfig.nvim to version 1.32.0 (last v1.x release)
-  -- This bridges Mason with nvim-lspconfig for automatic LSP setup
-  {
-    "mason-org/mason-lspconfig.nvim",
-    version = "1.32.0", -- Pinned to maintain compatibility with LazyVim
+        if has_server then
+          -- Create the compatibility module
+          package.loaded["mason-lspconfig.mappings"] = {
+            server = server,
+            -- Provide the get_mason_map function that LazyVim expects
+            get_mason_map = function()
+              return {
+                lspconfig_to_package = server.lspconfig_to_package or {},
+                package_to_lspconfig = server.package_to_lspconfig or {},
+              }
+            end,
+          }
+        end
+      end
+    end,
   },
 }
