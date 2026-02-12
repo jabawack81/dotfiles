@@ -17,5 +17,11 @@ kyrios/hypr/Fonts/
 shinkiro/hypr/.cache/
 shinkiro/hypr/Fonts/
 
+# Ansible check output (may contain private config values)
+ansible-check.txt
+
+# Private neovim LSP settings (work-specific, not public)
+common/nvim/lua/private/
+
 # EWW binary (installed via pacman/AUR)
 common/bin/eww

@@ -142,13 +142,22 @@ return {
         -- For rvm: cmd = { vim.fn.expand("~/.rvm/rubies/default/bin/ruby-lsp") }
         -- For asdf: cmd = { vim.fn.expand("~/.asdf/shims/ruby-lsp") }
         ruby_lsp = {
-          init_options = {
-            -- Auto-detect formatter (standard, rubocop, or syntax_tree)
-            formatter = "auto",
-          },
+          init_options = (function()
+            -- Load optional private LSP settings (e.g. includedGems for local engines)
+            local ok, private = pcall(dofile, vim.fn.expand("~/.config/nvim/lua/private/lsp.lua"))
+            local opts = {
+              formatter = "auto",
+            }
+            if ok and private and private.included_gems then
+              opts.indexing = { includedGems = private.included_gems }
+            end
+            return opts
+          end)(),
           -- Use rbenv's ruby-lsp binary
           -- This ensures it uses the correct Ruby version for your project
           cmd = { vim.fn.expand("~/.rbenv/shims/ruby-lsp") },
+          -- Root at the git repo, not at nested Gemfiles (e.g. engine subdirectories)
+          root_dir = lspconfig.util.root_pattern(".git", "Gemfile"),
         },
 
         -- ==================================================================
