@@ -54,12 +54,16 @@ case $DETAILED_SEVERITY in
     2)
         # 11:00-11:29 PM - Getting serious
         notify-send -u critical -t 15000 "GO TO BED! $EMOJI" "$MESSAGE"
+        # Pause all playing media
+        playerctl --all-players pause 2>/dev/null || true
         # Also play a sound if available
         paplay /usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga 2>/dev/null || true
         ;;
     3)
         # 11:30-11:59 PM - Very serious
         notify-send -u critical -t 20000 "SERIOUSLY, BED NOW! $EMOJI" "It's past 11:30 PM! You said you wanted better sleep habits!"
+        # Pause all playing media
+        playerctl --all-players pause 2>/dev/null || true
         # Flash the screen using Hyprland
         hyprctl dispatch exec "sh -c 'for i in {1..3}; do hyprctl keyword decoration:dim_inactive 1; sleep 0.2; hyprctl keyword decoration:dim_inactive 0; sleep 0.2; done'" 2>/dev/null
         paplay /usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga 2>/dev/null || true
@@ -67,6 +71,8 @@ case $DETAILED_SEVERITY in
     4)
         # 00:00-00:29 AM - Critical
         notify-send -u critical -t 30000 "FINAL WARNING! $EMOJI" "$MESSAGE"
+        # Pause all playing media
+        playerctl --all-players pause 2>/dev/null || true
         # More aggressive screen flash
         hyprctl dispatch exec "sh -c 'for i in {1..5}; do hyprctl keyword decoration:dim_inactive 1; sleep 0.1; hyprctl keyword decoration:dim_inactive 0; sleep 0.1; done'" 2>/dev/null
         # Play sound multiple times
@@ -74,28 +80,38 @@ case $DETAILED_SEVERITY in
             paplay /usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga 2>/dev/null || true
             sleep 1
         done
+        # Lock the screen
+        hyprlock &
         ;;
     5)
         # 00:30-00:59 AM - More critical
         notify-send -u critical -t 45000 "YOU'RE STILL AWAKE?! $EMOJI" "It's $(date +%H:%M)! $MESSAGE"
+        # Pause all playing media
+        playerctl --all-players pause 2>/dev/null || true
         # Flash and sound
         hyprctl dispatch exec "sh -c 'for i in {1..7}; do hyprctl keyword decoration:dim_inactive 1; sleep 0.08; hyprctl keyword decoration:dim_inactive 0; sleep 0.08; done'" 2>/dev/null
         for i in {1..5}; do
             paplay /usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga 2>/dev/null || true
             sleep 0.5
         done
+        # Lock the screen
+        hyprlock &
         ;;
     6)
         # 01:00-05:59 AM - DEFCON 1 - Maximum annoyance
         notify-send -u critical -t 60000 "YOU'RE STILL AWAKE?! $EMOJI" "It's $(date +%H:%M)! $MESSAGE"
-        
+        # Pause all playing media
+        playerctl --all-players pause 2>/dev/null || true
+
         # Create a floating window with a bedtime message
         echo "GO TO BED NOW!" | fuzzel --dmenu --prompt "IT'S $(date +%H:%M) - TIME FOR BED!" &
-        
+
         # Flash screen aggressively
         hyprctl dispatch exec "sh -c 'for i in {1..10}; do hyprctl keyword decoration:dim_inactive 1; sleep 0.05; hyprctl keyword decoration:dim_inactive 0; sleep 0.05; done'" 2>/dev/null
-        
+
         # Play alarm sound on loop for 10 seconds
         timeout 10s bash -c 'while true; do paplay /usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga 2>/dev/null || true; done'
+        # Lock the screen
+        hyprlock &
         ;;
 esac
