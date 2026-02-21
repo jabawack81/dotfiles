@@ -34,7 +34,7 @@ Variables let you define programs once and reuse them throughout the config. Thi
 ```conf
 $terminal = ghostty      # Terminal emulator
 $fileManager = thunar    # File manager
-$menu = fuzzel           # Application launcher
+$menu = hyprlauncher     # Application launcher
 $browser = firefox       # Web browser
 ```
 
@@ -43,7 +43,7 @@ $browser = firefox       # Web browser
 These variables are referenced throughout the config:
 - `$terminal` → Opens Ghostty terminal
 - `$fileManager` → Opens Thunar file manager
-- `$menu` → Opens Fuzzel application launcher
+- `$menu` → Opens Hyprlauncher application launcher
 - `$browser` → Opens Firefox
 
 ### How to Change
@@ -664,7 +664,7 @@ bind = $mainMod, R, exec, $menu        # Super+R = Open App Launcher
 | Super+Q | Terminal | ghostty |
 | Super+E | File Manager | thunar |
 | Super+F | Browser | firefox |
-| Super+R | App Launcher | fuzzel |
+| Super+R | App Launcher | hyprlauncher |
 | Super+D | Discord | discord |
 | Super+G | Steam | steam |
 | Super+T | Telegram | telegram |

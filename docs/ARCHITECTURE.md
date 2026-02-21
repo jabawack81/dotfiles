@@ -165,9 +165,12 @@ Personal machines include:
 - **Hyprland**: Tiling compositor with modular machine-specific configs
 - **waybar**: Status bar with machine-specific modules (battery for laptop, GPU temp for desktop)
 - **eww**: Widget system with system monitoring, weather, and app launcher
-- **fuzzel**: Application launcher with Nord-inspired styling
+- **hyprlauncher**: Application launcher (Hypr ecosystem) with dark theme via hyprtoolkit
 - **dunst**: Notification daemon with custom icons
 - **wlogout**: Session logout menu
+- **hypridle**: Idle management daemon (screen off, lock, suspend)
+- **hyprsunset**: Blue-light filter
+- **grimblast**: Screenshot tool (Hypr ecosystem wrapper around grim+slurp)
 - **bedtime reminder**: Systemd timer for healthy sleep habits (school nights only)
 
 ### Development Tools
@@ -205,7 +208,7 @@ The architecture is designed for easy extension:
 Clean migration strategy for:
 - Moving between machines
 - Upgrading system components
-- Transitioning to new tools (e.g., wofi → fuzzel)
+- Transitioning to new tools (e.g., wofi → hyprlauncher)
 
 ## Conclusion
 

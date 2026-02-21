@@ -62,11 +62,12 @@
       - hyprland
       - hyprlock
       - waybar
-      - fuzzel
       - dunst
-      - swww
       - grim
       - slurp
+      - hyprpaper
+      - hypridle
+      - hyprsunset
       - playerctl
       - pamixer
       - brightnessctl
@@ -108,6 +109,8 @@
       - wlogout
       - opencode-bin
       - eww
+      - grimblast-git
+      - hyprlauncher
       
     # Machine-specific packages
     shinkiro_packages:  # Desktop with AMD GPU
@@ -222,7 +225,7 @@
           GUI apps:
           brew install --cask firefox obsidian discord slack telegram
           
-          Note: nvtop, grim, swww, waybar, hyprland, etc. are Linux-only
+          Note: nvtop, grim, waybar, hyprland, etc. are Linux-only
       when: not is_personal_machine
       
     - name: Check if yay is installed
@@ -581,7 +584,7 @@
           loop: "{{ common_configs.files }}"
           when:
             - is_omarchy_machine
-            - item.path | basename not in ['hypr', 'waybar', 'dunst', 'fuzzel', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime']
+            - item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime']
 
         - name: Backup existing configs that aren't symlinks (non-omarchy)
           command: mv "{{ config_dir }}/{{ item.item.path | basename }}" "{{ backup_dir }}/{{ item.item.path | basename }}-backup"
@@ -604,7 +607,7 @@
             - item.stat is defined
             - item.stat.exists
             - not item.stat.islnk
-            - item.item.path | basename not in ['hypr', 'waybar', 'dunst', 'fuzzel', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime']
+            - item.item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime']
           loop_control:
             label: "{{ item.item.path | basename }}"
 
@@ -635,7 +638,7 @@
             - item.stat is defined
             - item.stat.exists
             - not item.stat.islnk
-            - item.item.path | basename not in ['hypr', 'waybar', 'dunst', 'fuzzel', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime']
+            - item.item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime']
           loop_control:
             label: "{{ item.item.path | basename }}"
 
@@ -664,7 +667,7 @@
           loop: "{{ common_configs.files }}"
           when:
             - is_omarchy_machine
-            - item.path | basename not in ['hypr', 'waybar', 'dunst', 'fuzzel', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime']  # omarchy manages these
+            - item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime']  # omarchy manages these
 
         - name: Link nvim .neoconf.json file
           file:

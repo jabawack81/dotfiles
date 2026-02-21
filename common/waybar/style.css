@@ -135,6 +135,34 @@ window#waybar {
 	color: #dc322f;
 }
 
+/* Night light toggle */
+#custom-nightlight {
+	background: #1a1a1a;
+	padding: 0 10px;
+}
+
+#custom-nightlight.on {
+	color: #b58900;
+}
+
+#custom-nightlight.off {
+	color: #586e75;
+}
+
+/* Caffeine toggle */
+#custom-caffeine {
+	background: #1a1a1a;
+	padding: 0 10px;
+}
+
+#custom-caffeine.on {
+	color: #268bd2;
+}
+
+#custom-caffeine.off {
+	color: #586e75;
+}
+
 #custom-media {
 	color: #66cc99;
 }

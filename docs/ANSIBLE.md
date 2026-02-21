@@ -28,7 +28,11 @@ Since the hostname determines the OS, the playbook only needs to check `is_perso
 | git | ✅ Auto (pacman) | ❌ Manual | ❌ Manual |
 | waybar | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
 | hyprland | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
-| wofi | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
+| hyprlauncher | ✅ Auto (yay/AUR) | ❌ N/A | ❌ N/A |
+| hypridle | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
+| hyprsunset | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
+| hyprpaper | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
+| grimblast | ✅ Auto (yay/AUR) | ❌ N/A | ❌ N/A |
 | dunst | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
 | btop | ✅ Auto (pacman) | ❌ Manual | ❌ Manual (brew) |
 | ghostty | ✅ Auto (pacman) | ❌ Manual | ❌ Manual (brew) |
@@ -54,7 +58,6 @@ Since the hostname determines the OS, the playbook only needs to check `is_perso
 | htop | ✅ Auto (pacman) | ❌ Manual | ❌ Manual (brew) |
 | telegram-desktop | ✅ Auto (pacman) | ❌ Manual | ❌ Manual (brew cask: telegram) |
 | grim | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
-| swww | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
 | playerctl | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
 | pamixer | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
 | pipewire* | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
@@ -82,7 +85,7 @@ Since the hostname determines the OS, the playbook only needs to check `is_perso
 | hypr/ | ✅ | ❌ | ❌ | Hyprland compositor config |
 | waybar/ | ✅ | ❌ | ❌ | Status bar configuration |
 | eww/ | ✅ Machine-specific | ❌ | ❌ | Widget system (shinkiro/kyrios only) |
-| wofi/ | ✅ | ❌ | ❌ | Application launcher |
+| hyprtoolkit.conf | ✅ | ❌ | ❌ | Hypr ecosystem theming (in hypr/) |
 | dunst/ | ✅ | ❌ | ❌ | Notification daemon |
 | wlogout/ | ✅ | ❌ | ❌ | Logout menu |
 | **Applications** |

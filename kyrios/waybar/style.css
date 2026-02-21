@@ -44,6 +44,8 @@ window#waybar {
 #network,
 #custom-network-status,
 #custom-media,
+#custom-nightlight,
+#custom-caffeine,
 #custom-power,
 #tray {
 	background: #1a1a1a;
@@ -62,6 +64,8 @@ window#waybar {
 #network,
 #custom-network-status,
 #custom-media,
+#custom-nightlight,
+#custom-caffeine,
 #custom-power,
 #custom-bedtime {
 	padding: 0 10px;
@@ -134,6 +138,26 @@ window#waybar {
 
 #custom-network-status.error {
 	color: #dc322f;
+}
+
+/* Night light toggle */
+#custom-nightlight {
+	min-width: 20px;
+	color: #586e75;
+}
+
+#custom-nightlight.on {
+	color: #cb4b16;
+}
+
+/* Caffeine toggle */
+#custom-caffeine {
+	min-width: 20px;
+	color: #586e75;
+}
+
+#custom-caffeine.on {
+	color: #268bd2;
 }
 
 #custom-media {

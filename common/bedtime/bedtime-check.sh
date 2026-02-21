@@ -103,8 +103,8 @@ case $DETAILED_SEVERITY in
         # Pause all playing media
         playerctl --all-players pause 2>/dev/null || true
 
-        # Create a floating window with a bedtime message
-        echo "GO TO BED NOW!" | fuzzel --dmenu --prompt "IT'S $(date +%H:%M) - TIME FOR BED!" &
+        # Show persistent on-screen warning via Hyprland notification
+        hyprctl notify 0 10000 "rgb(ff0000)" "fontsize:26 GO TO BED! It's $(date +%H:%M)!"
 
         # Flash screen aggressively
         hyprctl dispatch exec "sh -c 'for i in {1..10}; do hyprctl keyword decoration:dim_inactive 1; sleep 0.05; hyprctl keyword decoration:dim_inactive 0; sleep 0.05; done'" 2>/dev/null

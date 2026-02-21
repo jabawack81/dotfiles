@@ -132,7 +132,7 @@ AFTER:
 │   ├── btop/
 │   ├── dunst/
 │   ├── fastfetch/
-│   ├── fuzzel/
+│   ├── hyprlauncher/  (removed - theming via hypr/hyprtoolkit.conf)
 │   ├── ghostty/
 │   ├── git/
 │   ├── hypr/

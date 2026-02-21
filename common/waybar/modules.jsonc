@@ -85,6 +85,26 @@
 		}
 	},
 	
+	// Night light toggle (hyprsunset)
+	"custom/nightlight": {
+		"interval": 5,
+		"return-type": "json",
+		"exec": "bash ~/.config/waybar_common/nightlight-status.sh",
+		"on-click": "bash ~/.config/waybar_common/nightlight-toggle.sh",
+		"signal": 8,
+		"tooltip": true
+	},
+
+	// Caffeine toggle (hypridle)
+	"custom/caffeine": {
+		"interval": 5,
+		"return-type": "json",
+		"exec": "bash ~/.config/waybar_common/caffeine-status.sh",
+		"on-click": "bash ~/.config/waybar_common/caffeine-toggle.sh",
+		"signal": 9,
+		"tooltip": true
+	},
+
 	// Power menu
 	"custom/power": {
 		"format": "⏻",
