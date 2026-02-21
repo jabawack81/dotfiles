@@ -71,7 +71,7 @@
       - pamixer
       - brightnessctl
       - xdg-desktop-portal-hyprland
-      - polkit-kde-agent
+      - hyprpolkitagent
       - qt5-wayland
       - qt6-wayland
       
@@ -322,6 +322,34 @@
         state: present
       become: "{{ not running_as_root }}"
       loop: "{{ shinkiro_packages }}"
+      when: hostname == 'shinkiro'
+      ignore_errors: yes
+       
+    - name: Setup CoreCtrl autostart for shinkiro
+      copy:
+        src: /usr/share/applications/org.corectrl.CoreCtrl.desktop
+        dest: "{{ config_dir }}/autostart/org.corectrl.CoreCtrl.desktop"
+        remote_src: yes
+        mode: '0644'
+      become: no
+      when: hostname == 'shinkiro'
+      ignore_errors: yes
+      # CoreCtrl will start on login; minimize manually or use its built-in "Start minimized" setting
+
+    - name: Setup polkit rule for CoreCtrl on shinkiro
+      copy:
+        content: |
+          polkit.addRule(function(action, subject) {
+              if ((action.id == "org.corectrl.helper.init" ||
+                   action.id == "org.corectrl.helperkiller.init") &&
+                  subject.local == true &&
+                  subject.isInGroup("wheel")) {
+                  return polkit.Result.YES;
+              }
+          });
+        dest: /etc/polkit-1/rules.d/50-corectrl.rules
+        mode: '0644'
+      become: yes
       when: hostname == 'shinkiro'
       ignore_errors: yes
       
