@@ -89,10 +89,16 @@ return {
       "qf",
       "Outline",
     },
+    git_status_async_options = {
+      batch_size = 1000,
+      batch_delay = 10,
+      max_lines = 10000,
+    },
     filesystem = {
       bind_to_cwd = true,
       follow_current_file = { enabled = true },
       use_libuv_file_watcher = false,
+      async_directory_scan = "always",
     },
     window = {
       mappings = {
