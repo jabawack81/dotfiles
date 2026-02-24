@@ -196,15 +196,44 @@ return {
         yamlls = {},
 
         -- ==================================================================
+        -- TAILWIND CSS (tailwindcss)
+        -- ==================================================================
+        -- Tailwind CSS IntelliSense: class completion, hover preview, linting
+        -- classRegex covers clsx(), cn(), cva() patterns used in Next.js apps
+        tailwindcss = {
+          settings = {
+            tailwindCSS = {
+              experimental = {
+                classRegex = {
+                  { "clsx\\(([^)]*)\\)", "(?:'|\"|`)([^'\"`]*)(?:'|\"|`)" },
+                  { "cn\\(([^)]*)\\)", "(?:'|\"|`)([^'\"`]*)(?:'|\"|`)" },
+                  { "cva\\(([^)]*)\\)", "(?:'|\"|`)([^'\"`]*)(?:'|\"|`)" },
+                },
+              },
+            },
+          },
+        },
+
+        -- ==================================================================
+        -- DOCKER (dockerls)
+        -- ==================================================================
+        -- Dockerfile language server
+        dockerls = {},
+
+        -- ==================================================================
+        -- JSON (jsonls)
+        -- ==================================================================
+        -- JSON language server for biome.json, package.json, tsconfig.json, etc.
+        jsonls = {},
+
+        -- ==================================================================
         -- COMMENTED OUT SERVERS (enable if needed)
         -- ==================================================================
         -- Uncomment any of these if you work with these languages
 
         -- denols = {},      -- Deno (alternative to Node.js)
         -- diagnosticls = {}, -- Generic diagnostic server
-        -- dockerls = {},    -- Dockerfile
         -- helm_ls = {},     -- Helm charts (Kubernetes)
-        -- jsonls = {},      -- JSON (LazyVim may already configure this)
         -- jsonnet_ls = {},  -- Jsonnet
         -- lua_ls = {},      -- Lua (LazyVim already configures this)
         -- marksman = {},    -- Markdown

@@ -17,6 +17,7 @@
 - [Buffers & Windows](#buffers--windows)
 - [Diagnostics](#diagnostics)
 - [Comments](#comments)
+- [Testing (Neotest)](#testing-neotest)
 - [Rails Navigation](#rails-navigation)
 
 ---
@@ -367,6 +368,24 @@
 
 ---
 
+## Testing (Neotest)
+
+> Run tests directly from Neovim. Supports RSpec, Jest, and Vitest.
+
+| Key                | Action                              |
+|--------------------|-------------------------------------|
+| `<leader>tt`       | Run nearest test                    |
+| `<leader>tT`       | Run current file                    |
+| `<leader>ta`       | Run all tests                       |
+| `<leader>tl`       | Run last test                       |
+| `<leader>ts`       | Toggle summary panel                |
+| `<leader>to`       | Show test output                    |
+| `<leader>tO`       | Toggle output panel                 |
+| `<leader>tS`       | Stop running test                   |
+| `<leader>tw`       | Toggle watch mode                   |
+
+---
+
 ## Rails Navigation
 
 > Custom keybindings for Rails projects
@@ -378,6 +397,16 @@
 | `<leader>gd`       | Go to class definition              |
 | `<leader>gf`       | Find file by class name             |
 | `gD`               | Search definition (fallback)        |
+
+---
+
+## Next.js Navigation
+
+> Browse Next.js apps in a monorepo by category
+
+| Key                | Action                              |
+|--------------------|-------------------------------------|
+| `<leader>fN`       | Next.js files picker                |
 
 ---
 
@@ -414,6 +443,7 @@
 | flash.nvim         | Jump navigation                     |
 | treesitter         | Syntax highlighting                 |
 | noice.nvim         | UI enhancements                     |
+| neotest            | Test runner (RSpec, Jest, Vitest)   |
 | todo-comments.nvim | TODO highlighting                   |
 
 ---
