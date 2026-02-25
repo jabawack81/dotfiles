@@ -46,6 +46,7 @@ For full list of available commands: `make help`
 
 - **kyrios**: Personal Arch Linux laptop (battery monitoring, single display)
 - **shinkiro**: Personal Arch Linux desktop (dual 4K displays, GPU monitoring, EWW widgets)
+- **lupus**: Arch Linux ThinkPad T470p (hybrid Intel/NVIDIA GPU)
 - **Work machines**: Limited configs for non-personal machines
 
 ## Manual Steps After Setup
@@ -67,9 +68,10 @@ Then open tmux and press `prefix` + `I` to install plugins.
 ## Repository Structure
 
 **Configuration**:
-- `common/`: Shared configurations across personal machines
-- `kyrios/`: Laptop-specific configurations
-- `shinkiro/`: Desktop-specific configurations
+- `common/`: Shared configurations across personal machines (nvim, tmux, ghostty, btop, etc.)
+- `kyrios/`: Laptop-specific configurations (Hyprland, EWW, Waybar)
+- `shinkiro/`: Desktop-specific configurations (dual display, GPU monitoring)
+- `lupus/`: ThinkPad-specific configurations
 
 **Documentation**:
 - `docs/`: Comprehensive documentation
@@ -80,6 +82,7 @@ Then open tmux and press `prefix` + `I` to install plugins.
   - `SETUP.md`: Private config and initial setup
   - `TESTING.md`: Ansible testing and validation guide
   - `REFACTORING.md`: Technical refactoring documentation
+  - `NEOVIM_TROUBLESHOOTING.md`: LSP and Mason debugging guide
 
 **Scripts & Tools**:
 - `Makefile`: Interactive task management menu

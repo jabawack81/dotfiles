@@ -45,6 +45,60 @@ return {
       desc = "Git Explorer",
     },
     {
+      "<leader>gE",
+      function()
+        local test_patterns = {
+          "__tests__/", "__snapshots__/", "%.test%.", "%.spec%.",
+          "_spec%.rb$", "/spec/", "/coverage/", "/junit/",
+        }
+
+        local function is_test(path)
+          for _, pat in ipairs(test_patterns) do
+            if path:match(pat) then
+              return true
+            end
+          end
+          return false
+        end
+
+        -- Recursively remove test nodes from the nui tree, then prune empty dirs
+        local function filter_tree(tree, parent_id)
+          local to_remove = {}
+          local children = tree:get_nodes(parent_id)
+          for _, node in ipairs(children) do
+            local id = node:get_id()
+            if is_test(id) then
+              table.insert(to_remove, id)
+            else
+              local grandchildren = tree:get_nodes(id)
+              if #grandchildren > 0 then
+                filter_tree(tree, id)
+                if #tree:get_nodes(id) == 0 then
+                  table.insert(to_remove, id)
+                end
+              end
+            end
+          end
+          for _, id in ipairs(to_remove) do
+            tree:remove_node(id)
+          end
+        end
+
+        -- Open git status tree, then filter after render
+        require("neo-tree.command").execute({ source = "git_status", action = "show" })
+
+        vim.defer_fn(function()
+          local manager = require("neo-tree.sources.manager")
+          local state = manager.get_state("git_status")
+          if state and state.tree then
+            filter_tree(state.tree)
+            require("neo-tree.ui.renderer").redraw(state)
+          end
+        end, 300)
+      end,
+      desc = "Git Explorer (no tests)",
+    },
+    {
       "<leader>be",
       function()
         require("neo-tree.command").execute({
