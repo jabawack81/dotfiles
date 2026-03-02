@@ -575,7 +575,7 @@
           when:
             - is_personal_machine
             - not is_omarchy_machine
-            - item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr']
+            - item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'claude']
 
         - name: Check existing configs (omarchy)
           stat:
@@ -584,7 +584,7 @@
           loop: "{{ common_configs.files }}"
           when:
             - is_omarchy_machine
-            - item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime']
+            - item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime', 'claude']
 
         - name: Backup existing configs that aren't symlinks (non-omarchy)
           command: mv "{{ config_dir }}/{{ item.item.path | basename }}" "{{ backup_dir }}/{{ item.item.path | basename }}-backup"
@@ -595,7 +595,7 @@
             - item.stat is defined
             - item.stat.exists
             - not item.stat.islnk
-            - item.item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr']
+            - item.item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'claude']
           loop_control:
             label: "{{ item.item.path | basename }}"
 
@@ -607,7 +607,7 @@
             - item.stat is defined
             - item.stat.exists
             - not item.stat.islnk
-            - item.item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime']
+            - item.item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime', 'claude']
           loop_control:
             label: "{{ item.item.path | basename }}"
 
@@ -624,7 +624,7 @@
             - item.stat is defined
             - item.stat.exists
             - not item.stat.islnk
-            - item.item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr']
+            - item.item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'claude']
           loop_control:
             label: "{{ item.item.path | basename }}"
 
@@ -638,7 +638,7 @@
             - item.stat is defined
             - item.stat.exists
             - not item.stat.islnk
-            - item.item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime']
+            - item.item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime', 'claude']
           loop_control:
             label: "{{ item.item.path | basename }}"
 
@@ -654,7 +654,7 @@
           when:
             - is_personal_machine
             - not is_omarchy_machine
-            - item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'git']  # handled separately
+            - item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'git', 'claude']  # handled separately
 
         - name: Create symlinks for common configs (omarchy machine)
           file:
@@ -667,7 +667,7 @@
           loop: "{{ common_configs.files }}"
           when:
             - is_omarchy_machine
-            - item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime']  # omarchy manages these
+            - item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime', 'claude']  # omarchy manages these
 
         - name: Link nvim .neoconf.json file
           file:
@@ -720,7 +720,7 @@
       loop: "{{ hostname_configs.files }}"
       when: 
         - hostname_dir.stat.exists
-        - item.path | basename not in ['waybar', 'hypr', 'eww']  # These are handled specially
+        - item.path | basename not in ['waybar', 'hypr', 'eww', 'claude']  # These are handled specially
       
     - name: Link .tmux.conf to home directory
       file:
@@ -1759,6 +1759,55 @@
               {% endif %}
           when: backup_contents is defined
           
+    - name: Setup Claude Code configuration
+      block:
+        - name: Ensure ~/.claude directory exists
+          file:
+            path: "{{ target_home }}/.claude"
+            state: directory
+            mode: '0755'
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+
+        - name: Symlink Claude rules directory
+          file:
+            src: "{{ dotfiles_dir }}/common/claude/rules"
+            dest: "{{ target_home }}/.claude/rules"
+            state: link
+            force: yes
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+
+        - name: Symlink Claude agents directory
+          file:
+            src: "{{ dotfiles_dir }}/common/claude/agents"
+            dest: "{{ target_home }}/.claude/agents"
+            state: link
+            force: yes
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+
+        - name: Check if private Claude config exists
+          stat:
+            path: "{{ dotfiles_dir }}/private-config/claude/CLAUDE.private.md"
+          register: claude_private_config
+
+        - name: Assemble CLAUDE.md (public + private)
+          shell: >
+            cat "{{ dotfiles_dir }}/common/claude/CLAUDE.md"
+            "{{ dotfiles_dir }}/private-config/claude/CLAUDE.private.md"
+            > "{{ target_home }}/.claude/CLAUDE.md"
+          when: claude_private_config.stat.exists
+
+        - name: Copy CLAUDE.md (public only)
+          copy:
+            src: "{{ dotfiles_dir }}/common/claude/CLAUDE.md"
+            dest: "{{ target_home }}/.claude/CLAUDE.md"
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+            mode: '0644'
+          when: not claude_private_config.stat.exists
+
     - name: Fix ownership of all config files
       block:
         - name: Ensure all config files are owned by target user
