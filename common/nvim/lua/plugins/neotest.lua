@@ -1,5 +1,5 @@
 -- Test runner integration via neotest
--- Adapters: RSpec (Rails), Jest (Next.js apps), Vitest
+-- Adapters: RSpec (Rails), Jest (Next.js monorepo), Vitest
 return {
   {
     "nvim-neotest/neotest",
