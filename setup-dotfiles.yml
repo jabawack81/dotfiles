@@ -1787,6 +1787,15 @@
             owner: "{{ target_user }}"
             group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
 
+        - name: Copy Claude settings.json (if not already present)
+          copy:
+            src: "{{ dotfiles_dir }}/common/claude/settings.json"
+            dest: "{{ target_home }}/.claude/settings.json"
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+            mode: '0644'
+            force: no
+
         - name: Check if private Claude config exists
           stat:
             path: "{{ dotfiles_dir }}/private-config/claude/CLAUDE.private.md"
