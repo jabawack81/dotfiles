@@ -1207,7 +1207,7 @@
         - name: Set Git user name
           git_config:
             name: user.name
-            value: "{{ git_user_name | default('Paolo Fabbri') }}"
+            value: "{{ git_user_name }}"
             scope: global
             
         - name: Set Git user email
@@ -1257,7 +1257,7 @@
             - name: Set SSH signing key
               git_config:
                 name: user.signingkey
-                value: "{{ ssh_signing_key | default('{{ ssh_signing_key }}') }}"
+                value: "{{ ssh_signing_key }}"
                 scope: global
                 
             - name: Set global gitignore
@@ -1292,7 +1292,7 @@
             - name: Set SSH signing key
               git_config:
                 name: user.signingkey
-                value: "{{ ssh_signing_key | default('{{ ssh_signing_key }}') }}"
+                value: "{{ ssh_signing_key }}"
                 scope: global
                 
             - name: Set global gitignore
