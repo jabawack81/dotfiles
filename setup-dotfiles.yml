@@ -1796,6 +1796,33 @@
             mode: '0644'
             force: no
 
+        - name: Ensure ~/.claude/skills directory exists
+          file:
+            path: "{{ target_home }}/.claude/skills"
+            state: directory
+            mode: '0755'
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+
+        - name: Find private Claude skills
+          find:
+            paths: "{{ dotfiles_dir }}/private-config/claude/skills"
+            file_type: directory
+            recurse: no
+          register: private_claude_skills
+          ignore_errors: yes
+
+        - name: Symlink private Claude skills
+          file:
+            src: "{{ item.path }}"
+            dest: "{{ target_home }}/.claude/skills/{{ item.path | basename }}"
+            state: link
+            force: yes
+            owner: "{{ target_user }}"
+            group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+          loop: "{{ private_claude_skills.files | default([]) }}"
+          when: private_claude_skills is succeeded
+
         - name: Check if private Claude config exists
           stat:
             path: "{{ dotfiles_dir }}/private-config/claude/CLAUDE.private.md"
