@@ -69,6 +69,10 @@ unfocused-split-opacity=0.85
 # Where new tabs appear: current (after active) or end
 window-new-tab-position=end
 
+# Always start new tabs/windows in home directory instead of inheriting CWD
+working-directory=home
+window-inherit-working-directory=false
+
 # ==============================================================================
 # Quick Terminal (drop-down/quake-style)
 # ==============================================================================
@@ -106,7 +110,7 @@ macos-option-as-alt=left
 # window-width=120                     # Initial width in columns
 # window-height=40                     # Initial height in rows
 # window-save-state=always             # Remember window size/position: default, never, always
-# window-inherit-working-directory=true # New windows start in same directory
+# window-inherit-working-directory=true # New windows start in same directory (enabled above with =false)
 # window-inherit-font-size=true        # New windows inherit font size
 # maximize=true                        # Start maximized
 # fullscreen=true                      # Start in fullscreen
