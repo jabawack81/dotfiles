@@ -113,4 +113,21 @@ hyprctl binds -j | jq -r '.[] | "\(.modmask)|\(.key)|\(.dispatcher)|\(.arg)|\(.m
     fi
 
     printf "%-35s %s\n" "$combo" "$desc"
-done | sort | fuzzel --dmenu --prompt="Keybindings > " --width=60 --lines=30 > /dev/null
+done | sort | fuzzel --dmenu \
+    --prompt="  Keybindings > " \
+    --width=60 \
+    --lines=30 \
+    --font="JetBrainsMono Nerd Font:size=13" \
+    --background-color=1a1a1aee \
+    --text-color=fdf6e3ff \
+    --prompt-color=33ccffff \
+    --match-color=00ff99ff \
+    --selection-color=292b2eff \
+    --selection-text-color=fdf6e3ff \
+    --selection-match-color=00ff99ff \
+    --border-color=33ccffcc \
+    --border-width=2 \
+    --border-radius=12 \
+    --inner-pad=8 \
+    --layer=overlay \
+    > /dev/null
