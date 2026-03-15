@@ -163,14 +163,22 @@ window#waybar {
 	color: #cb4b16;
 }
 
-/* Caffeine toggle */
+/* Caffeine / power state */
 #custom-caffeine {
 	min-width: 20px;
 	color: #586e75;
 }
 
-#custom-caffeine.on {
+#custom-caffeine.caffeine {
 	color: #268bd2;
+}
+
+#custom-caffeine.remote {
+	color: #2aa198;
+}
+
+#custom-caffeine.hibernate {
+	color: #cb4b16;
 }
 
 #custom-media {

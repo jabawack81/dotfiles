@@ -95,12 +95,13 @@
 		"tooltip": true
 	},
 
-	// Caffeine toggle (hypridle)
+	// Caffeine / power state (normal → caffeine → remote → hibernate)
 	"custom/caffeine": {
 		"interval": 5,
 		"return-type": "json",
 		"exec": "bash ~/.config/waybar_common/caffeine-status.sh",
 		"on-click": "bash ~/.config/waybar_common/caffeine-toggle.sh",
+		"on-click-right": "bash ~/.config/waybar_common/caffeine-toggle.sh reset",
 		"signal": 9,
 		"tooltip": true
 	},
