@@ -544,7 +544,16 @@
         force: yes
       become: "{{ running_as_root }}"
       become_user: "{{ target_user if running_as_root else omit }}"
-        
+
+    - name: Link fan-control script to PATH
+      file:
+        src: "{{ dotfiles_dir }}/common/scripts/fan-control.sh"
+        dest: "{{ home_dir }}/.local/bin/fan-control"
+        state: link
+        force: yes
+      become: "{{ running_as_root }}"
+      become_user: "{{ target_user if running_as_root else omit }}"
+
     - name: Ensure .config directory exists
       file:
         path: "{{ config_dir }}"
