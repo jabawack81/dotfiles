@@ -24,42 +24,84 @@ Only the essential commands needed for development:
 ### 4. Makefile with Interactive Menu
 Every project should have a Makefile that:
 - Contains all common tasks (test, lint, build, install, etc.)
-- Has `make` (default) show an interactive numbered menu
-- Has `make help` show all commands with descriptions
-- Has `make list` for quick reference
+- Has `make` (default) show an interactive numbered menu with colors
+- Has `make help` show all commands with descriptions (also colored)
+- Has `make list` for quick reference (alias for help)
 - Is kept updated as the project evolves
+- Groups tasks by category: Development, Testing, Build & Deploy, Setup
+- Shows the actual `make` command next to each number so users learn to run them directly
+- Uses `printf` (not `echo`) for ANSI color codes
 
-Menu structure example:
+Menu format — each entry shows `N) make <target>  description`:
 ```makefile
 .DEFAULT_GOAL := menu
 
+# Colors
+CYAN    := \033[36m
+GREEN   := \033[32m
+YELLOW  := \033[33m
+DIM     := \033[2m
+BOLD    := \033[1m
+RESET   := \033[0m
+
 menu:
-	@echo "╔══════════════════════════════════════════════════════╗"
-	@echo "║              Project Name - Command Menu             ║"
-	@echo "╚══════════════════════════════════════════════════════╝"
-	@echo ""
-	@echo "  === Development ==="
-	@echo "  1) Start server"
-	@echo "  2) Run console"
-	@echo ""
-	@echo "  === Testing ==="
-	@echo "  3) Run all tests"
-	@echo "  4) Run linter"
-	@echo ""
-	@read -p "Enter choice: " choice; \
+	@printf "\n"
+	@printf "$(BOLD)$(CYAN)╔══════════════════════════════════════════════════════════════╗$(RESET)\n"
+	@printf "$(BOLD)$(CYAN)║              Project Name - Command Menu                    ║$(RESET)\n"
+	@printf "$(BOLD)$(CYAN)╚══════════════════════════════════════════════════════════════╝$(RESET)\n"
+	@printf "\n"
+	@printf "  $(BOLD)$(GREEN)=== Development ===$(RESET)\n"
+	@printf "   $(YELLOW)1)$(RESET)  make server            $(DIM)Start development server$(RESET)\n"
+	@printf "   $(YELLOW)2)$(RESET)  make console            $(DIM)Run interactive console$(RESET)\n"
+	@printf "\n"
+	@printf "  $(BOLD)$(GREEN)=== Testing ===$(RESET)\n"
+	@printf "   $(YELLOW)3)$(RESET)  make test              $(DIM)Run all tests$(RESET)\n"
+	@printf "   $(YELLOW)4)$(RESET)  make test-e2e          $(DIM)Run e2e tests (Playwright)$(RESET)\n"
+	@printf "   $(YELLOW)5)$(RESET)  make lint              $(DIM)Run linter$(RESET)\n"
+	@printf "\n"
+	@printf "  $(BOLD)$(GREEN)=== Build & Deploy ===$(RESET)\n"
+	@printf "   $(YELLOW)6)$(RESET)  make build             $(DIM)Build for production$(RESET)\n"
+	@printf "\n"
+	@printf "  $(BOLD)$(GREEN)=== Setup ===$(RESET)\n"
+	@printf "   $(YELLOW)7)$(RESET)  make install           $(DIM)Install dependencies$(RESET)\n"
+	@printf "   $(YELLOW)8)$(RESET)  make setup             $(DIM)Full dev setup$(RESET)\n"
+	@printf "\n"
+	@read -p "  Enter choice: " choice; \
 	case $$choice in \
 		1) $(MAKE) server ;; \
 		2) $(MAKE) console ;; \
 		3) $(MAKE) test ;; \
-		4) $(MAKE) lint ;; \
+		4) $(MAKE) test-e2e ;; \
+		5) $(MAKE) lint ;; \
+		6) $(MAKE) build ;; \
+		7) $(MAKE) install ;; \
+		8) $(MAKE) setup ;; \
 		*) echo "Invalid choice" ;; \
 	esac
 
+# E2e tests with Playwright (include headed/debug variants)
+test-e2e:
+	cd e2e && npx playwright test
+
+test-e2e-headed:
+	cd e2e && npx playwright test --headed
+
+test-e2e-debug:
+	cd e2e && npx playwright test --debug
+
 help:
-	@echo "Available commands:"
-	@echo "  make server  - Start development server"
-	@echo "  make test    - Run all tests"
-	@echo "  make lint    - Run linter"
+	@printf "\n"
+	@printf "$(BOLD)Available commands:$(RESET)\n"
+	@printf "\n"
+	@printf "  $(CYAN)make server$(RESET)            Start development server\n"
+	@printf "  $(CYAN)make test$(RESET)              Run all tests\n"
+	@printf "  $(CYAN)make test-e2e$(RESET)          Run e2e tests (Playwright)\n"
+	@printf "  $(CYAN)make test-e2e-headed$(RESET)   Run e2e tests with browser visible\n"
+	@printf "  $(CYAN)make test-e2e-debug$(RESET)    Run e2e tests in debug mode\n"
+	@printf "  $(CYAN)make lint$(RESET)              Run linter\n"
+	@printf "\n"
+
+list: help
 ```
 
 ### 5. Links to Detailed Docs
@@ -76,8 +118,9 @@ One-sentence project description.
 ## Build Commands
 
 ```bash
-make test    # or npm test, cargo test, etc.
-make lint    # or npm run lint, etc.
+make test      # or npm test, cargo test, etc.
+make test-e2e  # e2e tests with Playwright
+make lint      # or npm run lint, etc.
 ```
 
 ## Critical Rules
