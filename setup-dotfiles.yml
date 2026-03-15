@@ -515,12 +515,12 @@
             path: "{{ dotfiles_dir }}/private-config/oh-my-zsh-plugins"
           register: private_plugins_dir
           
-        - name: Copy private plugins
-          copy:
-            src: "{{ dotfiles_dir }}/private-config/oh-my-zsh-plugins/"
-            dest: "{{ oh_my_zsh_dir }}/custom/plugins/"
-            mode: preserve
-            directory_mode: '0755'
+        - name: Link private plugins
+          file:
+            src: "{{ dotfiles_dir }}/private-config/oh-my-zsh-plugins/{{ item }}"
+            dest: "{{ oh_my_zsh_dir }}/custom/plugins/{{ item }}"
+            state: link
+          loop: "{{ lookup('pipe', 'ls ' + dotfiles_dir + '/private-config/oh-my-zsh-plugins/').split('\n') }}"
           when: private_plugins_dir.stat.exists
       when: 
         - not is_personal_machine
