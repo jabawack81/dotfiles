@@ -198,7 +198,7 @@ The playbook installs and configures version managers on **all machines**:
 - Work machines: Cloned from GitHub repositories
 - Automatically added to `.zshrc` with proper PATH configuration
 - Includes `rbenv-default-gems` plugin for auto-installing essential gems
-- Default gems include: ruby-lsp, solargraph, rubocop, pry, rails, rspec, bundler
+- Default gems include: ruby-lsp, solargraph, rubocop, reek, fasterer, pry, pry-byebug, pry-doc, rails, spring, rspec, minitest, bundler, tmuxinator
 
 #### nodenv (Node.js Version Manager)
 - All machines: Cloned from GitHub with node-build plugin

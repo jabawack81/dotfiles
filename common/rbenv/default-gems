@@ -23,3 +23,6 @@ minitest
 
 # Other useful gems
 bundler
+
+# Tmux session manager
+tmuxinator
