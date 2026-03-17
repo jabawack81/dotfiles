@@ -18,15 +18,16 @@ if [ -z "$HWMON" ]; then
     exit 1
 fi
 
-# Detect active fans (non-zero RPM)
+# Detect fans with both an RPM sensor and a PWM control channel
 FANS=()
 for i in 1 2 3 4 5; do
-    rpm=$(cat "$HWMON/fan${i}_input" 2>/dev/null || echo "0")
-    [ "$rpm" -gt 0 ] && FANS+=("$i")
+    if [[ -f "$HWMON/fan${i}_input" && -f "$HWMON/pwm${i}" ]]; then
+        FANS+=("$i")
+    fi
 done
 
 if [ ${#FANS[@]} -eq 0 ]; then
-    echo "Error: no active fans detected"
+    echo "Error: no controllable fans detected"
     exit 1
 fi
 
