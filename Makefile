@@ -128,11 +128,9 @@ docs:
 	@echo ""
 	@echo -e "$(BOLD)Hyprland Configuration:$(RESET)"
 	@echo -e "  $(GREEN)docs/HYPRLAND_CONFIG.md$(RESET)     - Complete Hyprland settings guide"
-	@echo -e "  $(GREEN)docs/HYPRLAND_MIGRATION.md$(RESET)  - Migration from Hyprland v2 to v3"
 	@echo ""
 	@echo -e "$(BOLD)Project Information:$(RESET)"
 	@echo -e "  $(GREEN)docs/ARCHITECTURE.md$(RESET)        - Project architecture and design"
-	@echo -e "  $(GREEN)docs/REFACTORING.md$(RESET)         - Repository refactoring plan"
 	@echo ""
 	@echo -e "$(BOLD)Run $(GREEN)make view-docs$(RESET)$(BOLD) to browse documentation$(RESET)"
 

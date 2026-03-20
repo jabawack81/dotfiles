@@ -139,7 +139,7 @@ Built-in diagnostic capabilities:
   - Hyprland NVIDIA env vars (NVD_BACKEND, LIBVA_DRIVER_NAME, __GLX_VENDOR_LIBRARY_NAME)
   - cursor { no_hardware_cursors = true } for NVIDIA Wayland compatibility
   - GTK settings.ini and fontconfig for proper font rendering with NVIDIA GL
-  - See NVIDIA_SUSPEND_TROUBLESHOOTING.md for full GPU setup documentation
+  - GPU setup is handled automatically by the playbook's lupus-specific tasks
 
 ### Work Machines
 - **OS**: Typically macOS

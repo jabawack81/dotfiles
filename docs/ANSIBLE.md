@@ -204,7 +204,7 @@ The playbook installs and configures version managers on **all machines**:
 - All machines: Cloned from GitHub with node-build plugin
 - Automatically added to `.zshrc` with proper PATH configuration
 - Includes `nodenv-default-packages` plugin for auto-installing essential npm packages
-- Default packages include: @anthropic/claude-cli, typescript, eslint, prettier, jest, vite, pnpm
+- Default packages include: typescript, ts-node, nodemon, eslint, prettier, vite, webpack, jest, vitest, yarn, pnpm
 
 After installation, you can:
 - Install Ruby: `rbenv install 3.3.0 && rbenv global 3.3.0` (auto-installs default gems)

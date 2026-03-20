@@ -78,10 +78,8 @@ Then open tmux and press `prefix` + `I` to install plugins.
   - `ARCHITECTURE.md`: Project architecture overview
   - `ANSIBLE.md`: Ansible playbook documentation
   - `HYPRLAND_CONFIG.md`: Hyprland window manager config
-  - `HYPRLAND_MIGRATION.md`: Migration from Hyprland v2 to v3
   - `SETUP.md`: Private config and initial setup
   - `TESTING.md`: Ansible testing and validation guide
-  - `REFACTORING.md`: Technical refactoring documentation
   - `NEOVIM_TROUBLESHOOTING.md`: LSP and Mason debugging guide
 
 **Scripts & Tools**:

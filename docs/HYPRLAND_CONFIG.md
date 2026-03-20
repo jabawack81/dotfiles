@@ -833,7 +833,7 @@ bindl = , XF86AudioStop, exec, playerctl stop              # Media Stop (desktop
 
 **File:** `common.conf` (Lines 227-243)
 
-Window rules apply behavior to windows matching specific patterns. See [Window Rules Migration Guide](./MIGRATION_v3_DOCUMENTATION.md) for v3 syntax details.
+Window rules apply behavior to windows matching specific patterns.
 
 ### Rule 1: Suppress Maximize Events
 
