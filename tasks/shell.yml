@@ -116,14 +116,11 @@
       set_fact:
         zsh_plugins: "git zsh-autosuggestions zsh-syntax-highlighting"
 
-    - name: Check for private plugins
+    - name: Discover private plugins from source directory
       find:
-        paths: "{{ oh_my_zsh_dir }}/custom/plugins"
+        paths: "{{ dotfiles_dir }}/private-config/oh-my-zsh-plugins"
         file_type: directory
-        excludes:
-          - zsh-autosuggestions
-          - zsh-syntax-highlighting
-          - example
+        recurse: no
       register: private_plugins
       when:
         - not is_personal_machine
