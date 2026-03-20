@@ -1,0 +1,222 @@
+---
+# Shell setup — zsh, oh-my-zsh, plugins, .zshrc configuration
+
+- name: Ensure zsh is installed on personal machines
+  pacman:
+    name: zsh
+    state: present
+  become: "{{ not running_as_root }}"
+  when: is_personal_machine
+
+- name: Check if oh-my-zsh is installed
+  stat:
+    path: "{{ oh_my_zsh_dir }}"
+  register: oh_my_zsh_installed
+  become: "{{ running_as_root }}"
+  become_user: "{{ target_user if running_as_root else omit }}"
+
+- name: Install oh-my-zsh
+  shell: |
+    sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+  when: not oh_my_zsh_installed.stat.exists
+  become: "{{ running_as_root }}"
+  become_user: "{{ target_user if running_as_root else omit }}"
+
+- name: Check current shell
+  shell: echo $SHELL
+  register: current_shell
+  changed_when: false
+
+- name: Get zsh path
+  shell: which zsh
+  register: zsh_path
+  changed_when: false
+
+- name: Set zsh as default shell on personal machines
+  user:
+    name: "{{ target_user }}"
+    shell: "{{ zsh_path.stdout }}"
+  become: "{{ not running_as_root }}"
+  when:
+    - is_personal_machine
+    - current_shell.stdout != zsh_path.stdout
+
+- name: Set zsh as default shell on work machines (macOS)
+  shell: chsh -s "{{ zsh_path.stdout }}"
+  when:
+    - not is_personal_machine
+    - current_shell.stdout != zsh_path.stdout
+
+- name: Install zsh-syntax-highlighting plugin
+  git:
+    repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
+    dest: "{{ oh_my_zsh_dir }}/custom/plugins/zsh-syntax-highlighting"
+  become: "{{ running_as_root }}"
+  become_user: "{{ target_user if running_as_root else omit }}"
+
+- name: Install zsh-autosuggestions plugin
+  git:
+    repo: https://github.com/zsh-users/zsh-autosuggestions
+    dest: "{{ oh_my_zsh_dir }}/custom/plugins/zsh-autosuggestions"
+  become: "{{ running_as_root }}"
+  become_user: "{{ target_user if running_as_root else omit }}"
+
+- name: Link oh-my-zsh custom files
+  file:
+    src: "{{ dotfiles_dir }}/common/.oh-my-zsh/custom/{{ item }}"
+    dest: "{{ oh_my_zsh_dir }}/custom/{{ item }}"
+    state: link
+    force: yes
+  with_items:
+    - utils.zsh
+    - ruby_aliases.zsh
+    - bedtime-prompt.zsh
+  when: oh_my_zsh_installed.stat.exists
+  become: "{{ running_as_root }}"
+  become_user: "{{ target_user if running_as_root else omit }}"
+
+- name: Install private oh-my-zsh plugins (work machines)
+  block:
+    - name: Check if private oh-my-zsh plugins exist
+      stat:
+        path: "{{ dotfiles_dir }}/private-config/oh-my-zsh-plugins"
+      register: private_plugins_dir
+
+    - name: Link private plugins
+      file:
+        src: "{{ dotfiles_dir }}/private-config/oh-my-zsh-plugins/{{ item }}"
+        dest: "{{ oh_my_zsh_dir }}/custom/plugins/{{ item }}"
+        state: link
+      loop: "{{ lookup('pipe', 'ls ' + dotfiles_dir + '/private-config/oh-my-zsh-plugins/').split('\n') }}"
+      when: private_plugins_dir.stat.exists
+  when:
+    - not is_personal_machine
+    - private_config_loaded
+  become: "{{ running_as_root }}"
+  become_user: "{{ target_user if running_as_root else omit }}"
+
+- name: Ensure .zshrc exists
+  file:
+    path: "{{ ansible_facts['env'].HOME }}/.zshrc"
+    state: touch
+    mode: '0644'
+  when: ansible_facts['env'].HOME is defined
+
+- name: Set oh-my-zsh theme to agnoster
+  lineinfile:
+    path: "{{ ansible_facts['env'].HOME }}/.zshrc"
+    regexp: '^ZSH_THEME='
+    line: 'ZSH_THEME="agnoster"'
+    state: present
+  when: ansible_facts['env'].HOME is defined
+
+- name: Configure oh-my-zsh plugins
+  block:
+    - name: Set base plugins list
+      set_fact:
+        zsh_plugins: "git zsh-autosuggestions zsh-syntax-highlighting"
+
+    - name: Check for private plugins
+      find:
+        paths: "{{ oh_my_zsh_dir }}/custom/plugins"
+        file_type: directory
+        excludes:
+          - zsh-autosuggestions
+          - zsh-syntax-highlighting
+          - example
+      register: private_plugins
+      when:
+        - not is_personal_machine
+        - private_config_loaded
+
+    - name: Add private plugins to list
+      set_fact:
+        zsh_plugins: "{{ zsh_plugins }} {{ private_plugins.files | map(attribute='path') | map('basename') | join(' ') }}"
+      when:
+        - not is_personal_machine
+        - private_config_loaded
+        - private_plugins.files is defined
+        - private_plugins.files | length > 0
+
+    - name: Update .zshrc plugins
+      replace:
+        path: "{{ ansible_facts['env'].HOME }}/.zshrc"
+        regexp: 'plugins=\([^)]*\)'
+        replace: 'plugins=({{ zsh_plugins }})'
+  when: ansible_facts['env'].HOME is defined
+
+- name: Configure common shell environment (all machines)
+  block:
+    - name: Add common PATH configurations to .zshrc
+      blockinfile:
+        path: "{{ ansible_facts['env'].HOME }}/.zshrc"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - common paths"
+        block: |
+          # Common PATH additions
+          export PATH="$PATH:$HOME/.local/bin"
+          export PATH="$PATH:$HOME/go/bin"
+
+    - name: Add 1Password CLI plugin support
+      blockinfile:
+        path: "{{ ansible_facts['env'].HOME }}/.zshrc"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - 1password"
+        block: |
+          # 1Password CLI plugins
+          if [ -f "$HOME/.config/op/plugins.sh" ]; then
+            source "$HOME/.config/op/plugins.sh"
+          fi
+
+    - name: Clean up manual pnpm entries from .zshrc
+      replace:
+        path: "{{ ansible_facts['env'].HOME }}/.zshrc"
+        regexp: '# pnpm\nexport PNPM_HOME[^#]+# pnpm end\n'
+        replace: ''
+
+    - name: Install pnpm (fast npm alternative)
+      shell: |
+        curl -fsSL https://get.pnpm.io/install.sh | sh -
+      args:
+        creates: "{{ ansible_facts['env'].HOME }}/.local/share/pnpm"
+
+    - name: Add pnpm to .zshrc
+      blockinfile:
+        path: "{{ ansible_facts['env'].HOME }}/.zshrc"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - pnpm"
+        block: |
+          # pnpm
+          export PNPM_HOME="$HOME/.local/share/pnpm"
+          case ":$PATH:" in
+            *":$PNPM_HOME:"*) ;;
+            *) export PATH="$PNPM_HOME:$PATH" ;;
+          esac
+
+    - name: Remove duplicate oh-my-zsh update mode lines
+      shell: |
+        awk '/^zstyle .:omz:update. mode reminder/ && !seen {print; seen=1; next} /^zstyle .:omz:update. mode reminder/ {next} {print}' {{ ansible_facts['env'].HOME }}/.zshrc > {{ ansible_facts['env'].HOME }}/.zshrc.tmp
+        mv {{ ansible_facts['env'].HOME }}/.zshrc.tmp {{ ansible_facts['env'].HOME }}/.zshrc
+      changed_when: false
+
+    - name: Configure oh-my-zsh auto-update behavior
+      lineinfile:
+        path: "{{ ansible_facts['env'].HOME }}/.zshrc"
+        regexp: "^zstyle ':omz:update' mode"
+        line: "zstyle ':omz:update' mode reminder  # just remind me to update when it's time"
+        state: present
+
+    - name: Enable completion waiting dots
+      lineinfile:
+        path: "{{ ansible_facts['env'].HOME }}/.zshrc"
+        regexp: "^# COMPLETION_WAITING_DOTS="
+        line: 'COMPLETION_WAITING_DOTS="true"'
+        insertafter: "^# COMPLETION_WAITING_DOTS="
+
+    - name: Add fastfetch to end of .zshrc
+      blockinfile:
+        path: "{{ ansible_facts['env'].HOME }}/.zshrc"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - fastfetch"
+        insertafter: EOF
+        block: |
+          # Run fastfetch on shell startup
+          if command -v fastfetch &> /dev/null; then
+              fastfetch
+          fi

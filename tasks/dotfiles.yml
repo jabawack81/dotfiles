@@ -1,0 +1,212 @@
+---
+# Dotfile symlinks — common configs, hostname-specific, work machine, scripts
+
+- name: Create scripts directory in PATH
+  file:
+    path: "{{ home_dir }}/.local/bin"
+    state: directory
+    mode: '0755'
+    owner: "{{ target_user }}"
+    group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+
+- name: Link tmux-claude script to PATH
+  file:
+    src: "{{ dotfiles_dir }}/common/scripts/tmux-claude.sh"
+    dest: "{{ home_dir }}/.local/bin/tmux-claude.sh"
+    state: link
+    force: yes
+  become: "{{ running_as_root }}"
+  become_user: "{{ target_user if running_as_root else omit }}"
+
+- name: Link fan-control script to PATH
+  file:
+    src: "{{ dotfiles_dir }}/common/scripts/fan-control.sh"
+    dest: "{{ home_dir }}/.local/bin/fan-control"
+    state: link
+    force: yes
+  become: "{{ running_as_root }}"
+  become_user: "{{ target_user if running_as_root else omit }}"
+
+- name: Ensure .config directory exists
+  file:
+    path: "{{ config_dir }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ target_user }}"
+    group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+
+- name: Get list of common configs
+  find:
+    paths: "{{ dotfiles_dir }}/common"
+    file_type: directory
+    recurse: no
+  register: common_configs
+
+- name: Debug - Show common configs found
+  debug:
+    msg: "Found configs: {{ common_configs.files | map(attribute='path') | map('basename') | list }}"
+  when: is_personal_machine
+
+- name: Handle common configs with backup
+  block:
+    - name: Check existing configs (non-omarchy)
+      stat:
+        path: "{{ config_dir }}/{{ item.path | basename }}"
+      register: config_stat
+      loop: "{{ common_configs.files }}"
+      when:
+        - is_personal_machine
+        - not is_omarchy_machine
+        - item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'claude']
+
+    - name: Check existing configs (omarchy)
+      stat:
+        path: "{{ config_dir }}/{{ item.path | basename }}"
+      register: config_stat_omarchy
+      loop: "{{ common_configs.files }}"
+      when:
+        - is_omarchy_machine
+        - item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime', 'claude']
+
+    - name: Backup existing configs that aren't symlinks (non-omarchy)
+      command: mv "{{ config_dir }}/{{ item.item.path | basename }}" "{{ backup_dir }}/{{ item.item.path | basename }}-backup"
+      loop: "{{ config_stat.results }}"
+      when:
+        - is_personal_machine
+        - not is_omarchy_machine
+        - item.stat is defined
+        - item.stat.exists
+        - not item.stat.islnk
+        - item.item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'claude']
+      loop_control:
+        label: "{{ item.item.path | basename }}"
+
+    - name: Backup existing configs that aren't symlinks (omarchy)
+      command: mv "{{ config_dir }}/{{ item.item.path | basename }}" "{{ backup_dir }}/{{ item.item.path | basename }}-backup"
+      loop: "{{ config_stat_omarchy.results }}"
+      when:
+        - is_omarchy_machine
+        - item.stat is defined
+        - item.stat.exists
+        - not item.stat.islnk
+        - item.item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime', 'claude']
+      loop_control:
+        label: "{{ item.item.path | basename }}"
+
+    - name: Remove existing config directories after backup (non-omarchy)
+      file:
+        path: "{{ config_dir }}/{{ item.item.path | basename }}"
+        state: absent
+      loop: "{{ config_stat.results }}"
+      when:
+        - is_personal_machine
+        - not is_omarchy_machine
+        - item.stat is defined
+        - item.stat.exists
+        - not item.stat.islnk
+        - item.item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'claude']
+      loop_control:
+        label: "{{ item.item.path | basename }}"
+
+    - name: Remove existing config directories after backup (omarchy)
+      file:
+        path: "{{ config_dir }}/{{ item.item.path | basename }}"
+        state: absent
+      loop: "{{ config_stat_omarchy.results }}"
+      when:
+        - is_omarchy_machine
+        - item.stat is defined
+        - item.stat.exists
+        - not item.stat.islnk
+        - item.item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime', 'claude']
+      loop_control:
+        label: "{{ item.item.path | basename }}"
+
+    - name: Create symlinks for common configs (non-omarchy machines)
+      file:
+        src: "{{ item.path }}"
+        dest: "{{ config_dir }}/{{ item.path | basename }}"
+        state: link
+        force: yes
+        owner: "{{ target_user }}"
+        group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+      loop: "{{ common_configs.files }}"
+      when:
+        - is_personal_machine
+        - not is_omarchy_machine
+        - item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'git', 'claude']  # handled separately
+
+    - name: Create symlinks for common configs (omarchy machine)
+      file:
+        src: "{{ item.path }}"
+        dest: "{{ config_dir }}/{{ item.path | basename }}"
+        state: link
+        force: yes
+        owner: "{{ target_user }}"
+        group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+      loop: "{{ common_configs.files }}"
+      when:
+        - is_omarchy_machine
+        - item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime', 'claude']  # omarchy manages these
+
+    - name: Link nvim .neoconf.json file
+      file:
+        src: "{{ dotfiles_dir }}/common/nvim/dot_neoconf.json"
+        dest: "{{ config_dir }}/nvim/.neoconf.json"
+        state: link
+        force: yes
+        owner: "{{ target_user }}"
+        group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+      when: is_personal_machine
+
+- name: Create symlinks for common configs (work machine - limited)
+  file:
+    src: "{{ item.path }}"
+    dest: "{{ config_dir }}/{{ item.path | basename }}"
+    state: link
+    force: yes
+  loop: "{{ common_configs.files }}"
+  when:
+    - not is_personal_machine
+    - item.path | basename in work_configs
+
+- name: Link nvim .neoconf.json file (work machine)
+  file:
+    src: "{{ dotfiles_dir }}/common/nvim/dot_neoconf.json"
+    dest: "{{ config_dir }}/nvim/.neoconf.json"
+    state: link
+    force: yes
+  when: not is_personal_machine
+
+- name: Check if hostname-specific directory exists
+  stat:
+    path: "{{ dotfiles_dir }}/{{ hostname }}"
+  register: hostname_dir
+
+- name: Get list of hostname-specific configs
+  find:
+    paths: "{{ dotfiles_dir }}/{{ hostname }}"
+    file_type: directory
+    recurse: no
+  register: hostname_configs
+  when: hostname_dir.stat.exists
+
+- name: Create symlinks for hostname-specific configs
+  file:
+    src: "{{ item.path }}"
+    dest: "{{ config_dir }}/{{ item.path | basename }}"
+    state: link
+    force: yes
+  loop: "{{ hostname_configs.files }}"
+  when:
+    - hostname_dir.stat.exists
+    - item.path | basename not in ['waybar', 'hypr', 'eww', 'claude']  # These are handled specially
+
+- name: Link .tmux.conf to home directory
+  file:
+    src: "{{ dotfiles_dir }}/dot_tmux.conf"
+    dest: "{{ target_home }}/.tmux.conf"
+    state: link
+    force: yes
+    owner: "{{ target_user }}"
+    group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"

@@ -1,0 +1,179 @@
+---
+# Package installation — pacman, AUR, and machine-specific packages
+
+- name: Ensure required packages are installed (Personal machines - non-omarchy)
+  pacman:
+    name: "{{ item }}"
+    state: present
+  become: "{{ not running_as_root }}"
+  loop: "{{ required_packages }}"
+  when:
+    - is_personal_machine
+    - not is_omarchy_machine
+
+- name: Skip package installation on omarchy machines
+  debug:
+    msg: |
+      Skipping required_packages installation on omarchy machine.
+      Omarchy manages desktop packages. Only lupus-specific packages will be installed.
+  when: is_omarchy_machine
+
+- name: Skip package installation on work machines (macOS)
+  debug:
+    msg: |
+      Skipping package installation on macOS. Please install these packages manually via Homebrew:
+
+      Terminal apps:
+      brew install ghostty neovim lazygit git-delta jq ripgrep fzf bat htop btop gh broot
+      brew install anomalyco/tap/opencode
+
+      GUI apps:
+      brew install --cask firefox obsidian discord slack telegram
+
+      Note: nvtop, grim, waybar, hyprland, etc. are Linux-only
+  when: not is_personal_machine
+
+- name: Check if yay is installed
+  command: which yay
+  register: yay_check
+  ignore_errors: yes
+  changed_when: false
+  when:
+    - is_personal_machine
+    - not is_omarchy_machine
+
+- name: Install yay dependencies
+  pacman:
+    name:
+      - base-devel
+      - git
+    state: present
+  become: "{{ not running_as_root }}"
+  when:
+    - is_personal_machine
+    - not is_omarchy_machine
+    - yay_check.rc != 0
+
+- name: Clone yay repository
+  git:
+    repo: https://aur.archlinux.org/yay.git
+    dest: /tmp/yay
+    force: yes
+  when:
+    - is_personal_machine
+    - not is_omarchy_machine
+    - yay_check.rc != 0
+
+- name: Build and install yay
+  shell: |
+    cd /tmp/yay
+    makepkg -si --noconfirm
+  args:
+    creates: /usr/bin/yay
+  when:
+    - is_personal_machine
+    - not is_omarchy_machine
+    - yay_check.rc != 0
+
+- name: Install PipeWire audio compatibility layers
+  pacman:
+    name:
+      - pipewire-pulse
+      - pipewire-jack
+    state: present
+  become: "{{ not running_as_root }}"
+  when:
+    - is_personal_machine
+    - not is_omarchy_machine
+
+- name: Configure sudo for target user (when running as root)
+  lineinfile:
+    path: /etc/sudoers.d/ansible-aur
+    line: "{{ target_user }} ALL=(ALL) NOPASSWD: ALL"
+    create: yes
+    mode: '0440'
+    validate: 'visudo -cf %s'
+  when:
+    - running_as_root
+    - is_personal_machine
+    - not is_omarchy_machine
+
+- name: Install AUR packages with yay
+  shell: |
+    export SUDO_ASKPASS=/usr/bin/false
+    yay -S --noconfirm --norebuild --noredownload {{ item }} || true
+  loop: "{{ aur_packages }}"
+  when:
+    - is_personal_machine
+    - not is_omarchy_machine
+  become: "{{ running_as_root }}"
+  become_user: "{{ target_user if running_as_root else omit }}"
+
+- name: Remove temporary sudo configuration
+  file:
+    path: /etc/sudoers.d/ansible-aur
+    state: absent
+  when:
+    - running_as_root
+    - is_personal_machine
+    - not is_omarchy_machine
+
+- name: Install shinkiro-specific packages (AMD GPU tools)
+  pacman:
+    name: "{{ item }}"
+    state: present
+  become: "{{ not running_as_root }}"
+  loop: "{{ shinkiro_packages }}"
+  when: hostname == 'shinkiro'
+  ignore_errors: yes
+
+- name: Setup CoreCtrl autostart for shinkiro
+  copy:
+    src: /usr/share/applications/org.corectrl.CoreCtrl.desktop
+    dest: "{{ config_dir }}/autostart/org.corectrl.CoreCtrl.desktop"
+    remote_src: yes
+    mode: '0644'
+  become: no
+  when: hostname == 'shinkiro'
+  ignore_errors: yes
+
+- name: Setup polkit rule for CoreCtrl on shinkiro
+  copy:
+    content: |
+      polkit.addRule(function(action, subject) {
+          if ((action.id == "org.corectrl.helper.init" ||
+               action.id == "org.corectrl.helperkiller.init") &&
+              subject.local == true &&
+              subject.isInGroup("wheel")) {
+              return polkit.Result.YES;
+          }
+      });
+    dest: /etc/polkit-1/rules.d/50-corectrl.rules
+    mode: '0644'
+  become: yes
+  when: hostname == 'shinkiro'
+  ignore_errors: yes
+
+- name: Install kyrios-specific packages (Intel CPU/GPU tools)
+  pacman:
+    name: "{{ item }}"
+    state: present
+  become: "{{ not running_as_root }}"
+  loop: "{{ kyrios_packages }}"
+  when: hostname == 'kyrios'
+  ignore_errors: yes
+
+- name: Install lupus-specific packages (NVIDIA GPU)
+  pacman:
+    name: "{{ item }}"
+    state: present
+  become: "{{ not running_as_root }}"
+  loop: "{{ lupus_packages }}"
+  when: hostname == 'lupus'
+  ignore_errors: yes
+
+- name: Install lupus-specific AUR packages (fingerprint sensor)
+  shell: yay -S --noconfirm --needed --rebuild {{ item }}
+  loop: "{{ lupus_aur_packages }}"
+  when: hostname == 'lupus'
+  ignore_errors: yes

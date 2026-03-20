@@ -1,0 +1,85 @@
+---
+# Claude Code configuration — rules, agents, skills, CLAUDE.md assembly
+
+- name: Ensure ~/.claude directory exists
+  file:
+    path: "{{ target_home }}/.claude"
+    state: directory
+    mode: '0755'
+    owner: "{{ target_user }}"
+    group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+
+- name: Symlink Claude rules directory
+  file:
+    src: "{{ dotfiles_dir }}/common/claude/rules"
+    dest: "{{ target_home }}/.claude/rules"
+    state: link
+    force: yes
+    owner: "{{ target_user }}"
+    group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+
+- name: Symlink Claude agents directory
+  file:
+    src: "{{ dotfiles_dir }}/common/claude/agents"
+    dest: "{{ target_home }}/.claude/agents"
+    state: link
+    force: yes
+    owner: "{{ target_user }}"
+    group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+
+- name: Copy Claude settings.json (if not already present)
+  copy:
+    src: "{{ dotfiles_dir }}/common/claude/settings.json"
+    dest: "{{ target_home }}/.claude/settings.json"
+    owner: "{{ target_user }}"
+    group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+    mode: '0644'
+    force: no
+
+- name: Ensure ~/.claude/skills directory exists
+  file:
+    path: "{{ target_home }}/.claude/skills"
+    state: directory
+    mode: '0755'
+    owner: "{{ target_user }}"
+    group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+
+- name: Find private Claude skills
+  find:
+    paths: "{{ dotfiles_dir }}/private-config/claude/skills"
+    file_type: directory
+    recurse: no
+  register: private_claude_skills
+  ignore_errors: yes
+
+- name: Symlink private Claude skills
+  file:
+    src: "{{ item.path }}"
+    dest: "{{ target_home }}/.claude/skills/{{ item.path | basename }}"
+    state: link
+    force: yes
+    owner: "{{ target_user }}"
+    group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+  loop: "{{ private_claude_skills.files | default([]) }}"
+  when: private_claude_skills is succeeded
+
+- name: Check if private Claude config exists
+  stat:
+    path: "{{ dotfiles_dir }}/private-config/claude/CLAUDE.private.md"
+  register: claude_private_config
+
+- name: Assemble CLAUDE.md (public + private)
+  shell: >
+    cat "{{ dotfiles_dir }}/common/claude/CLAUDE.md"
+    "{{ dotfiles_dir }}/private-config/claude/CLAUDE.private.md"
+    > "{{ target_home }}/.claude/CLAUDE.md"
+  when: claude_private_config.stat.exists
+
+- name: Copy CLAUDE.md (public only)
+  copy:
+    src: "{{ dotfiles_dir }}/common/claude/CLAUDE.md"
+    dest: "{{ target_home }}/.claude/CLAUDE.md"
+    owner: "{{ target_user }}"
+    group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+    mode: '0644'
+  when: not claude_private_config.stat.exists

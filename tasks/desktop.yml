@@ -1,0 +1,404 @@
+---
+# Desktop environment — Hyprland, waybar, GTK, eww, bedtime, lupus/omarchy
+
+- name: Setup Hyprland with clean symlink structure
+  block:
+    - name: Check existing hypr directories
+      stat:
+        path: "{{ item }}"
+      register: hypr_checks
+      loop:
+        - "{{ config_dir }}/hypr"
+        - "{{ config_dir }}/hypr_common"
+
+    - name: Backup old hypr setup if needed
+      command: mv "{{ config_dir }}/hypr" "{{ backup_dir }}/hypr-old-backup"
+      when:
+        - not is_omarchy_machine
+        - hypr_checks.results[0].stat.exists
+        - not hypr_checks.results[0].stat.islnk
+
+    - name: Remove old hypr symlinks/directories
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ config_dir }}/hypr"
+        - "{{ config_dir }}/hypr_common"
+      when:
+        - is_personal_machine
+        - not is_omarchy_machine
+
+    - name: Create hypr symlink to machine-specific directory
+      file:
+        src: "{{ dotfiles_dir }}/{{ hostname }}/hypr"
+        dest: "{{ config_dir }}/hypr"
+        state: link
+        force: yes
+        owner: "{{ target_user }}"
+        group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+      when:
+        - is_personal_machine
+        - hostname in ['kyrios', 'shinkiro']
+
+    - name: Create hypr_common symlink to common directory
+      file:
+        src: "{{ dotfiles_dir }}/common/hypr"
+        dest: "{{ config_dir }}/hypr_common"
+        state: link
+        force: yes
+        owner: "{{ target_user }}"
+        group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+      when:
+        - is_personal_machine
+        - not is_omarchy_machine
+
+- name: Ensure gtk-3.0 directory exists
+  file:
+    path: "{{ config_dir }}/gtk-3.0"
+    state: directory
+    mode: '0755'
+  when:
+    - is_personal_machine
+    - not is_omarchy_machine
+
+- name: Link GTK3 CSS for system-wide theming
+  file:
+    src: "{{ dotfiles_dir }}/common/thunar/gtk.css"
+    dest: "{{ config_dir }}/gtk-3.0/gtk.css"
+    state: link
+    force: yes
+  when:
+    - is_personal_machine
+    - not is_omarchy_machine
+
+- name: Ensure Thunar directory exists (capital T)
+  file:
+    path: "{{ config_dir }}/Thunar"
+    state: directory
+    mode: '0755'
+  when:
+    - is_personal_machine
+    - not is_omarchy_machine
+
+- name: Link GTK files to Thunar directory
+  file:
+    src: "{{ dotfiles_dir }}/common/thunar/{{ item }}"
+    dest: "{{ config_dir }}/Thunar/{{ item }}"
+    state: link
+    force: yes
+  loop:
+    - gtk.css
+    - gtkrc-2.0
+  when:
+    - is_personal_machine
+    - not is_omarchy_machine
+
+- name: Setup Waybar with clean symlink structure
+  block:
+    - name: Check existing waybar directories
+      stat:
+        path: "{{ item }}"
+      register: waybar_checks
+      loop:
+        - "{{ config_dir }}/waybar"
+        - "{{ config_dir }}/waybar_common"
+
+    - name: Backup old waybar setup if needed
+      command: mv "{{ config_dir }}/waybar" "{{ backup_dir }}/waybar-old-backup"
+      when:
+        - not is_omarchy_machine
+        - waybar_checks.results[0].stat.exists
+        - not waybar_checks.results[0].stat.islnk
+
+    - name: Remove old waybar symlinks/directories
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ config_dir }}/waybar"
+        - "{{ config_dir }}/waybar_common"
+      when:
+        - is_personal_machine
+        - not is_omarchy_machine
+
+    - name: Create waybar symlink to machine-specific directory
+      file:
+        src: "{{ dotfiles_dir }}/{{ hostname }}/waybar"
+        dest: "{{ config_dir }}/waybar"
+        state: link
+        force: yes
+        owner: "{{ target_user }}"
+        group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+      when:
+        - is_personal_machine
+        - hostname in ['kyrios', 'shinkiro']
+
+    - name: Create waybar_common symlink to common directory
+      file:
+        src: "{{ dotfiles_dir }}/common/waybar"
+        dest: "{{ config_dir }}/waybar_common"
+        state: link
+        force: yes
+        owner: "{{ target_user }}"
+        group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+      when:
+        - is_personal_machine
+        - not is_omarchy_machine
+
+- name: Configure monitor for lupus (1080p laptop screen)
+  copy:
+    content: |
+      # Lupus monitor config (ThinkPad T470p - 14" 1920x1080)
+      # Managed by dotfiles playbook - re-applied via omarchy post-update hook
+
+      env = GDK_SCALE,1
+      monitor=,highres,auto,1
+    dest: "{{ config_dir }}/hypr/monitors.conf"
+    mode: '0644'
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+  when: hostname == 'lupus'
+
+- name: Apply lupus waybar customizations (Omarchy overlay)
+  block:
+    - name: Ensure gpu-status script is executable
+      file:
+        path: "{{ dotfiles_dir }}/lupus/waybar/gpu-status.sh"
+        mode: '0755'
+
+    - name: Ensure apply-customizations script is executable
+      file:
+        path: "{{ dotfiles_dir }}/lupus/waybar/apply-customizations.sh"
+        mode: '0755'
+
+    - name: Run waybar apply-customizations script
+      shell: "{{ dotfiles_dir }}/lupus/waybar/apply-customizations.sh"
+      register: waybar_apply_result
+
+    - name: Show waybar customization result
+      debug:
+        msg: "{{ waybar_apply_result.stdout }}"
+
+    - name: Ensure omarchy hooks directory exists
+      file:
+        path: "{{ config_dir }}/omarchy/hooks"
+        state: directory
+        mode: '0755'
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+
+    - name: Install omarchy post-update hook
+      copy:
+        content: |
+          #!/bin/bash
+          # Re-apply lupus customizations after Omarchy updates.
+          # Omarchy migrations may reset configs, so we re-apply our patches.
+
+          DOTFILES_DIR="{{ dotfiles_dir }}"
+          MONITORS_CONF="$HOME/.config/hypr/monitors.conf"
+
+          # Re-apply monitor config (1080p, scale 1)
+          echo "Running post-update hook: re-applying lupus monitor config..."
+          printf '%s\n' \
+            '# Lupus monitor config (ThinkPad T470p - 14" 1920x1080)' \
+            '# Managed by dotfiles playbook - re-applied via omarchy post-update hook' \
+            '' \
+            'env = GDK_SCALE,1' \
+            'monitor=,highres,auto,1' \
+            > "$MONITORS_CONF"
+
+          # Re-apply waybar customizations
+          echo "Running post-update hook: re-applying lupus waybar customizations..."
+          "$DOTFILES_DIR/lupus/waybar/apply-customizations.sh"
+        dest: "{{ config_dir }}/omarchy/hooks/post-update"
+        mode: '0755'
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+  when: hostname == 'lupus'
+
+- name: Setup bedtime reminder system
+  block:
+    - name: Remove old bedtime directory if exists
+      file:
+        path: "{{ config_dir }}/bedtime"
+        state: absent
+
+    - name: Symlink bedtime directory
+      file:
+        src: "{{ dotfiles_dir }}/common/bedtime"
+        dest: "{{ config_dir }}/bedtime"
+        state: link
+        force: yes
+        owner: "{{ target_user }}"
+        group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+
+    - name: Create systemd user directory
+      file:
+        path: "{{ ansible_facts['env'].HOME }}/.config/systemd/user"
+        state: directory
+        mode: '0755'
+
+    - name: Install bedtime systemd files
+      file:
+        src: "{{ dotfiles_dir }}/common/bedtime/{{ item }}"
+        dest: "{{ ansible_facts['env'].HOME }}/.config/systemd/user/{{ item }}"
+        state: link
+        force: yes
+      loop:
+        - bedtime-reminder.service
+        - bedtime-reminder.timer
+
+    - name: Enable bedtime reminder timer (when not root)
+      systemd:
+        name: bedtime-reminder.timer
+        enabled: yes
+        daemon_reload: yes
+        scope: user
+      when: not running_as_root
+      ignore_errors: yes
+
+    - name: Check if bedtime timer is already enabled
+      stat:
+        path: "{{ target_home }}/.config/systemd/user/timers.target.wants/bedtime-reminder.timer"
+      register: bedtime_timer_enabled
+
+    - name: Enable bedtime reminder timer as target user (when root)
+      shell: |
+        echo "Note: Cannot enable user systemd services when running as root."
+        echo "Please run as your user: systemctl --user enable --now bedtime-reminder.timer"
+      when:
+        - running_as_root
+        - not bedtime_timer_enabled.stat.exists
+
+    - name: Show bedtime timer status
+      debug:
+        msg: |
+          {% if bedtime_timer_enabled.stat.exists %}
+          Bedtime reminder timer is already enabled
+          {% else %}
+          To enable bedtime timer, run as your user (not root):
+          systemctl --user enable --now bedtime-reminder.timer
+          {% endif %}
+  when:
+    - is_personal_machine
+    - not is_omarchy_machine
+
+- name: Setup eww widget system
+  block:
+    - name: Create local bin directory
+      file:
+        path: "{{ ansible_facts['env'].HOME }}/.local/bin"
+        state: directory
+        mode: '0755'
+
+    - name: Symlink eww binary
+      file:
+        src: "{{ dotfiles_dir }}/common/bin/eww"
+        dest: "{{ ansible_facts['env'].HOME }}/.local/bin/eww"
+        state: link
+        force: yes
+
+    - name: Create eww config directory
+      file:
+        path: "{{ config_dir }}/eww"
+        state: directory
+        mode: '0755'
+
+    - name: Symlink machine-specific eww files
+      file:
+        src: "{{ item }}"
+        dest: "{{ config_dir }}/eww/{{ item | basename }}"
+        state: link
+        force: yes
+      with_fileglob:
+        - "{{ dotfiles_dir }}/{{ hostname }}/eww/*"
+  when:
+    - is_personal_machine
+    - not is_omarchy_machine
+
+- name: Setup fingerprint authentication on lupus
+  block:
+    - name: Disable conflicting fprintd service
+      systemd:
+        name: fprintd.service
+        enabled: no
+        state: stopped
+      ignore_errors: yes
+
+    - name: Enable open-fprintd service
+      systemd:
+        name: open-fprintd.service
+        enabled: yes
+        state: restarted
+
+    - name: Ensure pam_fprintd is configured for sudo
+      lineinfile:
+        path: /etc/pam.d/sudo
+        line: "auth        sufficient  pam_fprintd.so"
+        insertbefore: "^auth.*pam_unix"
+        state: present
+
+    - name: Ensure pam_fprintd is configured for su
+      lineinfile:
+        path: /etc/pam.d/su
+        line: "auth        sufficient  pam_fprintd.so"
+        insertbefore: "^auth.*pam_unix"
+        state: present
+
+    - name: Ensure pam_fprintd is configured for hyprlock
+      lineinfile:
+        path: /etc/pam.d/hyprlock
+        line: "auth        sufficient  pam_fprintd.so"
+        insertbefore: "^auth.*pam_unix"
+        state: present
+
+    - name: Ensure pam_fprintd is configured for sddm
+      lineinfile:
+        path: /etc/pam.d/sddm
+        line: "auth        sufficient  pam_fprintd.so"
+        insertbefore: "^auth.*pam_unix"
+        state: present
+  become: "{{ not running_as_root }}"
+  when: hostname == 'lupus'
+
+- name: Configure fingerprint authentication on kyrios
+  block:
+    - name: Install fingerprint packages
+      pacman:
+        name:
+          - fprintd
+          - libfprint
+        state: present
+
+    - name: Create fingerprint setup instructions
+      copy:
+        dest: "{{ ansible_facts['env'].HOME }}/fingerprint-setup-instructions.txt"
+        content: |
+          ThinkPad T460s Fingerprint Setup Instructions
+          =============================================
+
+          Your fingerprint reader (Validity Sensors VFS7500) has been detected.
+
+          To enable fingerprint authentication:
+
+          1. Configure PAM for fingerprint support:
+             sudo sed -i '3i auth       sufficient                  pam_fprintd.so' /etc/pam.d/system-auth
+
+          2. Enroll your fingerprints:
+             fprintd-enroll -f right-index-finger
+             fprintd-enroll -f left-index-finger
+
+          3. Test with sudo:
+             sudo echo "Fingerprint test"
+
+          4. For 1Password:
+             - Open 1Password preferences
+             - Go to Security settings
+             - Enable "Unlock with system authentication"
+
+          Note: Always have a password backup in case fingerprint fails!
+        owner: "{{ target_user }}"
+        group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+        mode: '0644'
+  when: hostname == 'kyrios'
