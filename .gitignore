@@ -20,6 +20,8 @@ shinkiro/hypr/Fonts/
 # Ansible check output (may contain private config values)
 ansible-check.txt
 
+# Neovim generated files
+common/nvim/.neoconf.json
 # Private neovim LSP settings (work-specific, not public)
 common/nvim/lua/private/
 
