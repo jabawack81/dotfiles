@@ -18,7 +18,7 @@
   become: "{{ running_as_root }}"
   become_user: "{{ target_user if running_as_root else omit }}"
 
-- name: Link fan-control script to PATH
+- name: Link fan-control script to PATH (shinkiro only)
   file:
     src: "{{ dotfiles_dir }}/common/scripts/fan-control.sh"
     dest: "{{ home_dir }}/.local/bin/fan-control"
@@ -26,6 +26,7 @@
     force: yes
   become: "{{ running_as_root }}"
   become_user: "{{ target_user if running_as_root else omit }}"
+  when: hostname == 'shinkiro'
 
 - name: Ensure .config directory exists
   file:
