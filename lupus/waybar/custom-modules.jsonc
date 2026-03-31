@@ -8,7 +8,7 @@
     "exec": "gpu-status",
     "return-type": "json",
     "interval": 10,
-    "on-click": "omarchy-launch-floating-terminal-with-presentation envy-tui",
+    "on-click": "omarchy-launch-envy-tui",
     "tooltip": true
   },
   "memory": {
@@ -24,6 +24,14 @@
     "interval": 5,
     "signal": 9,
     "on-click": "omarchy-toggle-caffeine",
+    "tooltip": true
+  },
+  "custom/fan": {
+    "format": "{}",
+    "exec": "fan-status",
+    "return-type": "json",
+    "interval": 5,
+    "on-click": "omarchy-launch-thinkfan-tui",
     "tooltip": true
   }
 }
