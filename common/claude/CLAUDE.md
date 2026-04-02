@@ -14,3 +14,7 @@ Always be conscious of security risks. Use the elite-security-auditor agent to r
 
 # Documentation
 After significant code changes (new features, API changes, config changes, refactors affecting public interfaces), use the docs-updater agent to verify that docs/, README, CLAUDE.md, and Makefile are still accurate. Fix any stale documentation before considering the task complete.
+
+# Markdown Formatting
+- Always align columns in markdown tables (pad cells with spaces so pipes line up)
+- Always leave a blank line before a table (required for Obsidian and some markdown parsers to render tables correctly)
