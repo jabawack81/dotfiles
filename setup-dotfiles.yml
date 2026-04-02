@@ -136,6 +136,8 @@
       - nvtop
       - nvidia-prime
       - dkms
+      - hyprpwcenter            # native Hyprland PipeWire audio control center
+      - hyprland-qt-support     # QT theming integration for Hyprland
       # nvidia-580xx-dkms and nvidia-580xx-utils installed via AUR (yay -S aur/nvidia-580xx-dkms)
       # nvidia-open does NOT support Maxwell (940MX) - must use 580xx branch
 
@@ -143,6 +145,7 @@
       - open-fprintd          # fingerprint daemon (works with python-validity)
       - fprintd-clients-git   # fprintd client tools (enroll, verify, list)
       - python-validity       # Validity/Synaptics fingerprint sensor driver
+      - thinkfan-tui          # TUI for ThinkPad fan control
 
   tasks:
     # ── Bootstrap ──────────────────────────────────────────────

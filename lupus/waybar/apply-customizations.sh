@@ -20,10 +20,11 @@ if [ ! -f "$WAYBAR_CONFIG" ]; then
   echo "  Waybar config not found at $WAYBAR_CONFIG"
   echo "  Omarchy may not have set up waybar yet (reboot/session restart needed)."
   echo "  Skipping config patching - the post-update hook will re-run this later."
-  # Still link gpu-status so it's ready when waybar starts
+  # Still link status scripts so they're ready when waybar starts
   mkdir -p "$HOME/.local/bin"
   ln -sf "$LUPUS_WAYBAR/gpu-status.sh" "$HOME/.local/bin/gpu-status"
-  echo "  Linked gpu-status to ~/.local/bin/"
+  ln -sf "$LUPUS_WAYBAR/fan-status.sh" "$HOME/.local/bin/fan-status"
+  echo "  Linked gpu-status and fan-status to ~/.local/bin/"
   exit 0
 fi
 
@@ -32,6 +33,13 @@ if [ ! -L "$HOME/.local/bin/gpu-status" ] || [ "$(readlink -f "$HOME/.local/bin/
   mkdir -p "$HOME/.local/bin"
   ln -sf "$LUPUS_WAYBAR/gpu-status.sh" "$HOME/.local/bin/gpu-status"
   echo "  Linked gpu-status to ~/.local/bin/"
+fi
+
+# --- 1a. Symlink fan-status script to PATH ---
+if [ ! -L "$HOME/.local/bin/fan-status" ] || [ "$(readlink -f "$HOME/.local/bin/fan-status")" != "$LUPUS_WAYBAR/fan-status.sh" ]; then
+  mkdir -p "$HOME/.local/bin"
+  ln -sf "$LUPUS_WAYBAR/fan-status.sh" "$HOME/.local/bin/fan-status"
+  echo "  Linked fan-status to ~/.local/bin/"
 fi
 
 # --- 2. Patch waybar config.jsonc using Python (safe JSON manipulation) ---
@@ -109,6 +117,18 @@ if "custom/gpu" not in modules_right:
         print("  WARNING: cpu not found in modules-right")
 else:
     print("  custom/gpu already in modules-right")
+
+# Add custom/fan after custom/gpu
+if "custom/fan" not in modules_right:
+    try:
+        idx = modules_right.index("custom/gpu")
+        modules_right.insert(idx + 1, "custom/fan")
+        changed = True
+        print("  Added custom/fan to modules-right")
+    except ValueError:
+        print("  WARNING: custom/gpu not found in modules-right")
+else:
+    print("  custom/fan already in modules-right")
 
 # Add memory after cpu
 if "memory" not in modules_right:

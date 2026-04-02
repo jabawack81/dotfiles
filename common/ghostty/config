@@ -168,3 +168,6 @@ macos-option-as-alt=left
 # --- Custom shaders (you have many in ghostty-shaders/) ---
 # custom-shader=~/.config/ghostty/ghostty-shaders/bloom.glsl
 # custom-shader=~/.config/ghostty/ghostty-shaders/crt.glsl
+
+# Fix general slowness on hyprland (https://github.com/ghostty-org/ghostty/discussions/3224)
+async-backend = epoll

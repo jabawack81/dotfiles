@@ -359,6 +359,29 @@
         line: "auth        sufficient  pam_fprintd.so"
         insertbefore: "^auth.*pam_unix"
         state: present
+
+    - name: Ensure pam_fprintd is configured for polkit (1Password, etc.)
+      copy:
+        dest: /etc/pam.d/polkit-1
+        content: |
+          #%PAM-1.0
+
+          auth        sufficient  pam_fprintd.so
+          auth        include     system-auth
+          account     include     system-auth
+          password    include     system-auth
+          session     include     system-auth
+        mode: '0644'
+  become: "{{ not running_as_root }}"
+  when: hostname == 'lupus'
+
+- name: Enable ThinkPad fan control on lupus
+  copy:
+    dest: /etc/modprobe.d/thinkpad_acpi.conf
+    content: |
+      # Enable fan control for ThinkPad T470p
+      options thinkpad_acpi fan_control=1
+    mode: '0644'
   become: "{{ not running_as_root }}"
   when: hostname == 'lupus'
 
