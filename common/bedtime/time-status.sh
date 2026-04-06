@@ -5,14 +5,44 @@
 # Allow environment override for testing, otherwise use current time
 HOUR=${HOUR:-$(date +%-H)}
 DAY=${DAY:-$(date +%u)} # 1=Monday, 7=Sunday
+TODAY=${TODAY:-$(date +%Y-%m-%d)}
+TOMORROW=${TOMORROW:-$(date -d "+1 day" +%Y-%m-%d)}
 
-# Check if it's a school night (Sunday-Thursday nights)
+# UK bank holidays — cached from https://www.gov.uk/bank-holidays.json
+BANK_HOLIDAYS_CACHE="$HOME/.cache/uk-bank-holidays.txt"
+
+refresh_bank_holidays() {
+    if [[ -f "$BANK_HOLIDAYS_CACHE" ]]; then
+        local age=$(( $(date +%s) - $(stat -c %Y "$BANK_HOLIDAYS_CACHE") ))
+        [[ $age -lt 2592000 ]] && return 0  # Fresh (< 30 days)
+    fi
+    # Refresh in background to avoid blocking waybar
+    (curl -sf "https://www.gov.uk/bank-holidays.json" 2>/dev/null | \
+        jq -r '.["england-and-wales"].events[].date' > "$BANK_HOLIDAYS_CACHE.tmp" 2>/dev/null && \
+        mv "$BANK_HOLIDAYS_CACHE.tmp" "$BANK_HOLIDAYS_CACHE") &
+}
+
+is_bank_holiday() {
+    [[ -f "$BANK_HOLIDAYS_CACHE" ]] && grep -qxF "$1" "$BANK_HOLIDAYS_CACHE"
+}
+
+refresh_bank_holidays
+
+# Check if it's a school night (Sunday-Thursday nights, unless a bank holiday applies)
 is_schoolnight() {
+    if [ $HOUR -ge 0 ] && [ $HOUR -lt 6 ]; then
+        # Early morning: tail end of last night — check if TODAY is a day off
+        is_bank_holiday "$TODAY" && return 1
+    else
+        # Evening: check if TOMORROW is a day off
+        is_bank_holiday "$TOMORROW" && return 1
+    fi
     [ $DAY -eq 7 ] || [ $DAY -ge 1 ] && [ $DAY -le 4 ]
 }
 
-# Check if it's a weekday (Monday-Friday)
+# Check if it's a weekday (Monday-Friday, excluding bank holidays)
 is_weekday() {
+    is_bank_holiday "$TODAY" && return 1
     [ $DAY -ge 1 ] && [ $DAY -le 5 ]
 }
 
