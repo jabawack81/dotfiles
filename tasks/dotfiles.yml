@@ -179,6 +179,29 @@
     force: yes
   when: not is_personal_machine
 
+- name: Link private nvim config from private-config (work-specific LSP, plugins)
+  block:
+    - name: Check if private nvim config exists in private-config
+      stat:
+        path: "{{ dotfiles_dir }}/private-config/nvim/lua/private"
+      register: private_nvim_dir
+
+    - name: Ensure nvim lua directory exists
+      file:
+        path: "{{ config_dir }}/nvim/lua"
+        state: directory
+        mode: '0755'
+      when: private_nvim_dir.stat.exists
+
+    - name: Symlink private nvim lua directory
+      file:
+        src: "{{ dotfiles_dir }}/private-config/nvim/lua/private"
+        dest: "{{ config_dir }}/nvim/lua/private"
+        state: link
+        force: yes
+      when: private_nvim_dir.stat.exists
+  when: private_config_loaded
+
 - name: Check if hostname-specific directory exists
   stat:
     path: "{{ dotfiles_dir }}/{{ hostname }}"
