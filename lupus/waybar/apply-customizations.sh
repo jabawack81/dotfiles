@@ -167,7 +167,7 @@ fi
 if pgrep -x waybar > /dev/null; then
   killall waybar
   sleep 1
-  waybar &
+  waybar >/dev/null 2>&1 &
   disown
   echo "  Waybar restarted"
 fi

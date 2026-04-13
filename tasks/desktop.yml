@@ -153,7 +153,17 @@
       # Managed by dotfiles playbook - re-applied via omarchy post-update hook
 
       env = GDK_SCALE,1
-      monitor=,highres,auto,1
+      # Default for any monitor: use preferred mode (EDID default, usually 60Hz native)
+      # Avoid `highres` which picks 4K@30Hz on the dock's BenQ EL2870U — too much for 940MX
+      monitor=,preferred,auto,1
+      # Dock monitors (BenQ EL2870U): force 1920x1080@60Hz, NVIDIA 940MX can't handle 4K smoothly
+      monitor=DP-4,1920x1080@60,auto,1
+      monitor=DP-5,1920x1080@60,auto,1
+
+      # Lid closed: disable laptop screen and fingerprint sensor
+      bindl=,switch:on:Lid Switch,exec,hyprctl keyword monitor "eDP-1, disable" && sudo -n systemctl stop open-fprintd.service
+      # Lid opened: re-enable laptop screen and fingerprint sensor
+      bindl=,switch:off:Lid Switch,exec,hyprctl keyword monitor "eDP-1, preferred, auto, 1" && sudo -n systemctl start open-fprintd.service
     dest: "{{ config_dir }}/hypr/monitors.conf"
     mode: '0644'
     owner: "{{ target_user }}"
@@ -382,6 +392,17 @@
       # Enable fan control for ThinkPad T470p
       options thinkpad_acpi fan_control=1
     mode: '0644'
+  become: "{{ not running_as_root }}"
+  when: hostname == 'lupus'
+
+- name: Allow passwordless open-fprintd stop/start on lupus (for lid switch)
+  copy:
+    dest: /etc/sudoers.d/open-fprintd
+    content: |
+      {{ target_user }} ALL=(root) NOPASSWD: /usr/bin/systemctl stop open-fprintd.service
+      {{ target_user }} ALL=(root) NOPASSWD: /usr/bin/systemctl start open-fprintd.service
+    mode: '0440'
+    validate: 'visudo -cf %s'
   become: "{{ not running_as_root }}"
   when: hostname == 'lupus'
 
