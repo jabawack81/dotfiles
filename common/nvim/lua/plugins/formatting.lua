@@ -12,6 +12,26 @@ return {
         json = { "biome" },
         jsonc = { "biome" },
       },
+      -- Override rubocop to run via bundler so it picks up project-specific gems
+      -- (e.g. rubocop-rails, rubocop-rspec, or custom rubocop-* cops from Gemfile)
+      formatters = {
+        rubocop = {
+          command = "bundle",
+          args = function(_, ctx)
+            return {
+              "exec",
+              "rubocop",
+              "--autocorrect",
+              "--force-exclusion",
+              "--stdin",
+              ctx.filename,
+              "--stderr",
+              "--format",
+              "files",
+            }
+          end,
+        },
+      },
     },
   },
 }
