@@ -22,8 +22,9 @@ ansible-check.txt
 
 # Neovim generated files
 common/nvim/.neoconf.json
-# Private neovim LSP settings (work-specific, not public)
+# Private neovim config (work-specific, symlinked from private-config)
 common/nvim/lua/private/
+common/nvim/lua/private
 
 # EWW binary (installed via pacman/AUR)
 common/bin/eww

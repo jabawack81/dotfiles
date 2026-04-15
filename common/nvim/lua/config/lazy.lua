@@ -6,20 +6,19 @@ if not vim.loop.fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(vim.env.LAZY or lazypath)
 
+local spec = {
+  { "LazyVim/LazyVim", import = "lazyvim.plugins" },
+  { import = "lazyvim.plugins.extras.ai.copilot" },
+  { import = "plugins" },
+}
+
+-- Load work-specific plugin overrides from private-config (gitignored)
+if vim.uv.fs_stat(vim.fn.stdpath("config") .. "/lua/private/plugins") then
+  table.insert(spec, { import = "private.plugins" })
+end
+
 require("lazy").setup({
-  spec = {
-    -- add LazyVim and import its plugins
-    { "LazyVim/LazyVim", import = "lazyvim.plugins" },
-    -- import any extras modules here
-    { import = "lazyvim.plugins.extras.ai.copilot" },
-    -- { import = "lazyvim.plugins.extras.lang.typescript" },
-    -- { import = "lazyvim.plugins.extras.lang.json" },
-    -- { import = "lazyvim.plugins.extras.ui.mini-animate" },
-    -- import/override with your plugins
-    { import = "plugins" },
-    -- work-specific plugin overrides (gitignored, loaded from private-config)
-    vim.uv.fs_stat(vim.fn.stdpath("config") .. "/lua/private/plugins") and { import = "private.plugins" } or nil,
-  },
+  spec = spec,
   defaults = {
     -- By default, only LazyVim plugins will be lazy-loaded. Your custom plugins will load during startup.
     -- If you know what you're doing, you can set this to `true` to have all your custom plugins lazy-loaded by default.

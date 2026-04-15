@@ -105,6 +105,9 @@ return {
           if dir_exists(p .. "spec") then
             add("Specs", "fd -t f -g '*_spec.rb' " .. p .. "spec")
           end
+          if dir_exists(p .. "db/migrate") then
+            add("Migrations", "fd -t f -e rb . " .. p .. "db/migrate")
+          end
 
           -- Auto-detect engines (top-level, engines/, {rails_root}/engines/)
           local engines = find_engines(p)
@@ -128,6 +131,9 @@ return {
             end
             if dir_exists(engine .. "/spec") then
               add(label .. " Specs", "fd -t f -g '*_spec.rb' " .. engine .. "/spec")
+            end
+            if dir_exists(engine .. "/db/migrate") then
+              add(label .. " Migrations", "fd -t f -e rb . " .. engine .. "/db/migrate")
             end
           end
 
