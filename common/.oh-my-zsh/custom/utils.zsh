@@ -136,3 +136,53 @@ alias tcc='tmux-claude.sh --continue'
 # Neofetch replacement with hostname-aware config
 alias neofetch='~/.config/fastfetch/select-config.sh'
 alias fastfetch='~/.config/fastfetch/select-config.sh'
+
+# Context-aware task runner: fzf picker for npm scripts or Rails tasks
+# - In a directory with package.json → pick from `scripts` + run via npm
+# - In a Rails app (bin/rails present) → pick from `rails -T` + run via bin/rails
+# - Otherwise Rakefile → pick from `rake -T` + run via bundle exec rake
+function run() {
+  if ! command -v fzf &>/dev/null; then
+    echo "❌ fzf is required. Install with: brew install fzf"
+    return 1
+  fi
+
+  if [[ -f package.json ]]; then
+    if ! command -v jq &>/dev/null; then
+      echo "❌ jq is required. Install with: brew install jq"
+      return 1
+    fi
+    local script
+    script=$(jq -r '.scripts // {} | to_entries[] | "\(.key)\t\(.value)"' package.json \
+      | column -t -s $'\t' \
+      | fzf --prompt="  npm run > " --height=50% --reverse --ansi \
+            --preview='echo {} | cut -d" " -f1 | xargs -I{} jq -r ".scripts.{}" package.json' \
+            --preview-window=down:3:wrap \
+      | awk '{print $1}')
+    [[ -z "$script" ]] && return 0
+    echo "▶ npm run $script"
+    npm run "$script"
+
+  elif [[ -x bin/rails ]]; then
+    local task
+    task=$(bin/rails -T 2>/dev/null \
+      | fzf --prompt="  rails > " --height=50% --reverse --ansi \
+      | awk '{print $2}')
+    [[ -z "$task" ]] && return 0
+    echo "▶ bin/rails $task"
+    bin/rails "$task"
+
+  elif [[ -f Rakefile ]]; then
+    local task
+    task=$(bundle exec rake -T 2>/dev/null \
+      | fzf --prompt="  rake > " --height=50% --reverse --ansi \
+      | awk '{print $2}')
+    [[ -z "$task" ]] && return 0
+    echo "▶ bundle exec rake $task"
+    bundle exec rake "$task"
+
+  else
+    echo "❌ No package.json, bin/rails, or Rakefile found in $PWD"
+    return 1
+  fi
+}
