@@ -156,7 +156,7 @@ function run() {
     script=$(jq -r '.scripts // {} | to_entries[] | "\(.key)\t\(.value)"' package.json \
       | column -t -s $'\t' \
       | fzf --prompt="  npm run > " --height=50% --reverse --ansi \
-            --preview='echo {} | cut -d" " -f1 | xargs -I{} jq -r ".scripts.{}" package.json' \
+            --preview='echo {} | sed -E "s/^[^[:space:]]+[[:space:]]+//"' \
             --preview-window=down:3:wrap \
       | awk '{print $1}')
     [[ -z "$script" ]] && return 0
