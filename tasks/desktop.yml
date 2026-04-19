@@ -53,6 +53,82 @@
         - is_personal_machine
         - not is_omarchy_machine
 
+- name: Setup wallpaper cycling (shinkiro only)
+  block:
+    - name: Ensure ~/Pictures/wallpapers exists
+      file:
+        path: "{{ target_home }}/Pictures/wallpapers"
+        state: directory
+        mode: '0755'
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+
+    - name: Seed wallpapers with Hyprland defaults (skips if already present)
+      copy:
+        src: "/usr/share/hypr/{{ item }}"
+        dest: "{{ target_home }}/Pictures/wallpapers/{{ item }}"
+        force: no
+        mode: '0644'
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+      loop:
+        - wall0.png
+        - wall1.png
+        - wall2.png
+
+    - name: Ensure ~/.local/bin exists
+      file:
+        path: "{{ target_home }}/.local/bin"
+        state: directory
+        mode: '0755'
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+
+    - name: Symlink cycle-wallpaper.sh into ~/.local/bin
+      file:
+        src: "{{ dotfiles_dir }}/common/wallpaper/cycle-wallpaper.sh"
+        dest: "{{ target_home }}/.local/bin/cycle-wallpaper.sh"
+        state: link
+        force: yes
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+
+    - name: Ensure cycle-wallpaper.sh is executable
+      file:
+        path: "{{ dotfiles_dir }}/common/wallpaper/cycle-wallpaper.sh"
+        mode: '0755'
+
+    - name: Ensure systemd user directory exists
+      file:
+        path: "{{ target_home }}/.config/systemd/user"
+        state: directory
+        mode: '0755'
+        owner: "{{ target_user }}"
+        group: "{{ target_user }}"
+
+    - name: Install wallpaper-cycle systemd user units
+      file:
+        src: "{{ dotfiles_dir }}/common/wallpaper/{{ item }}"
+        dest: "{{ target_home }}/.config/systemd/user/{{ item }}"
+        state: link
+        force: yes
+      loop:
+        - wallpaper-cycle.service
+        - wallpaper-cycle.timer
+
+    - name: Enable + start wallpaper-cycle.timer
+      systemd:
+        name: wallpaper-cycle.timer
+        enabled: yes
+        state: started
+        daemon_reload: yes
+        scope: user
+      when: not running_as_root
+      ignore_errors: yes
+  when:
+    - is_personal_machine
+    - hostname == 'shinkiro'
+
 - name: Ensure gtk-3.0 directory exists
   file:
     path: "{{ config_dir }}/gtk-3.0"
