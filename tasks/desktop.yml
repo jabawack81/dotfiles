@@ -53,6 +53,65 @@
         - is_personal_machine
         - not is_omarchy_machine
 
+- name: Setup greetd + regreet as display manager (shinkiro only)
+  block:
+    - name: Install greetd configs from dotfiles
+      copy:
+        src: "{{ dotfiles_dir }}/shinkiro/greetd/{{ item }}"
+        dest: "/etc/greetd/{{ item }}"
+        owner: root
+        group: root
+        mode: '0644'
+      loop:
+        - config.toml
+        - regreet.toml
+        - regreet.css
+
+    - name: Seed greeter wallpaper from Hyprland defaults
+      copy:
+        src: /usr/share/hypr/wall2.png
+        dest: /etc/greetd/wallpaper.png
+        owner: root
+        group: root
+        mode: '0644'
+        remote_src: yes
+
+    - name: Ensure regreet state directory exists
+      file:
+        path: /var/lib/regreet
+        state: directory
+        owner: greeter
+        group: greeter
+        mode: '0755'
+
+    - name: Pre-seed regreet state so Hyprland is the default session
+      copy:
+        dest: /var/lib/regreet/state.toml
+        content: |
+          last_user = "{{ target_user }}"
+
+          [user_to_last_sess]
+          {{ target_user }} = "Hyprland"
+        owner: greeter
+        group: greeter
+        mode: '0644'
+        force: no   # don't overwrite if regreet has already written the user's real picks
+
+    - name: Disable sddm (greetd replaces it)
+      systemd:
+        name: sddm.service
+        enabled: no
+      ignore_errors: yes   # sddm may not be installed on fresh machines
+
+    - name: Enable greetd as the display manager
+      systemd:
+        name: greetd.service
+        enabled: yes
+  become: yes
+  when:
+    - is_personal_machine
+    - hostname == 'shinkiro'
+
 - name: Setup wallpaper cycling (shinkiro only)
   block:
     - name: Ensure ~/Pictures/wallpapers exists

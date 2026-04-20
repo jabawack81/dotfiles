@@ -1,0 +1,22 @@
+# regreet — cyberpunk theme. Styling lives in /etc/greetd/regreet.css.
+
+[background]
+path = "/etc/greetd/wallpaper.png"
+fit = "Cover"
+
+[GTK]
+application_prefer_dark_theme = true
+font_name = "JetBrainsMono Nerd Font 13"
+cursor_theme_name = "Adwaita"
+cursor_blink = true
+
+[appearance]
+greeting_msg = "[ AUTH REQUIRED ]"
+
+[widget.clock]
+format = "%H:%M · %Y.%m.%d"
+resolution = "1s"
+
+[commands]
+reboot = ["systemctl", "reboot"]
+poweroff = ["systemctl", "poweroff"]

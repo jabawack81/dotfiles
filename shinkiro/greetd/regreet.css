@@ -1,0 +1,146 @@
+/* ╔══════════════════════════════════════════════════════════════╗
+   ║  regreet — cyberpunk terminal (GTK4)                         ║
+   ║  palette mirrors hyprlock: cyan/green/magenta + dark card    ║
+   ╚══════════════════════════════════════════════════════════════╝ */
+
+/* Transparent window; the #background Picture covers everything. */
+window {
+    background-color: transparent;
+    color: #e0e4eb;
+    font-family: "JetBrainsMono Nerd Font", monospace;
+}
+
+/* Heavily darken the wallpaper so text has contrast.            */
+/* Picture widget doesn't accept overlays, so we dim via opacity. */
+#background {
+    opacity: 0.45;
+}
+
+/* The main login card (a Frame with .background class). */
+frame.background {
+    background-color: rgba(10, 12, 18, 0.78);
+    border: 2px solid rgba(51, 204, 255, 0.9);
+    border-radius: 12px;
+    padding: 28px 32px;
+    box-shadow: 0 0 24px rgba(51, 204, 255, 0.25);
+}
+
+/* Clock — big cyan monospace in its own frame. */
+#clock_frame {
+    background: transparent;
+    border: none;
+    padding: 0 0 20px 0;
+}
+#clock_frame label {
+    color: #33ccff;
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: 2px;
+}
+
+/* Greeting header: "[ AUTH REQUIRED ]" etc. */
+#message_label {
+    color: #ff2a6d;
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    padding: 0 0 16px 0;
+}
+
+/* Labels next to inputs (Username:, Password:, etc). */
+label {
+    color: #e0e4eb;
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    font-size: 14px;
+}
+
+/* Text + password inputs. */
+entry, entry > text {
+    background-color: rgba(10, 12, 18, 0.85);
+    color: #33ccff;
+    caret-color: #00ff99;
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    font-size: 14px;
+    border: 1px solid rgba(51, 204, 255, 0.55);
+    border-radius: 8px;
+    padding: 8px 12px;
+    min-height: 32px;
+}
+entry:focus, entry:focus-within, entry:focus > text {
+    border-color: #00ff99;
+    box-shadow: 0 0 8px rgba(0, 255, 153, 0.45);
+    outline: none;
+}
+entry selection {
+    background-color: rgba(51, 204, 255, 0.35);
+    color: #ffffff;
+}
+
+/* Dropdown style for username / session pickers. */
+combobox button {
+    background-color: rgba(10, 12, 18, 0.85);
+    color: #33ccff;
+    border: 1px solid rgba(51, 204, 255, 0.55);
+    border-radius: 8px;
+    padding: 6px 10px;
+}
+combobox button:hover { border-color: #00ff99; }
+
+/* Buttons — base. */
+button {
+    background-color: rgba(10, 12, 18, 0.85);
+    color: #e0e4eb;
+    border: 1px solid rgba(122, 130, 144, 0.6);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    font-weight: 600;
+    letter-spacing: 1px;
+    transition: all 150ms ease;
+}
+button:hover {
+    border-color: #33ccff;
+    color: #33ccff;
+}
+
+/* Login button — cyan→green cyberpunk accent. */
+button.suggested-action, #login_button {
+    background-color: rgba(51, 204, 255, 0.15);
+    color: #00ff99;
+    border: 1px solid #33ccff;
+    box-shadow: 0 0 10px rgba(51, 204, 255, 0.35);
+}
+button.suggested-action:hover, #login_button:hover {
+    background-color: rgba(0, 255, 153, 0.2);
+    color: #00ff99;
+    border-color: #00ff99;
+    box-shadow: 0 0 14px rgba(0, 255, 153, 0.5);
+}
+
+/* Reboot / poweroff — destructive magenta. */
+button.destructive-action, #reboot_button, #poweroff_button {
+    background-color: rgba(255, 42, 109, 0.12);
+    color: #ff2a6d;
+    border: 1px solid rgba(255, 42, 109, 0.7);
+}
+button.destructive-action:hover, #reboot_button:hover, #poweroff_button:hover {
+    background-color: rgba(255, 42, 109, 0.22);
+    color: #ff4d85;
+    border-color: #ff2a6d;
+    box-shadow: 0 0 10px rgba(255, 42, 109, 0.5);
+}
+
+/* Error info bar. */
+#error_info {
+    background-color: rgba(255, 42, 109, 0.15);
+    border: 1px solid #ff2a6d;
+    border-radius: 8px;
+    color: #ff2a6d;
+}
+#error_label {
+    color: #ff2a6d;
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    font-weight: 600;
+}

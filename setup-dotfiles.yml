@@ -67,6 +67,9 @@
       - slurp
       - hyprpaper
       - hypridle
+      - greetd
+      - greetd-regreet
+      - cage
       - hyprsunset
       - playerctl
       - pamixer
