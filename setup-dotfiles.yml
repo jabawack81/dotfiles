@@ -45,6 +45,7 @@
       - git-delta
       - jq
       - ripgrep
+      - fd
       - fzf
       - bat
       - htop

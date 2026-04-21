@@ -24,7 +24,7 @@
       Skipping package installation on macOS. Please install these packages manually via Homebrew:
 
       Terminal apps:
-      brew install ghostty neovim lazygit git-delta jq ripgrep fzf bat htop btop gh broot
+      brew install ghostty neovim lazygit git-delta jq ripgrep fd fzf bat htop btop gh broot
       brew install anomalyco/tap/opencode
 
       GUI apps:
