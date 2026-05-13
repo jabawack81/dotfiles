@@ -5,4 +5,4 @@ PartOf=graphical-session.target
 
 [Service]
 Type=oneshot
-ExecStart=%h/bin/cycle-wallpaper.sh
+ExecStart=%h/.local/bin/cycle-wallpaper.sh
