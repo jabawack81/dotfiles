@@ -28,3 +28,9 @@ common/nvim/lua/private
 
 # EWW binary (installed via pacman/AUR)
 common/bin/eww
+
+# Opencode runtime-generated files (auto-created when plugins are configured)
+common/opencode/package.json
+common/opencode/package-lock.json
+common/opencode/bun.lock
+common/opencode/node_modules/
