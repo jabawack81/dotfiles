@@ -29,7 +29,7 @@ QtObject {
     readonly property int    fontSizeSmall: 11
 
     // === Sizes ===
-    readonly property int barHeight:      28
+    readonly property int barHeight:      30
     readonly property int modulePadding:  10
     readonly property int moduleSpacing:  4
     readonly property int barBorderWidth: 1
