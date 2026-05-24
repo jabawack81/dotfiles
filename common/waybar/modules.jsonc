@@ -85,16 +85,6 @@
 		}
 	},
 	
-	// Night light toggle (hyprsunset)
-	"custom/nightlight": {
-		"interval": 5,
-		"return-type": "json",
-		"exec": "bash ~/.config/waybar_common/nightlight-status.sh",
-		"on-click": "bash ~/.config/waybar_common/nightlight-toggle.sh",
-		"signal": 8,
-		"tooltip": true
-	},
-
 	// Caffeine / power state (normal → caffeine → remote → hibernate)
 	"custom/caffeine": {
 		"interval": 5,

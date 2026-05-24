@@ -135,20 +135,6 @@ window#waybar {
 	color: #dc322f;
 }
 
-/* Night light toggle */
-#custom-nightlight {
-	background: #1a1a1a;
-	padding: 0 10px;
-}
-
-#custom-nightlight.on {
-	color: #b58900;
-}
-
-#custom-nightlight.off {
-	color: #586e75;
-}
-
 /* Caffeine / power state */
 #custom-caffeine {
 	background: #1a1a1a;

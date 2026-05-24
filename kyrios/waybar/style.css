@@ -44,7 +44,6 @@ window#waybar {
 #network,
 #custom-network-status,
 #custom-media,
-#custom-nightlight,
 #custom-caffeine,
 #custom-power,
 #tray {
@@ -64,7 +63,6 @@ window#waybar {
 #network,
 #custom-network-status,
 #custom-media,
-#custom-nightlight,
 #custom-caffeine,
 #custom-power,
 #custom-bedtime {
@@ -138,16 +136,6 @@ window#waybar {
 
 #custom-network-status.error {
 	color: #dc322f;
-}
-
-/* Night light toggle */
-#custom-nightlight {
-	min-width: 20px;
-	color: #586e75;
-}
-
-#custom-nightlight.on {
-	color: #cb4b16;
 }
 
 /* Caffeine toggle */

@@ -53,7 +53,7 @@ Scope {
                 Clock { id: clock }
             }
 
-            // Right section: network + audio + temps + system stats
+            // Right section: bedtime · caffeine · network · audio · temps · stats
             Row {
                 anchors.right: parent.right
                 anchors.rightMargin: Theme.modulePadding
@@ -61,6 +61,8 @@ Scope {
                 anchors.bottom: parent.bottom
                 spacing: 14
 
+                Bedtime {}
+                Caffeine {}
                 Network {}
                 Audio {}
                 Temperatures {}

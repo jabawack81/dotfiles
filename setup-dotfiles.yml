@@ -71,7 +71,6 @@
       - greetd
       - greetd-regreet
       - cage
-      - hyprsunset
       - playerctl
       - pamixer
       - brightnessctl
