@@ -1,7 +1,9 @@
-// Stub quickshell config — just a minimal top bar so the launcher path works.
-// Real cyberpunk theming comes later. Cyan border on black is the only styling.
+// Cyberpunk tech-terminal bar — Phase 1.
+// Layout: [ WS workspaces ]  [ date ] [ HH:MM:SS ]    CPU ▓▓░ 42%  │  MEM ▓░ 8.2G
+// Modules live in ./modules/. Theme constants in ./Theme.qml.
 import Quickshell
 import QtQuick
+import "modules"
 
 Scope {
     Variants {
@@ -17,31 +19,49 @@ Scope {
                 right: true
             }
 
-            implicitHeight: 30
-            color: "#000000"
+            implicitHeight: Theme.barHeight
+            color: Theme.bg
 
+            // Thin neon line at the bottom as a tech accent
             Rectangle {
                 anchors.bottom: parent.bottom
                 anchors.left: parent.left
                 anchors.right: parent.right
-                height: 2
-                color: "#33ccff"
+                height: Theme.barBorderWidth
+                color: Theme.accent
             }
 
-            Text {
-                anchors.centerIn: parent
-                text: "QUICKSHELL — STUB · " + Qt.formatDateTime(new Date(), "hh:mm")
-                color: "#33ccff"
-                font.family: "JetBrainsMono Nerd Font"
-                font.pixelSize: 13
+            // Left section: workspaces
+            Item {
+                id: leftSection
+                anchors.left: parent.left
+                anchors.leftMargin: Theme.modulePadding
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: childrenRect.width
 
-                Timer {
-                    interval: 1000
-                    running: true
-                    repeat: true
-                    onTriggered: parent.text = "QUICKSHELL — STUB · " +
-                        Qt.formatDateTime(new Date(), "hh:mm")
-                }
+                Workspaces { screen: modelData }
+            }
+
+            // Center section: clock
+            Item {
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: clock.implicitWidth
+
+                Clock { id: clock }
+            }
+
+            // Right section: system stats
+            Item {
+                anchors.right: parent.right
+                anchors.rightMargin: Theme.modulePadding
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: childrenRect.width
+
+                SystemStats {}
             }
         }
     }
