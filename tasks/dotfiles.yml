@@ -28,6 +28,24 @@
   become_user: "{{ target_user if running_as_root else omit }}"
   when: hostname == 'shinkiro'
 
+- name: Check if wayland-sessions directory exists
+  stat:
+    path: /usr/share/wayland-sessions
+  register: wayland_sessions_dir
+
+- name: Install Hyprland session entries (waybar + quickshell)
+  copy:
+    src: "{{ dotfiles_dir }}/common/wayland-sessions/{{ item }}"
+    dest: "/usr/share/wayland-sessions/{{ item }}"
+    mode: '0644'
+  loop:
+    - hyprland-waybar.desktop
+    - hyprland-quickshell.desktop
+  become: yes
+  when:
+    - is_personal_machine
+    - wayland_sessions_dir.stat.exists
+
 - name: Ensure .config directory exists
   file:
     path: "{{ config_dir }}"
@@ -67,7 +85,7 @@
       loop: "{{ common_configs.files }}"
       when:
         - is_omarchy_machine
-        - item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime', 'claude']
+        - item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime', 'claude', 'wayland-sessions']
 
     - name: Backup existing configs that aren't symlinks (non-omarchy)
       command: mv "{{ config_dir }}/{{ item.item.path | basename }}" "{{ backup_dir }}/{{ item.item.path | basename }}-backup"
@@ -90,7 +108,7 @@
         - item.stat is defined
         - item.stat.exists
         - not item.stat.islnk
-        - item.item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime', 'claude']
+        - item.item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime', 'claude', 'wayland-sessions']
       loop_control:
         label: "{{ item.item.path | basename }}"
 
@@ -105,7 +123,7 @@
         - item.stat is defined
         - item.stat.exists
         - not item.stat.islnk
-        - item.item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'claude']
+        - item.item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'claude', 'wayland-sessions']
       loop_control:
         label: "{{ item.item.path | basename }}"
 
@@ -119,7 +137,7 @@
         - item.stat is defined
         - item.stat.exists
         - not item.stat.islnk
-        - item.item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime', 'claude']
+        - item.item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime', 'claude', 'wayland-sessions']
       loop_control:
         label: "{{ item.item.path | basename }}"
 
@@ -135,7 +153,7 @@
       when:
         - is_personal_machine
         - not is_omarchy_machine
-        - item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'git', 'claude']  # handled separately
+        - item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'git', 'claude', 'wayland-sessions']  # handled separately
 
     - name: Create symlinks for common configs (omarchy machine)
       file:
@@ -148,7 +166,7 @@
       loop: "{{ common_configs.files }}"
       when:
         - is_omarchy_machine
-        - item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime', 'claude']  # omarchy manages these
+        - item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'eww', 'bin', 'git', 'bedtime', 'claude', 'wayland-sessions']  # omarchy manages these
 
     - name: Link nvim .neoconf.json file
       file:

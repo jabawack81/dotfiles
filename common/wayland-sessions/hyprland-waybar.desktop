@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Hyprland (Waybar)
+Comment=Hyprland with the waybar status bar
+Exec=env BAR=waybar /usr/bin/start-hyprland
+Type=Application
+DesktopNames=Hyprland
+Keywords=tiling;wayland;compositor;

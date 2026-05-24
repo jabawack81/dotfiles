@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Hyprland (Quickshell)
+Comment=Hyprland with the quickshell desktop shell
+Exec=env BAR=quickshell /usr/bin/start-hyprland
+Type=Application
+DesktopNames=Hyprland
+Keywords=tiling;wayland;compositor;
