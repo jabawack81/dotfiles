@@ -1,0 +1,95 @@
+// CPU + GPU temperatures from /sys/class/hwmon.
+// Polls every 2s via a small shell snippet because hwmon numbering can shift
+// between boots — we resolve devices by their `name` file each tick.
+import QtQuick
+import Quickshell.Io
+import "../"
+
+Row {
+    id: root
+    spacing: 12
+    anchors.verticalCenter: parent.verticalCenter
+
+    property int cpuTemp: 0
+    property int gpuTemp: 0
+    property bool gpuPresent: false
+
+    Timer {
+        interval: 2000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: tempProc.running = true
+    }
+
+    Process {
+        id: tempProc
+        // Find k10temp or coretemp for CPU; amdgpu or nvidia for GPU.
+        // Print "cpu_milli gpu_milli" — missing GPU prints 0.
+        command: ["bash", "-c", `
+            cpu=0; gpu=0
+            for h in /sys/class/hwmon/hwmon*; do
+                n=$(cat "$h/name" 2>/dev/null) || continue
+                case "$n" in
+                    k10temp|coretemp) [ "$cpu" = 0 ] && cpu=$(cat "$h/temp1_input" 2>/dev/null || echo 0) ;;
+                    amdgpu|nvidia)    [ "$gpu" = 0 ] && gpu=$(cat "$h/temp1_input" 2>/dev/null || echo 0) ;;
+                esac
+            done
+            echo "$cpu $gpu"
+        `]
+        stdout: SplitParser {
+            onRead: function(line) {
+                const parts = line.trim().split(/\s+/);
+                root.cpuTemp = Math.round(parseInt(parts[0]) / 1000);
+                root.gpuTemp = Math.round(parseInt(parts[1]) / 1000);
+                root.gpuPresent = root.gpuTemp > 0;
+            }
+        }
+    }
+
+    function tempColor(c) {
+        if (c >= 85) return Theme.critical;
+        if (c >= 70) return Theme.warning;
+        return Theme.text;
+    }
+
+    Text {
+        text: "CPU"
+        color: Theme.textDim
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSize
+        anchors.verticalCenter: parent.verticalCenter
+    }
+    Text {
+        text: String(root.cpuTemp).padStart(2, "0") + "°"
+        color: root.tempColor(root.cpuTemp)
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSize
+        anchors.verticalCenter: parent.verticalCenter
+    }
+
+    Text {
+        visible: root.gpuPresent
+        text: "│"
+        color: Theme.accentDim
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSize
+        anchors.verticalCenter: parent.verticalCenter
+    }
+    Text {
+        visible: root.gpuPresent
+        text: "GPU"
+        color: Theme.textDim
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSize
+        anchors.verticalCenter: parent.verticalCenter
+    }
+    Text {
+        visible: root.gpuPresent
+        text: String(root.gpuTemp).padStart(2, "0") + "°"
+        color: root.tempColor(root.gpuTemp)
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSize
+        anchors.verticalCenter: parent.verticalCenter
+    }
+}

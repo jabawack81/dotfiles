@@ -53,14 +53,17 @@ Scope {
                 Clock { id: clock }
             }
 
-            // Right section: system stats
-            Item {
+            // Right section: network + audio + temps + system stats
+            Row {
                 anchors.right: parent.right
                 anchors.rightMargin: Theme.modulePadding
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
-                width: childrenRect.width
+                spacing: 14
 
+                Network {}
+                Audio {}
+                Temperatures {}
                 SystemStats {}
             }
         }
