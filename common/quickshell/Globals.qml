@@ -4,6 +4,8 @@ import QtQuick
 
 QtObject {
     property bool dashboardOpen: false
+    property bool overviewOpen: false
+    property bool clipboardOpen: false
 
     // Notification center state. History holds plain snapshots (not live
     // Notification objects, which go invalid after dismiss).

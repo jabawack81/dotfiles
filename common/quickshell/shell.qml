@@ -18,6 +18,9 @@ Scope {
     // Notification center history panel — toggled by the bell in the bar.
     NotificationCenter {}
 
+    // Workspace overview — expose-style grid (Super+Tab via global shortcut).
+    WorkspaceOverview {}
+
     Variants {
         model: Quickshell.screens
 
