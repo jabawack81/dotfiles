@@ -3,6 +3,7 @@
 // right-click opens a self-rendered cyberpunk menu from the app's DBusMenu.
 import QtQuick
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Services.SystemTray
 import "../"
 
@@ -73,6 +74,12 @@ Row {
                 anchor.item: trayItem
                 anchor.edges: Edges.Bottom
                 anchor.gravity: Edges.Bottom | Edges.Left
+
+                HyprlandFocusGrab {
+                    active: menuPopup.visible
+                    windows: [menuPopup]
+                    onCleared: menuPopup.visible = false
+                }
 
                 Rectangle {
                     anchors.fill: parent

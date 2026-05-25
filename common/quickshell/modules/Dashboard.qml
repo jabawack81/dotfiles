@@ -4,6 +4,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import Quickshell.Io
 import "../"
 
@@ -18,6 +19,7 @@ Scope {
             model: Quickshell.screens.slice(0, 1)
 
             PanelWindow {
+                id: dashWindow
                 required property var modelData
                 screen: modelData
 
@@ -30,10 +32,11 @@ Scope {
                 WlrLayershell.layer: WlrLayer.Overlay
                 WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
 
-                // Click-away to close
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: Globals.dashboardOpen = false
+                // Close when clicking anywhere outside this window
+                HyprlandFocusGrab {
+                    active: true
+                    windows: [dashWindow]
+                    onCleared: Globals.dashboardOpen = false
                 }
 
                 Rectangle {
@@ -111,6 +114,18 @@ Scope {
                             font.bold: true
                         }
                         DashSystem {}
+
+                        Rectangle { width: parent.width; height: 1; color: Theme.accentDim }
+
+                        // === Quick controls ===
+                        Text {
+                            text: "[ CONTROLS ]"
+                            color: Theme.secondary
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSizeSmall
+                            font.bold: true
+                        }
+                        DashControls {}
                     }
                 }
             }

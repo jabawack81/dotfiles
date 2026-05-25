@@ -3,6 +3,7 @@
 // hibernate, shutdown. Each runs its command via Process.
 import QtQuick
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 import "../"
 
@@ -48,6 +49,12 @@ MouseArea {
         anchor.item: root
         anchor.edges: Edges.Bottom
         anchor.gravity: Edges.Bottom | Edges.Left
+
+        HyprlandFocusGrab {
+            active: menuPopup.visible
+            windows: [menuPopup]
+            onCleared: menuPopup.visible = false
+        }
 
         Rectangle {
             anchors.fill: parent

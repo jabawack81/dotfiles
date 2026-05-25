@@ -18,7 +18,17 @@ if [[ -z "$bar" && -f "$PREF_FILE" ]]; then
 fi
 bar="${bar:-waybar}"
 
+# Notifications: dunst handles them in waybar mode; quickshell has its own
+# notification server. Only one daemon can own the D-Bus name, so we hand off.
+start_dunst() {
+    pgrep -x dunst >/dev/null || (dunst &)
+}
+stop_dunst() {
+    pkill -x dunst 2>/dev/null || true
+}
+
 start_waybar() {
+    start_dunst
     # Reuse the existing waybar-launcher.sh which sets up rbenv etc.
     if [[ -x "$HOME/.config/waybar/waybar-launcher.sh" ]]; then
         exec "$HOME/.config/waybar/waybar-launcher.sh"
@@ -32,6 +42,7 @@ start_quickshell() {
         notify-send -u critical "Bar launcher" "quickshell not installed — falling back to waybar" 2>/dev/null || true
         start_waybar
     fi
+    stop_dunst  # quickshell's NotificationServer takes over the D-Bus name
     local cmd
     cmd=$(command -v qs || command -v quickshell)
     exec "$cmd"

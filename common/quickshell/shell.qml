@@ -12,6 +12,12 @@ Scope {
     // Dashboard / control center popup — toggled by clicking the clock.
     Dashboard {}
 
+    // Notification daemon + toasts (replaces dunst in quickshell mode).
+    Notifications {}
+
+    // Notification center history panel — toggled by the bell in the bar.
+    NotificationCenter {}
+
     Variants {
         model: Quickshell.screens
 
@@ -74,6 +80,7 @@ Scope {
                 anchors.bottom: parent.bottom
                 spacing: 14
 
+                Bell {}
                 Bedtime {}
                 Caffeine {}
                 Network {}
