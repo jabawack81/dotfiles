@@ -6,6 +6,12 @@ import QtQuick
 import "modules"
 
 Scope {
+    // On-screen display for volume/brightness — manages its own popup windows.
+    Osd {}
+
+    // Dashboard / control center popup — toggled by clicking the clock.
+    Dashboard {}
+
     Variants {
         model: Quickshell.screens
 
@@ -38,9 +44,16 @@ Scope {
                 anchors.leftMargin: Theme.modulePadding
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
-                width: childrenRect.width
+                width: leftRow.width
 
-                Workspaces { screen: modelData }
+                Row {
+                    id: leftRow
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 18
+
+                    Workspaces { screen: modelData }
+                    Media {}
+                }
             }
 
             // Center section: clock
@@ -68,6 +81,7 @@ Scope {
                 Temperatures {}
                 SystemStats {}
                 Tray {}
+                PowerMenu {}
             }
         }
     }
