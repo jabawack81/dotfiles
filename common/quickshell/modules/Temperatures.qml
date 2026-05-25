@@ -47,10 +47,16 @@ Row {
         }
     }
 
+    // Heat gradient: green (cool) → amber → orange → red (critical)
     function tempColor(c) {
-        if (c >= 85) return Theme.critical;
-        if (c >= 70) return Theme.warning;
-        return Theme.text;
+        if (c >= 85) return Theme.critical;   // red
+        if (c >= 75) return "#ff8800";        // orange
+        if (c >= 60) return Theme.warning;    // amber
+        return Theme.secondary;               // green — running cool
+    }
+
+    function isCritical(c) {
+        return c >= 85;
     }
 
     Text {
@@ -65,6 +71,7 @@ Row {
         color: root.tempColor(root.cpuTemp)
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSize
+        font.bold: root.isCritical(root.cpuTemp)
         anchors.verticalCenter: parent.verticalCenter
     }
 
@@ -90,6 +97,7 @@ Row {
         color: root.tempColor(root.gpuTemp)
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSize
+        font.bold: root.isCritical(root.gpuTemp)
         anchors.verticalCenter: parent.verticalCenter
     }
 }

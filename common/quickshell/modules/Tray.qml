@@ -1,6 +1,6 @@
 // System tray — shows StatusNotifierItem icons for background apps
 // (1Password, Discord, Slack, Telegram, etc.). Left-click activates,
-// right-click opens the app's menu.
+// right-click opens a self-rendered cyberpunk menu from the app's DBusMenu.
 import QtQuick
 import Quickshell
 import Quickshell.Services.SystemTray
@@ -15,6 +15,7 @@ Row {
         model: SystemTray.items
 
         delegate: MouseArea {
+            id: trayItem
             required property var modelData
             property bool hovered: containsMouse
 
@@ -29,21 +30,11 @@ Row {
                     modelData.activate();
                 } else if (mouse.button === Qt.RightButton) {
                     if (modelData.hasMenu) {
-                        menuAnchor.open();
+                        menuPopup.visible = !menuPopup.visible;
                     } else {
                         modelData.secondaryActivate();
                     }
                 }
-            }
-
-            QsMenuAnchor {
-                id: menuAnchor
-                menu: modelData.menu
-                anchor.window: root.QsWindow.window
-                anchor.rect.x: parent.x
-                anchor.rect.y: parent.y + parent.height
-                anchor.rect.width: parent.width
-                anchor.rect.height: parent.height
             }
 
             Image {
@@ -61,6 +52,87 @@ Row {
 
                 Behavior on opacity {
                     NumberAnimation { duration: 120 }
+                }
+            }
+
+            // Pulls the DBusMenu entries from the tray item's menu handle.
+            QsMenuOpener {
+                id: menuOpener
+                menu: trayItem.modelData.menu
+            }
+
+            PopupWindow {
+                id: menuPopup
+                visible: false
+                color: "transparent"
+                implicitWidth: 200
+                implicitHeight: menuColumn.implicitHeight + 2
+
+                // Anchor directly to the icon: attach to its bottom edge and
+                // expand down-and-left so the menu stays on-screen near the right.
+                anchor.item: trayItem
+                anchor.edges: Edges.Bottom
+                anchor.gravity: Edges.Bottom | Edges.Left
+
+                Rectangle {
+                    anchors.fill: parent
+                    color: Theme.bgPanel
+                    border.color: Theme.accent
+                    border.width: 1
+
+                    Column {
+                        id: menuColumn
+                        anchors.fill: parent
+                        anchors.margins: 1
+
+                        Repeater {
+                            model: menuOpener.children
+
+                            delegate: Loader {
+                                required property var modelData
+                                width: menuColumn.width
+                                sourceComponent: modelData.isSeparator ? sepComp : entryComp
+
+                                Component {
+                                    id: sepComp
+                                    Rectangle {
+                                        height: 1
+                                        color: Theme.accentDim
+                                    }
+                                }
+
+                                Component {
+                                    id: entryComp
+                                    MouseArea {
+                                        height: entryText.implicitHeight + 8
+                                        hoverEnabled: true
+                                        enabled: modelData.enabled
+                                        onClicked: {
+                                            modelData.triggered();
+                                            menuPopup.visible = false;
+                                        }
+
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            color: parent.containsMouse ? Theme.bgInactive : "transparent"
+                                        }
+
+                                        Text {
+                                            id: entryText
+                                            anchors.left: parent.left
+                                            anchors.leftMargin: 10
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            text: modelData.text
+                                            color: !modelData.enabled ? Theme.textDim
+                                                 : (parent.containsMouse ? Theme.highlight : Theme.text)
+                                            font.family: Theme.fontFamily
+                                            font.pixelSize: Theme.fontSizeSmall
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
