@@ -57,6 +57,7 @@
       - zip
       - wget
       - wl-clipboard
+      - cliphist
       - xdg-utils
 
       # Desktop environment

@@ -83,6 +83,7 @@ Scope {
                 anchors.bottom: parent.bottom
                 spacing: 14
 
+                Clip {}
                 Bell {}
                 Bedtime {}
                 Caffeine {}
