@@ -4,6 +4,9 @@ import QtQuick
 // Shared UI state across windows (bar ↔ popups/panels).
 QtObject {
     property bool overviewOpen: false
+    // Keyboard cursor for the workspace overview (the id currently selected
+    // via Tab/arrows, distinct from the active workspace).
+    property int overviewSelectedId: -1
 
     // Notification center state. History holds plain snapshots (not live
     // Notification objects, which go invalid after dismiss).

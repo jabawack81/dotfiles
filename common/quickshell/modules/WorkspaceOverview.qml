@@ -10,11 +10,41 @@ import qs.Commons
 Scope {
     id: scope
 
+    // All workspace ids ordered left-monitor-first then by id — the order
+    // Tab cycles through.
+    function orderedIds() {
+        const ws = [...Hyprland.workspaces.values];
+        ws.sort((a, b) => {
+            const ax = a.monitor ? a.monitor.x : 0;
+            const bx = b.monitor ? b.monitor.x : 0;
+            return ax !== bx ? ax - bx : a.id - b.id;
+        });
+        return ws.map(w => w.id);
+    }
+
+    function moveSelection(delta) {
+        const ids = orderedIds();
+        if (!ids.length) return;
+        const cur = ids.indexOf(Globals.overviewSelectedId);
+        const next = cur < 0 ? 0 : (cur + delta + ids.length) % ids.length;
+        Globals.overviewSelectedId = ids[next];
+    }
+
+    function activateSelection() {
+        if (Globals.overviewSelectedId > 0)
+            Hyprland.dispatch("workspace " + Globals.overviewSelectedId);
+        Globals.overviewOpen = false;
+    }
+
     // Hyprland binds to this via: bind = SUPER, TAB, global, quickshell:overview
     GlobalShortcut {
         appid: "quickshell"
         name: "overview"
-        onPressed: Globals.overviewOpen = !Globals.overviewOpen
+        onPressed: {
+            if (!Globals.overviewOpen)
+                Globals.overviewSelectedId = Hyprland.focusedWorkspace ? Hyprland.focusedWorkspace.id : -1;
+            Globals.overviewOpen = !Globals.overviewOpen;
+        }
     }
 
     LazyLoader {
@@ -37,8 +67,47 @@ Scope {
                 WlrLayershell.layer: WlrLayer.Overlay
                 WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
 
-                // Esc closes
-                Keys.onEscapePressed: Globals.overviewOpen = false
+                // Keyboard navigation. The Wayland layer holds keyboard focus,
+                // but Qt only routes key events to a focused scene item — so the
+                // handlers live on a focused Item that grabs focus on load.
+                // Tab/Backtab need dedicated handlers because Qt's focus system
+                // swallows them before Keys.onPressed.
+                Item {
+                    anchors.fill: parent
+                    focus: true
+                    Component.onCompleted: forceActiveFocus()
+
+                    Keys.onTabPressed: scope.moveSelection(1)
+                    Keys.onBacktabPressed: scope.moveSelection(-1)
+                    Keys.onPressed: function(event) {
+                        switch (event.key) {
+                            case Qt.Key_Escape:
+                                Globals.overviewOpen = false; break;
+                            case Qt.Key_Return:
+                            case Qt.Key_Enter:
+                            case Qt.Key_Space:
+                                scope.activateSelection(); break;
+                            case Qt.Key_Right:
+                            case Qt.Key_Down:
+                            case Qt.Key_L:
+                            case Qt.Key_J:
+                                scope.moveSelection(1); break;
+                            case Qt.Key_Left:
+                            case Qt.Key_Up:
+                            case Qt.Key_H:
+                            case Qt.Key_K:
+                                scope.moveSelection(-1); break;
+                            default:
+                                if (event.key >= Qt.Key_1 && event.key <= Qt.Key_9) {
+                                    Hyprland.dispatch("workspace " + (event.key - Qt.Key_0));
+                                    Globals.overviewOpen = false;
+                                } else {
+                                    return;
+                                }
+                        }
+                        event.accepted = true;
+                    }
+                }
 
                 // Click backdrop to close
                 MouseArea {
@@ -75,13 +144,14 @@ Scope {
                             delegate: WsCard {
                                 required property var modelData
                                 ws: modelData
+                                selected: modelData.id === Globals.overviewSelectedId
                             }
                         }
                     }
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: "// click a workspace to switch · esc to close"
+                        text: "// tab·arrows move · enter select · 1-9 jump · esc close"
                         color: Color.textDim
                         font.family: Style.font.family
                         font.pixelSize: Style.font.small

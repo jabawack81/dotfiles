@@ -8,6 +8,8 @@ Rectangle {
     id: card
     required property var ws
     property bool isActive: ws.active
+    // Keyboard cursor highlight (set by the overview); distinct from active.
+    property bool selected: false
 
     // Resolve an app icon path from a Hyprland toplevel's window class.
     function iconFor(toplevel) {
@@ -22,8 +24,10 @@ Rectangle {
     width: 240
     height: 140
     color: Color.surface
-    border.width: isActive ? 2 : 1
-    border.color: isActive ? Color.accent : Color.accentDim
+    // Keyboard cursor (magenta) takes visual precedence over the active
+    // marker; which workspace is active is still shown by the ● inside.
+    border.width: (selected || isActive) ? 2 : 1
+    border.color: selected ? Color.highlight : (isActive ? Color.accent : Color.accentDim)
     radius: Style.cornerRadius
 
     MouseArea {
