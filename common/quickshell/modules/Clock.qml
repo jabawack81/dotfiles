@@ -1,8 +1,10 @@
 // Clock with cyberpunk bracket styling: [ date ] [ HH:MM:SS ]
-// Updates every second. Click toggles the dashboard.
+// Click opens the dashboard / control center in a PopupCard anchored under it
+// (calendar, system summary, quick controls).
 import QtQuick
 import Quickshell
 import qs.Commons
+import qs.Ui
 
 MouseArea {
     id: root
@@ -10,7 +12,7 @@ MouseArea {
     implicitWidth: row.implicitWidth
     implicitHeight: row.implicitHeight
     hoverEnabled: true
-    onClicked: Globals.dashboardOpen = !Globals.dashboardOpen
+    onClicked: dash.toggle()
 
     property string timeText: "00:00:00"
     property string dateText: ""
@@ -48,7 +50,7 @@ MouseArea {
         }
         Text {
             text: root.timeText
-            color: root.containsMouse ? Color.highlight : Color.foreground
+            color: root.containsMouse || dash.visible ? Color.highlight : Color.foreground
             font.family: Style.font.family
             font.pixelSize: Style.font.base
             font.bold: true
@@ -61,6 +63,66 @@ MouseArea {
             font.family: Style.font.family
             font.pixelSize: Style.font.base
             anchors.verticalCenter: parent.verticalCenter
+        }
+    }
+
+    // === Dashboard / control center ===
+    PopupCard {
+        id: dash
+        anchorItem: root
+        gravity: Edges.Bottom   // center under the (centered) clock
+        contentWidth: 380
+        contentHeight: dashCol.implicitHeight + Style.spacing.lg * 2
+
+        Column {
+            id: dashCol
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            spacing: 14
+
+            // Header: full date + live time
+            Column {
+                spacing: 2
+                Text {
+                    id: bigTime
+                    text: "00:00:00"
+                    color: Color.accent
+                    font.family: Style.font.family
+                    font.pixelSize: Style.font.big
+                    font.bold: true
+                }
+                Text {
+                    id: bigDate
+                    text: ""
+                    color: Color.textDim
+                    font.family: Style.font.family
+                    font.pixelSize: Style.font.base
+                }
+                Timer {
+                    interval: 1000
+                    running: dash.visible
+                    repeat: true
+                    triggeredOnStart: true
+                    onTriggered: {
+                        const d = new Date();
+                        bigTime.text = Qt.formatDateTime(d, "HH:mm:ss");
+                        bigDate.text = Qt.formatDateTime(d, "dddd · dd MMMM yyyy");
+                    }
+                }
+            }
+
+            Separator {}
+            SectionHeader { title: "CALENDAR" }
+            CalendarGrid {}
+
+            Separator {}
+            SectionHeader { title: "SYSTEM" }
+            DashSystem { active: dash.visible }
+
+            Separator {}
+            SectionHeader { title: "CONTROLS" }
+            DashControls { active: dash.visible }
         }
     }
 }

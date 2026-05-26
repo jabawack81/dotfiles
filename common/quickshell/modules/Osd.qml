@@ -117,6 +117,7 @@ Scope {
                     color: Color.surface
                     border.color: Color.accent
                     border.width: 1
+                    radius: Style.cornerRadius
 
                     Column {
                         anchors.centerIn: parent

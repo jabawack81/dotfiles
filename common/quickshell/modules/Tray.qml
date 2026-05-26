@@ -1,11 +1,11 @@
 // System tray — shows StatusNotifierItem icons for background apps
 // (1Password, Discord, Slack, Telegram, etc.). Left-click activates,
-// right-click opens a self-rendered cyberpunk menu from the app's DBusMenu.
+// right-click opens a cyberpunk menu from the app's DBusMenu via PopupCard.
 import QtQuick
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Services.SystemTray
 import qs.Commons
+import qs.Ui
 
 Row {
     id: root
@@ -31,7 +31,7 @@ Row {
                     modelData.activate();
                 } else if (mouse.button === Qt.RightButton) {
                     if (modelData.hasMenu) {
-                        menuPopup.visible = !menuPopup.visible;
+                        menu.toggle();
                     } else {
                         modelData.secondaryActivate();
                     }
@@ -62,79 +62,61 @@ Row {
                 menu: trayItem.modelData.menu
             }
 
-            PopupWindow {
-                id: menuPopup
-                visible: false
-                color: "transparent"
-                implicitWidth: 200
-                implicitHeight: menuColumn.implicitHeight + 2
+            PopupCard {
+                id: menu
+                anchorItem: trayItem
+                padding: 1
+                contentWidth: 200
+                contentHeight: menuColumn.implicitHeight + 2
 
-                // Anchor directly to the icon: attach to its bottom edge and
-                // expand down-and-left so the menu stays on-screen near the right.
-                anchor.item: trayItem
-                anchor.edges: Edges.Bottom
-                anchor.gravity: Edges.Bottom | Edges.Left
+                Column {
+                    id: menuColumn
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
 
-                HyprlandFocusGrab {
-                    active: menuPopup.visible
-                    windows: [menuPopup]
-                    onCleared: menuPopup.visible = false
-                }
+                    Repeater {
+                        model: menuOpener.children
 
-                Rectangle {
-                    anchors.fill: parent
-                    color: Color.surface
-                    border.color: Color.accent
-                    border.width: 1
+                        delegate: Loader {
+                            required property var modelData
+                            width: menuColumn.width
+                            sourceComponent: modelData.isSeparator ? sepComp : entryComp
 
-                    Column {
-                        id: menuColumn
-                        anchors.fill: parent
-                        anchors.margins: 1
-
-                        Repeater {
-                            model: menuOpener.children
-
-                            delegate: Loader {
-                                required property var modelData
-                                width: menuColumn.width
-                                sourceComponent: modelData.isSeparator ? sepComp : entryComp
-
-                                Component {
-                                    id: sepComp
-                                    Rectangle {
-                                        height: 1
-                                        color: Color.accentDim
-                                    }
+                            Component {
+                                id: sepComp
+                                Rectangle {
+                                    height: 1
+                                    color: Color.accentDim
                                 }
+                            }
 
-                                Component {
-                                    id: entryComp
-                                    MouseArea {
-                                        height: entryText.implicitHeight + 8
-                                        hoverEnabled: true
-                                        enabled: modelData.enabled
-                                        onClicked: {
-                                            modelData.triggered();
-                                            menuPopup.visible = false;
-                                        }
+                            Component {
+                                id: entryComp
+                                MouseArea {
+                                    height: entryText.implicitHeight + 8
+                                    hoverEnabled: true
+                                    enabled: modelData.enabled
+                                    onClicked: {
+                                        modelData.triggered();
+                                        menu.visible = false;
+                                    }
 
-                                        Rectangle {
-                                            anchors.fill: parent
-                                            color: parent.containsMouse ? Color.surfaceInactive : "transparent"
-                                        }
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        color: parent.containsMouse ? Color.surfaceInactive : "transparent"
+                                    }
 
-                                        Text {
-                                            id: entryText
-                                            anchors.left: parent.left
-                                            anchors.leftMargin: 10
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            text: modelData.text
-                                            color: !modelData.enabled ? Color.textDim
-                                                 : (parent.containsMouse ? Color.highlight : Color.foreground)
-                                            font.family: Style.font.family
-                                            font.pixelSize: Style.font.small
-                                        }
+                                    Text {
+                                        id: entryText
+                                        anchors.left: parent.left
+                                        anchors.leftMargin: 10
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: modelData.text
+                                        color: !modelData.enabled ? Color.textDim
+                                             : (parent.containsMouse ? Color.highlight : Color.foreground)
+                                        font.family: Style.font.family
+                                        font.pixelSize: Style.font.small
                                     }
                                 }
                             }

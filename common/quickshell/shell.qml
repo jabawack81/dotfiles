@@ -11,14 +11,8 @@ Scope {
     // On-screen display for volume/brightness — manages its own popup windows.
     Osd {}
 
-    // Dashboard / control center popup — toggled by clicking the clock.
-    Dashboard {}
-
     // Notification daemon + toasts (replaces dunst in quickshell mode).
     Notifications {}
-
-    // Notification center history panel — toggled by the bell in the bar.
-    NotificationCenter {}
 
     // Workspace overview — expose-style grid (Super+Tab via global shortcut).
     WorkspaceOverview {}

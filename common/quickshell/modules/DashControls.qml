@@ -12,6 +12,10 @@ Column {
     spacing: 10
     width: parent.width
 
+    // Bound to the dashboard popup's visibility by the parent — only poll
+    // toggle states while the dashboard is actually open.
+    property bool active: true
+
     property bool wifiOn: false
     property bool btPresent: false
     property bool btOn: false
@@ -22,7 +26,7 @@ Column {
     // Poll toggle states while the dashboard is open
     Timer {
         interval: 3000
-        running: Globals.dashboardOpen
+        running: root.active
         repeat: true
         triggeredOnStart: true
         onTriggered: {

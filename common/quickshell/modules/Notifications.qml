@@ -68,6 +68,7 @@ Scope {
                             height: toastContent.implicitHeight + 20
                             color: Color.surface
                             border.width: 1
+                            radius: Style.cornerRadius
                             border.color: {
                                 // urgency: 0=low, 1=normal, 2=critical
                                 if (modelData.urgency === 2) return Color.urgent;

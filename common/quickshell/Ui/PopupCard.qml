@@ -19,7 +19,12 @@ PopupWindow {
     required property Item anchorItem
     property int contentWidth: 240
     property int contentHeight: 200
+    property int padding: Style.spacing.lg
     property color borderColor: Color.popups.border
+    // Direction the popup expands from the anchor's bottom edge. Default
+    // Bottom|Left keeps right-side bar icons on-screen; use Bottom alone to
+    // center the popup under a centered anchor (e.g. the clock).
+    property int gravity: Edges.Bottom | Edges.Left
     default property alias cardContent: holder.data
 
     visible: false
@@ -29,10 +34,13 @@ PopupWindow {
 
     anchor.item: anchorItem
     anchor.edges: Edges.Bottom
-    anchor.gravity: Edges.Bottom | Edges.Left
+    anchor.gravity: root.gravity
 
-    // Native grab: keyboard focus + dismiss-on-outside-click.
-    grabFocus: visible
+    // Native grab: keyboard focus + dismiss-on-outside-click. Constant `true`
+    // (not bound to `visible`) — the grab only applies while the popup is
+    // mapped, and a binding here can miss establishing the grab for popups
+    // that hold keyboard focus (e.g. a search field).
+    grabFocus: true
     onClosed: root.visible = false
 
     function toggle() { root.visible = !root.visible; }
@@ -47,7 +55,7 @@ PopupWindow {
         Item {
             id: holder
             anchors.fill: parent
-            anchors.margins: Style.spacing.lg
+            anchors.margins: root.padding
         }
     }
 }

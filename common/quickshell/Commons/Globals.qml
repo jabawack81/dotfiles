@@ -3,9 +3,7 @@ import QtQuick
 
 // Shared UI state across windows (bar ↔ popups/panels).
 QtObject {
-    property bool dashboardOpen: false
     property bool overviewOpen: false
-    property bool notificationCenterOpen: false
 
     // Notification center state. History holds plain snapshots (not live
     // Notification objects, which go invalid after dismiss).

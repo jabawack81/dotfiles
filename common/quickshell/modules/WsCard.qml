@@ -24,6 +24,7 @@ Rectangle {
     color: Color.surface
     border.width: isActive ? 2 : 1
     border.color: isActive ? Color.accent : Color.accentDim
+    radius: Style.cornerRadius
 
     MouseArea {
         anchors.fill: parent
