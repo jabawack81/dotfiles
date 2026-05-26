@@ -1,70 +1,13 @@
 // CPU and memory readout in terminal-bar style: CPU ▓▓▓░░░ 42% MEM ▓▓░░░░ 8.2G
-// Polls /proc/stat and /proc/meminfo every 2s.
+// Reads from the shared SystemUsage service (no own /proc polling).
 import QtQuick
-import Quickshell.Io
 import qs.Commons
+import qs.Ui
 
 Row {
     id: root
     spacing: 12
     anchors.verticalCenter: parent.verticalCenter
-
-    property int cpuPercent: 0
-    property real memUsedGib: 0
-    property real memTotalGib: 0
-    property int memPercent: 0
-
-    // Track previous CPU stats for delta calculation
-    property var prevCpu: ({ total: 0, idle: 0 })
-
-    Timer {
-        interval: 2000
-        running: true
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: {
-            cpuReader.reload();
-            memReader.reload();
-        }
-    }
-
-    FileView {
-        id: cpuReader
-        path: "/proc/stat"
-        blockLoading: true
-        onLoaded: {
-            const firstLine = cpuReader.text().split("\n")[0];
-            // "cpu  user nice system idle iowait irq softirq steal ..."
-            const parts = firstLine.split(/\s+/).slice(1).map(Number);
-            const idle = parts[3] + (parts[4] || 0);
-            const total = parts.reduce((a, b) => a + b, 0);
-            const dIdle = idle - root.prevCpu.idle;
-            const dTotal = total - root.prevCpu.total;
-            if (dTotal > 0 && root.prevCpu.total > 0) {
-                root.cpuPercent = Math.round(100 * (1 - dIdle / dTotal));
-            }
-            root.prevCpu = { total: total, idle: idle };
-        }
-    }
-
-    FileView {
-        id: memReader
-        path: "/proc/meminfo"
-        blockLoading: true
-        onLoaded: {
-            const lines = memReader.text().split("\n");
-            const get = (key) => {
-                const line = lines.find(l => l.startsWith(key + ":"));
-                return line ? parseInt(line.split(/\s+/)[1]) : 0;
-            };
-            const totalKb = get("MemTotal");
-            const availKb = get("MemAvailable");
-            const usedKb = totalKb - availKb;
-            root.memTotalGib = totalKb / 1024 / 1024;
-            root.memUsedGib = usedKb / 1024 / 1024;
-            root.memPercent = totalKb > 0 ? Math.round(100 * usedKb / totalKb) : 0;
-        }
-    }
 
     function bar(pct) {
         const w = 8;
@@ -78,55 +21,29 @@ Row {
         return Color.foreground;
     }
 
-    Text {
-        text: "CPU"
-        color: Color.textDim
-        font.family: Style.font.family
-        font.pixelSize: Style.font.base
+    BarText { text: "CPU"; color: Color.textDim; anchors.verticalCenter: parent.verticalCenter }
+    BarText {
+        text: root.bar(SystemUsage.cpuPercent)
+        color: root.statColor(SystemUsage.cpuPercent)
         anchors.verticalCenter: parent.verticalCenter
     }
-    Text {
-        text: root.bar(root.cpuPercent)
-        color: root.statColor(root.cpuPercent)
-        font.family: Style.font.family
-        font.pixelSize: Style.font.base
-        anchors.verticalCenter: parent.verticalCenter
-    }
-    Text {
-        text: String(root.cpuPercent).padStart(2, "0") + "%"
-        color: root.statColor(root.cpuPercent)
-        font.family: Style.font.family
-        font.pixelSize: Style.font.base
+    BarText {
+        text: String(SystemUsage.cpuPercent).padStart(2, "0") + "%"
+        color: root.statColor(SystemUsage.cpuPercent)
         anchors.verticalCenter: parent.verticalCenter
     }
 
-    Text {
-        text: "│"
-        color: Color.accentDim
-        font.family: Style.font.family
-        font.pixelSize: Style.font.base
-        anchors.verticalCenter: parent.verticalCenter
-    }
+    BarText { text: "│"; color: Color.accentDim; anchors.verticalCenter: parent.verticalCenter }
 
-    Text {
-        text: "MEM"
-        color: Color.textDim
-        font.family: Style.font.family
-        font.pixelSize: Style.font.base
+    BarText { text: "MEM"; color: Color.textDim; anchors.verticalCenter: parent.verticalCenter }
+    BarText {
+        text: root.bar(SystemUsage.memPercent)
+        color: root.statColor(SystemUsage.memPercent)
         anchors.verticalCenter: parent.verticalCenter
     }
-    Text {
-        text: root.bar(root.memPercent)
-        color: root.statColor(root.memPercent)
-        font.family: Style.font.family
-        font.pixelSize: Style.font.base
-        anchors.verticalCenter: parent.verticalCenter
-    }
-    Text {
-        text: root.memUsedGib.toFixed(1) + "G"
-        color: root.statColor(root.memPercent)
-        font.family: Style.font.family
-        font.pixelSize: Style.font.base
+    BarText {
+        text: SystemUsage.memUsedGib.toFixed(1) + "G"
+        color: root.statColor(SystemUsage.memPercent)
         anchors.verticalCenter: parent.verticalCenter
     }
 }

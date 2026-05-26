@@ -3,3 +3,4 @@ singleton Util 1.0 Util.qml
 singleton Style 1.0 Style.qml
 singleton Color 1.0 Color.qml
 singleton Globals 1.0 Globals.qml
+singleton SystemUsage 1.0 SystemUsage.qml

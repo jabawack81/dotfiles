@@ -1,2 +1,7 @@
 module qs.Ui
 PopupCard 1.0 PopupCard.qml
+BarPill 1.0 BarPill.qml
+BarText 1.0 BarText.qml
+Separator 1.0 Separator.qml
+SectionHeader 1.0 SectionHeader.qml
+ToolTip 1.0 ToolTip.qml

@@ -1,16 +1,22 @@
 // Network indicator via nmcli. Shows ETH/WIFI/OFF + SSID for wifi.
-// Polls every 5s — slower than CPU/audio because it's chattier and changes rarely.
+// Polls every 5s — chattier and changes rarely. Renders as a BarPill.
 import QtQuick
 import Quickshell.Io
 import qs.Commons
+import qs.Ui
 
-Row {
+BarPill {
     id: root
-    spacing: 0
-    anchors.verticalCenter: parent.verticalCenter
+    hoverHighlight: false
 
-    property string label: "..."
     property string state: "off"   // off | wired | wifi | limited
+
+    content: "..."
+    baseColor: {
+        if (state === "off")     return Color.urgent;
+        if (state === "limited") return Color.warning;
+        return Color.foreground;
+    }
 
     Timer {
         interval: 5000
@@ -22,8 +28,7 @@ Row {
 
     Process {
         id: netProc
-        // Output: STATE\tTYPE\tCONN
-        // STATE = connected|connecting|disconnected, TYPE = ethernet|wifi, CONN = name
+        // Output: STATE|TYPE:CONN
         command: ["bash", "-c", `
             state=$(nmcli -t -f STATE general status 2>/dev/null | head -1)
             line=$(nmcli -t -f TYPE,CONNECTION,STATE device status 2>/dev/null | \
@@ -35,49 +40,21 @@ Row {
                 const [gs, dev] = line.trim().split("|");
                 if (!dev) {
                     root.state = "off";
-                    root.label = "OFF";
+                    root.content = "OFF";
                     return;
                 }
                 const [type, conn] = dev.split(":");
                 if (gs && gs.includes("limited")) {
                     root.state = "limited";
-                    root.label = (type === "wifi" ? "WIFI " : "ETH ") + "· NO NET";
+                    root.content = (type === "wifi" ? "WIFI " : "ETH ") + "· NO NET";
                 } else if (type === "wifi") {
                     root.state = "wifi";
-                    root.label = "WIFI · " + conn;
+                    root.content = "WIFI · " + conn;
                 } else {
                     root.state = "wired";
-                    root.label = "ETH";
+                    root.content = "ETH";
                 }
             }
         }
-    }
-
-    function netColor() {
-        if (root.state === "off")     return Color.urgent;
-        if (root.state === "limited") return Color.warning;
-        return Color.foreground;
-    }
-
-    Text {
-        text: Style.bracketL
-        color: Color.accent
-        font.family: Style.font.family
-        font.pixelSize: Style.font.base
-        anchors.verticalCenter: parent.verticalCenter
-    }
-    Text {
-        text: root.label
-        color: root.netColor()
-        font.family: Style.font.family
-        font.pixelSize: Style.font.base
-        anchors.verticalCenter: parent.verticalCenter
-    }
-    Text {
-        text: Style.bracketR
-        color: Color.accent
-        font.family: Style.font.family
-        font.pixelSize: Style.font.base
-        anchors.verticalCenter: parent.verticalCenter
     }
 }
