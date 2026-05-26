@@ -14,6 +14,9 @@ QtObject {
     property int memPercent: 0
     property int diskPercent: 0
     property string uptime: ""
+    property int cpuTemp: 0
+    property int gpuTemp: 0
+    property bool gpuPresent: false
 
     // Previous CPU counters for delta calculation.
     property var _prevCpu: ({ total: 0, idle: 0 })
@@ -22,6 +25,7 @@ QtObject {
         cpuReader.reload();
         memReader.reload();
         extraProc.running = true;
+        tempProc.running = true;
     }
 
     property Timer _timer: Timer {
@@ -79,6 +83,30 @@ QtObject {
                 const lines = this.text.split("\n");
                 root.diskPercent = parseInt(lines[0]) || 0;
                 root.uptime = lines[1] || "";
+            }
+        }
+    }
+
+    // CPU + GPU temps from hwmon (resolved by name each tick — numbering shifts).
+    property Process _tempProc: Process {
+        id: tempProc
+        command: ["bash", "-c", `
+            cpu=0; gpu=0
+            for h in /sys/class/hwmon/hwmon*; do
+                n=$(cat "$h/name" 2>/dev/null) || continue
+                case "$n" in
+                    k10temp|coretemp) [ "$cpu" = 0 ] && cpu=$(cat "$h/temp1_input" 2>/dev/null || echo 0) ;;
+                    amdgpu|nvidia)    [ "$gpu" = 0 ] && gpu=$(cat "$h/temp1_input" 2>/dev/null || echo 0) ;;
+                esac
+            done
+            echo "$cpu $gpu"
+        `]
+        stdout: SplitParser {
+            onRead: function(line) {
+                const parts = line.trim().split(/\s+/);
+                root.cpuTemp = Math.round(parseInt(parts[0]) / 1000);
+                root.gpuTemp = Math.round(parseInt(parts[1]) / 1000);
+                root.gpuPresent = root.gpuTemp > 0;
             }
         }
     }

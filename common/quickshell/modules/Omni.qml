@@ -41,10 +41,31 @@ Scope {
         return 0;
     }
 
-    // Build the scored, sorted result list from apps + actions.
+    // Evaluate a math expression. Returns a number string or null. Only allows
+    // arithmetic chars (no identifiers) so eval can't run arbitrary code.
+    function calcResult(raw) {
+        const expr = raw.trim();
+        if (!/[0-9]/.test(expr) || !/[-+*/%]/.test(expr)) return null;
+        if (!/^[0-9+\-*/%.()\s]+$/.test(expr)) return null;
+        try {
+            const v = Function('"use strict";return (' + expr + ')')();
+            if (typeof v === "number" && isFinite(v))
+                return (Math.round(v * 1e6) / 1e6).toString();
+        } catch (e) {}
+        return null;
+    }
+
+    // Build the scored, sorted result list from apps, actions, and open windows.
+    // A calculator result (when the query is an expression) is pinned on top.
     function results() {
         const q = scope.query.toLowerCase().trim();
         const out = [];
+
+        // Calculator — pinned first
+        const calc = calcResult(scope.query);
+        if (calc !== null)
+            out.push({ kind: "calc", name: calc, icon: "accessories-calculator",
+                       comment: "= " + scope.query.trim() + "  ·  Enter to copy", value: calc, score: 1e6 });
 
         for (const app of DesktopEntries.applications.values) {
             if (app.noDisplay) continue;
@@ -59,6 +80,16 @@ Scope {
             if (s > 0) out.push({ kind: "action", name: a.name, icon: a.icon,
                                   comment: a.comment, cmd: a.cmd, score: s });
         }
+        // Open windows (focus on Enter)
+        for (const w of Hyprland.toplevels.values) {
+            const ipc = w.lastIpcObject || {};
+            const title = w.title || ipc.title || ipc.class || "window";
+            const cls = ipc.class || "";
+            const s = score(title, cls + " window", q);
+            if (s > 0) out.push({ kind: "window", name: title,
+                                  icon: DesktopEntries.heuristicLookup(cls) ? DesktopEntries.heuristicLookup(cls).icon : cls,
+                                  comment: "Window · " + cls, address: ipc.address, score: s - 5 });
+        }
 
         out.sort((x, y) => y.score - x.score || x.name.localeCompare(y.name));
         return out.slice(0, 40);
@@ -69,8 +100,12 @@ Scope {
 
     function run(item) {
         if (!item) return;
-        if (item.kind === "app") item.entry.execute();
-        else { runProc.command = ["bash", "-c", item.cmd]; runProc.running = true; }
+        switch (item.kind) {
+            case "app":    item.entry.execute(); break;
+            case "action": runProc.command = ["bash", "-c", item.cmd]; runProc.running = true; break;
+            case "window": if (item.address) Hyprland.dispatch("focuswindow address:" + item.address); break;
+            case "calc":   runProc.command = ["bash", "-c", "printf '%s' " + Util.shellQuote(item.value) + " | wl-copy"]; runProc.running = true; break;
+        }
         Globals.omniOpen = false;
     }
 
@@ -162,10 +197,10 @@ Scope {
 
                             // Search row
                             Item {
-                                width: parent.width; height: 62
+                                width: parent.width; height: 64
                                 Row {
                                     anchors.fill: parent
-                                    anchors.leftMargin: 22; anchors.rightMargin: 22
+                                    anchors.leftMargin: 30; anchors.rightMargin: 30
                                     spacing: 14
                                     Text {
                                         anchors.verticalCenter: parent.verticalCenter
@@ -202,10 +237,19 @@ Scope {
                                 }
                             }
 
-                            // Body: results + preview
+                            // Quick-stats dashboard — shown when the query is empty.
+                            QuickStats {
+                                visible: scope.query === ""
+                                width: parent.width - 76
+                                height: parent.height - 64 - 1 - 44
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            // Body: results + preview (shown once you type)
                             Row {
+                                visible: scope.query !== ""
                                 width: parent.width
-                                height: parent.height - 62 - 1 - 44
+                                height: parent.height - 64 - 1 - 44
 
                                 // Results list
                                 ListView {
@@ -334,7 +378,7 @@ Scope {
                                 color: "#070b0f"
                                 Row {
                                     anchors.fill: parent
-                                    anchors.leftMargin: 22; anchors.rightMargin: 22
+                                    anchors.leftMargin: 30; anchors.rightMargin: 30
                                     spacing: 22
                                     Text { anchors.verticalCenter: parent.verticalCenter; text: "↑↓ move"; color: Color.textDim; font.family: Style.font.family; font.pixelSize: 11 }
                                     Text { anchors.verticalCenter: parent.verticalCenter; text: "⏎ run"; color: Color.textDim; font.family: Style.font.family; font.pixelSize: 11 }
@@ -342,8 +386,9 @@ Scope {
                                 }
                                 Text {
                                     anchors.verticalCenter: parent.verticalCenter
-                                    anchors.right: parent.right; anchors.rightMargin: 22
-                                    text: scope.items.length + " results · esc"
+                                    anchors.right: parent.right; anchors.rightMargin: 30
+                                    text: scope.query === "" ? "system · type to search · esc"
+                                                             : scope.items.length + " results · esc"
                                     color: Color.highlight; font.family: Style.font.family; font.pixelSize: 11
                                 }
                             }
