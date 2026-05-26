@@ -2,7 +2,7 @@
 // Polls /proc/stat and /proc/meminfo every 2s.
 import QtQuick
 import Quickshell.Io
-import "../"
+import qs.Commons
 
 Row {
     id: root
@@ -73,60 +73,60 @@ Row {
     }
 
     function statColor(pct) {
-        if (pct >= 90) return Theme.critical;
-        if (pct >= 75) return Theme.warning;
-        return Theme.text;
+        if (pct >= 90) return Color.urgent;
+        if (pct >= 75) return Color.warning;
+        return Color.foreground;
     }
 
     Text {
         text: "CPU"
-        color: Theme.textDim
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
+        color: Color.textDim
+        font.family: Style.font.family
+        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
     }
     Text {
         text: root.bar(root.cpuPercent)
         color: root.statColor(root.cpuPercent)
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
+        font.family: Style.font.family
+        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
     }
     Text {
         text: String(root.cpuPercent).padStart(2, "0") + "%"
         color: root.statColor(root.cpuPercent)
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
+        font.family: Style.font.family
+        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
     }
 
     Text {
         text: "│"
-        color: Theme.accentDim
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
+        color: Color.accentDim
+        font.family: Style.font.family
+        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
     }
 
     Text {
         text: "MEM"
-        color: Theme.textDim
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
+        color: Color.textDim
+        font.family: Style.font.family
+        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
     }
     Text {
         text: root.bar(root.memPercent)
         color: root.statColor(root.memPercent)
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
+        font.family: Style.font.family
+        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
     }
     Text {
         text: root.memUsedGib.toFixed(1) + "G"
         color: root.statColor(root.memPercent)
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
+        font.family: Style.font.family
+        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
     }
 }

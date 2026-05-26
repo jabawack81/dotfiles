@@ -4,7 +4,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../"
+import qs.Commons
 
 Row {
     id: root
@@ -56,36 +56,36 @@ Row {
 
     function bedtimeColor() {
         switch (root.severityClass) {
-            case "work":     return Theme.accent;
-            case "lunch":    return Theme.warning;
-            case "weekend":  return Theme.highlight;
-            case "info":     return Theme.warning;
+            case "work":     return Color.accent;
+            case "lunch":    return Color.warning;
+            case "weekend":  return Color.highlight;
+            case "info":     return Color.warning;
             case "warning":  return "#cb4b16";   // orange
-            case "critical": return Theme.critical;
-            default:         return Theme.text;
+            case "critical": return Color.urgent;
+            default:         return Color.foreground;
         }
     }
 
     Text {
-        text: Theme.bracketL
-        color: Theme.accent
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
+        text: Style.bracketL
+        color: Color.accent
+        font.family: Style.font.family
+        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
     }
     Text {
         text: root.label
         color: root.bedtimeColor()
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
+        font.family: Style.font.family
+        font.pixelSize: Style.font.base
         font.bold: root.severityClass === "critical" || root.severityClass === "warning"
         anchors.verticalCenter: parent.verticalCenter
     }
     Text {
-        text: Theme.bracketR
-        color: Theme.accent
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
+        text: Style.bracketR
+        color: Color.accent
+        font.family: Style.font.family
+        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
     }
 }

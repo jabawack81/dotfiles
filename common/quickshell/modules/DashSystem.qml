@@ -2,7 +2,7 @@
 // Polls every 3s while visible. Reuses /proc readers like SystemStats.
 import QtQuick
 import Quickshell.Io
-import "../"
+import qs.Commons
 
 Column {
     id: root
@@ -85,26 +85,26 @@ Column {
 
     Text {
         text: "CPU  " + root.bar(root.cpuPercent) + "  " + String(root.cpuPercent).padStart(2, "0") + "%"
-        color: Theme.text
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSizeSmall
+        color: Color.foreground
+        font.family: Style.font.family
+        font.pixelSize: Style.font.small
     }
     Text {
         text: "MEM  " + root.bar(root.memPercent) + "  " + root.memUsedGib.toFixed(1) + "/" + root.memTotalGib.toFixed(0) + "G"
-        color: Theme.text
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSizeSmall
+        color: Color.foreground
+        font.family: Style.font.family
+        font.pixelSize: Style.font.small
     }
     Text {
         text: "DISK " + root.bar(root.diskPercent) + "  " + String(root.diskPercent).padStart(2, "0") + "%"
-        color: Theme.text
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSizeSmall
+        color: Color.foreground
+        font.family: Style.font.family
+        font.pixelSize: Style.font.small
     }
     Text {
         text: "UP   " + root.uptime
-        color: Theme.textDim
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSizeSmall
+        color: Color.textDim
+        font.family: Style.font.family
+        font.pixelSize: Style.font.small
     }
 }

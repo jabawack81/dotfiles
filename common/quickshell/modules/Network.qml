@@ -2,7 +2,7 @@
 // Polls every 5s — slower than CPU/audio because it's chattier and changes rarely.
 import QtQuick
 import Quickshell.Io
-import "../"
+import qs.Commons
 
 Row {
     id: root
@@ -54,30 +54,30 @@ Row {
     }
 
     function netColor() {
-        if (root.state === "off")     return Theme.critical;
-        if (root.state === "limited") return Theme.warning;
-        return Theme.text;
+        if (root.state === "off")     return Color.urgent;
+        if (root.state === "limited") return Color.warning;
+        return Color.foreground;
     }
 
     Text {
-        text: Theme.bracketL
-        color: Theme.accent
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
+        text: Style.bracketL
+        color: Color.accent
+        font.family: Style.font.family
+        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
     }
     Text {
         text: root.label
         color: root.netColor()
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
+        font.family: Style.font.family
+        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
     }
     Text {
-        text: Theme.bracketR
-        color: Theme.accent
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
+        text: Style.bracketR
+        color: Color.accent
+        font.family: Style.font.family
+        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
     }
 }

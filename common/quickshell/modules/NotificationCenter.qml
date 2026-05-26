@@ -4,7 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
-import "../"
+import qs.Commons
 
 Scope {
     id: scope
@@ -22,7 +22,7 @@ Scope {
 
                 anchors.top: true
                 anchors.right: true
-                margins.top: Theme.barHeight + 6
+                margins.top: Style.barHeight + 6
                 margins.right: 8
                 implicitWidth: 380
                 implicitHeight: 460
@@ -43,8 +43,8 @@ Scope {
                     anchors.top: parent.top
                     width: 360
                     height: 440
-                    color: Theme.bgPanel
-                    border.color: Theme.accent
+                    color: Color.surface
+                    border.color: Color.accent
                     border.width: 1
 
                     MouseArea { anchors.fill: parent }  // swallow clicks inside
@@ -59,18 +59,18 @@ Scope {
                             width: parent.width
                             Text {
                                 text: "[ NOTIFICATIONS ]"
-                                color: Theme.secondary
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSizeSmall
+                                color: Color.secondary
+                                font.family: Style.font.family
+                                font.pixelSize: Style.font.small
                                 font.bold: true
                                 width: parent.width - clearBtn.width
                             }
                             Text {
                                 id: clearBtn
                                 text: "CLEAR"
-                                color: clearArea.containsMouse ? Theme.critical : Theme.textDim
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSizeSmall
+                                color: clearArea.containsMouse ? Color.urgent : Color.textDim
+                                font.family: Style.font.family
+                                font.pixelSize: Style.font.small
                                 font.bold: true
                                 MouseArea {
                                     id: clearArea
@@ -82,15 +82,15 @@ Scope {
                             }
                         }
 
-                        Rectangle { width: parent.width; height: 1; color: Theme.accentDim }
+                        Rectangle { width: parent.width; height: 1; color: Color.accentDim }
 
                         // Empty state
                         Text {
                             visible: Globals.notificationHistory.length === 0
                             text: "// no notifications"
-                            color: Theme.textDim
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeSmall
+                            color: Color.textDim
+                            font.family: Style.font.family
+                            font.pixelSize: Style.font.small
                         }
 
                         // Scrollable history list
@@ -106,12 +106,12 @@ Scope {
                                 required property var modelData
                                 width: ListView.view.width
                                 height: itemCol.implicitHeight + 16
-                                color: Theme.bgInactive
+                                color: Color.surfaceInactive
                                 border.width: 1
                                 border.color: {
-                                    if (modelData.urgency === 2) return Theme.critical;
-                                    if (modelData.urgency === 0) return Theme.accentDim;
-                                    return Theme.accent;
+                                    if (modelData.urgency === 2) return Color.urgent;
+                                    if (modelData.urgency === 0) return Color.accentDim;
+                                    return Color.accent;
                                 }
 
                                 Column {
@@ -127,17 +127,17 @@ Scope {
                                         Text {
                                             text: "▶ " + modelData.appName
                                             color: parent.parent.parent.border.color
-                                            font.family: Theme.fontFamily
-                                            font.pixelSize: Theme.fontSizeSmall
+                                            font.family: Style.font.family
+                                            font.pixelSize: Style.font.small
                                             font.bold: true
                                             width: parent.width - 44
                                             elide: Text.ElideRight
                                         }
                                         Text {
                                             text: modelData.time
-                                            color: Theme.textDim
-                                            font.family: Theme.fontFamily
-                                            font.pixelSize: Theme.fontSizeSmall
+                                            color: Color.textDim
+                                            font.family: Style.font.family
+                                            font.pixelSize: Style.font.small
                                             horizontalAlignment: Text.AlignRight
                                             width: 44
                                         }
@@ -145,9 +145,9 @@ Scope {
                                     Text {
                                         width: parent.width
                                         text: modelData.summary
-                                        color: Theme.text
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSizeSmall
+                                        color: Color.foreground
+                                        font.family: Style.font.family
+                                        font.pixelSize: Style.font.small
                                         font.bold: true
                                         wrapMode: Text.WordWrap
                                         elide: Text.ElideRight
@@ -157,9 +157,9 @@ Scope {
                                         width: parent.width
                                         visible: modelData.body !== ""
                                         text: modelData.body
-                                        color: Theme.textDim
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSizeSmall
+                                        color: Color.textDim
+                                        font.family: Style.font.family
+                                        font.pixelSize: Style.font.small
                                         wrapMode: Text.WordWrap
                                         elide: Text.ElideRight
                                         maximumLineCount: 3

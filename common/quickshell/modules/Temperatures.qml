@@ -3,7 +3,7 @@
 // between boots — we resolve devices by their `name` file each tick.
 import QtQuick
 import Quickshell.Io
-import "../"
+import qs.Commons
 
 Row {
     id: root
@@ -49,10 +49,10 @@ Row {
 
     // Heat gradient: green (cool) → amber → orange → red (critical)
     function tempColor(c) {
-        if (c >= 85) return Theme.critical;   // red
+        if (c >= 85) return Color.urgent;   // red
         if (c >= 75) return "#ff8800";        // orange
-        if (c >= 60) return Theme.warning;    // amber
-        return Theme.secondary;               // green — running cool
+        if (c >= 60) return Color.warning;    // amber
+        return Color.secondary;               // green — running cool
     }
 
     function isCritical(c) {
@@ -61,16 +61,16 @@ Row {
 
     Text {
         text: "CPU"
-        color: Theme.textDim
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
+        color: Color.textDim
+        font.family: Style.font.family
+        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
     }
     Text {
         text: String(root.cpuTemp).padStart(2, "0") + "°"
         color: root.tempColor(root.cpuTemp)
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
+        font.family: Style.font.family
+        font.pixelSize: Style.font.base
         font.bold: root.isCritical(root.cpuTemp)
         anchors.verticalCenter: parent.verticalCenter
     }
@@ -78,25 +78,25 @@ Row {
     Text {
         visible: root.gpuPresent
         text: "│"
-        color: Theme.accentDim
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
+        color: Color.accentDim
+        font.family: Style.font.family
+        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
     }
     Text {
         visible: root.gpuPresent
         text: "GPU"
-        color: Theme.textDim
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
+        color: Color.textDim
+        font.family: Style.font.family
+        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
     }
     Text {
         visible: root.gpuPresent
         text: String(root.gpuTemp).padStart(2, "0") + "°"
         color: root.tempColor(root.gpuTemp)
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
+        font.family: Style.font.family
+        font.pixelSize: Style.font.base
         font.bold: root.isCritical(root.gpuTemp)
         anchors.verticalCenter: parent.verticalCenter
     }

@@ -1,13 +1,13 @@
 // Wraps a module in the tech-terminal bracket style: [ content ]
 // Reusable shell for any module.
 import QtQuick
-import "../"
+import qs.Commons
 
 Item {
     id: root
     property alias content: contentText.text
-    property color contentColor: Theme.text
-    property color bracketColor: Theme.accent
+    property color contentColor: Color.foreground
+    property color bracketColor: Color.accent
     property bool hovered: mouseArea.containsMouse
     signal clicked()
     signal rightClicked()
@@ -32,26 +32,26 @@ Item {
         spacing: 0
 
         Text {
-            text: Theme.bracketL
+            text: Style.bracketL
             color: root.bracketColor
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
+            font.family: Style.font.family
+            font.pixelSize: Style.font.base
         }
         Text {
             id: contentText
-            color: root.hovered ? Theme.highlight : root.contentColor
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
+            color: root.hovered ? Color.highlight : root.contentColor
+            font.family: Style.font.family
+            font.pixelSize: Style.font.base
 
             Behavior on color {
                 ColorAnimation { duration: 120 }
             }
         }
         Text {
-            text: Theme.bracketR
+            text: Style.bracketR
             color: root.bracketColor
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
+            font.family: Style.font.family
+            font.pixelSize: Style.font.base
         }
     }
 }

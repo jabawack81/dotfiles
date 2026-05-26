@@ -1,8 +1,10 @@
-// Cyberpunk tech-terminal bar — Phase 1.
-// Layout: [ WS workspaces ]  [ date ] [ HH:MM:SS ]    CPU ▓▓░ 42%  │  MEM ▓░ 8.2G
-// Modules live in ./modules/. Theme constants in ./Theme.qml.
+// Cyberpunk tech-terminal bar.
+// Layout: [ WS ] media · · · clock · · · clip bell bedtime caffeine net audio temps stats tray power
+// Design tokens live in Commons/ (Color, Style, Util, Globals); reusable UI
+// in Ui/; feature modules in modules/.
 import Quickshell
 import QtQuick
+import qs.Commons
 import "modules"
 
 Scope {
@@ -34,23 +36,23 @@ Scope {
                 right: true
             }
 
-            implicitHeight: Theme.barHeight
-            color: Theme.bg
+            implicitHeight: Style.barHeight
+            color: Color.bar.background
 
             // Thin neon line at the bottom as a tech accent
             Rectangle {
                 anchors.bottom: parent.bottom
                 anchors.left: parent.left
                 anchors.right: parent.right
-                height: Theme.barBorderWidth
-                color: Theme.accent
+                height: Style.barBorderWidth
+                color: Color.bar.border
             }
 
-            // Left section: workspaces
+            // Left section: workspaces + media
             Item {
                 id: leftSection
                 anchors.left: parent.left
-                anchors.leftMargin: Theme.modulePadding
+                anchors.leftMargin: Style.modulePadding
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 width: leftRow.width
@@ -75,10 +77,10 @@ Scope {
                 Clock { id: clock }
             }
 
-            // Right section: bedtime · caffeine · network · audio · temps · stats · tray
+            // Right section: clip · bell · bedtime · caffeine · network · audio · temps · stats · tray · power
             Row {
                 anchors.right: parent.right
-                anchors.rightMargin: Theme.modulePadding
+                anchors.rightMargin: Style.modulePadding
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 spacing: 14

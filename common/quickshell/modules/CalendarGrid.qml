@@ -1,7 +1,7 @@
 // Month calendar grid with today highlighted. Pure JS date math — no Qt.labs.
 // Monday-first week layout to match UK convention.
 import QtQuick
-import "../"
+import qs.Commons
 
 Column {
     id: root
@@ -27,9 +27,9 @@ Column {
     // Month/year label
     Text {
         text: Qt.formatDateTime(root.now, "MMMM yyyy")
-        color: Theme.text
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSizeSmall
+        color: Color.foreground
+        font.family: Style.font.family
+        font.pixelSize: Style.font.small
         font.bold: true
     }
 
@@ -43,9 +43,9 @@ Column {
                 width: 44
                 horizontalAlignment: Text.AlignHCenter
                 text: modelData
-                color: Theme.accentDim
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeSmall
+                color: Color.accentDim
+                font.family: Style.font.family
+                font.pixelSize: Style.font.small
             }
         }
     }
@@ -68,15 +68,15 @@ Column {
                     height: 20
                     visible: parent.isToday
                     color: "transparent"
-                    border.color: Theme.accent
+                    border.color: Color.accent
                     border.width: 1
                 }
                 Text {
                     anchors.centerIn: parent
                     text: parent.modelData > 0 ? String(parent.modelData) : ""
-                    color: parent.isToday ? Theme.accent : Theme.text
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
+                    color: parent.isToday ? Color.accent : Color.foreground
+                    font.family: Style.font.family
+                    font.pixelSize: Style.font.small
                     font.bold: parent.isToday
                 }
             }

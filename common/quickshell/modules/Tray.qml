@@ -5,7 +5,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Services.SystemTray
-import "../"
+import qs.Commons
 
 Row {
     id: root
@@ -20,8 +20,8 @@ Row {
             required property var modelData
             property bool hovered: containsMouse
 
-            implicitWidth: Theme.fontSize + 4
-            implicitHeight: Theme.fontSize + 4
+            implicitWidth: Style.font.base + 4
+            implicitHeight: Style.font.base + 4
             hoverEnabled: true
             acceptedButtons: Qt.LeftButton | Qt.RightButton
             anchors.verticalCenter: parent.verticalCenter
@@ -83,8 +83,8 @@ Row {
 
                 Rectangle {
                     anchors.fill: parent
-                    color: Theme.bgPanel
-                    border.color: Theme.accent
+                    color: Color.surface
+                    border.color: Color.accent
                     border.width: 1
 
                     Column {
@@ -104,7 +104,7 @@ Row {
                                     id: sepComp
                                     Rectangle {
                                         height: 1
-                                        color: Theme.accentDim
+                                        color: Color.accentDim
                                     }
                                 }
 
@@ -121,7 +121,7 @@ Row {
 
                                         Rectangle {
                                             anchors.fill: parent
-                                            color: parent.containsMouse ? Theme.bgInactive : "transparent"
+                                            color: parent.containsMouse ? Color.surfaceInactive : "transparent"
                                         }
 
                                         Text {
@@ -130,10 +130,10 @@ Row {
                                             anchors.leftMargin: 10
                                             anchors.verticalCenter: parent.verticalCenter
                                             text: modelData.text
-                                            color: !modelData.enabled ? Theme.textDim
-                                                 : (parent.containsMouse ? Theme.highlight : Theme.text)
-                                            font.family: Theme.fontFamily
-                                            font.pixelSize: Theme.fontSizeSmall
+                                            color: !modelData.enabled ? Color.textDim
+                                                 : (parent.containsMouse ? Color.highlight : Color.foreground)
+                                            font.family: Style.font.family
+                                            font.pixelSize: Style.font.small
                                         }
                                     }
                                 }

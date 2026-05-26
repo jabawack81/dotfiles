@@ -5,7 +5,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Io
-import "../"
+import qs.Commons
 
 MouseArea {
     id: root
@@ -70,23 +70,23 @@ MouseArea {
         spacing: 0
 
         Text {
-            text: Theme.bracketL
-            color: Theme.accent
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
+            text: Style.bracketL
+            color: Color.accent
+            font.family: Style.font.family
+            font.pixelSize: Style.font.base
         }
         Text {
             text: "󰅍"
-            color: root.containsMouse || menuPopup.visible ? Theme.highlight : Theme.textDim
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
+            color: root.containsMouse || menuPopup.visible ? Color.highlight : Color.textDim
+            font.family: Style.font.family
+            font.pixelSize: Style.font.base
             Behavior on color { ColorAnimation { duration: 120 } }
         }
         Text {
-            text: Theme.bracketR
-            color: Theme.accent
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
+            text: Style.bracketR
+            color: Color.accent
+            font.family: Style.font.family
+            font.pixelSize: Style.font.base
         }
     }
 
@@ -109,8 +109,8 @@ MouseArea {
 
         Rectangle {
             anchors.fill: parent
-            color: Theme.bgPanel
-            border.color: Theme.accent
+            color: Color.surface
+            border.color: Color.accent
             border.width: 1
 
             Column {
@@ -123,18 +123,18 @@ MouseArea {
                     width: parent.width
                     Text {
                         text: "[ CLIPBOARD ]"
-                        color: Theme.secondary
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
+                        color: Color.secondary
+                        font.family: Style.font.family
+                        font.pixelSize: Style.font.small
                         font.bold: true
                         width: parent.width - wipeBtn.width
                     }
                     Text {
                         id: wipeBtn
                         text: "WIPE"
-                        color: wipeArea.containsMouse ? Theme.critical : Theme.textDim
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
+                        color: wipeArea.containsMouse ? Color.urgent : Color.textDim
+                        font.family: Style.font.family
+                        font.pixelSize: Style.font.small
                         font.bold: true
                         MouseArea {
                             id: wipeArea
@@ -150,8 +150,8 @@ MouseArea {
                 Rectangle {
                     width: parent.width
                     height: 28
-                    color: Theme.bg
-                    border.color: Theme.accentDim
+                    color: Color.background
+                    border.color: Color.accentDim
                     border.width: 1
 
                     Row {
@@ -161,17 +161,17 @@ MouseArea {
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             text: "❯"
-                            color: Theme.accent
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeSmall
+                            color: Color.accent
+                            font.family: Style.font.family
+                            font.pixelSize: Style.font.small
                         }
                         TextInput {
                             id: searchInput
                             anchors.verticalCenter: parent.verticalCenter
                             width: parent.width - 30
-                            color: Theme.text
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeSmall
+                            color: Color.foreground
+                            font.family: Style.font.family
+                            font.pixelSize: Style.font.small
                             focus: true
                             onTextChanged: scope.filter = text
                             Connections {
@@ -184,14 +184,14 @@ MouseArea {
                     }
                 }
 
-                Rectangle { width: parent.width; height: 1; color: Theme.accentDim }
+                Rectangle { width: parent.width; height: 1; color: Color.accentDim }
 
                 Text {
                     visible: root.filtered().length === 0
                     text: "// clipboard empty"
-                    color: Theme.textDim
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
+                    color: Color.textDim
+                    font.family: Style.font.family
+                    font.pixelSize: Style.font.small
                 }
 
                 ListView {
@@ -205,8 +205,8 @@ MouseArea {
                         required property var modelData
                         width: ListView.view.width
                         height: 28
-                        color: clipArea.containsMouse ? Theme.bgInactive : Theme.bg
-                        border.color: Theme.accentDim
+                        color: clipArea.containsMouse ? Color.surfaceInactive : Color.background
+                        border.color: Color.accentDim
                         border.width: 1
 
                         Text {
@@ -215,9 +215,9 @@ MouseArea {
                             anchors.rightMargin: 8
                             verticalAlignment: Text.AlignVCenter
                             text: modelData.preview
-                            color: clipArea.containsMouse ? Theme.highlight : Theme.text
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeSmall
+                            color: clipArea.containsMouse ? Color.highlight : Color.foreground
+                            font.family: Style.font.family
+                            font.pixelSize: Style.font.small
                             elide: Text.ElideRight
                             maximumLineCount: 1
                         }

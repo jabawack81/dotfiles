@@ -2,7 +2,7 @@
 // Reads the default sink, tracks volume %, and shows MUTE when muted.
 import QtQuick
 import Quickshell.Services.Pipewire
-import "../"
+import qs.Commons
 
 MouseArea {
     id: root
@@ -35,25 +35,25 @@ MouseArea {
         spacing: 0
 
         Text {
-            text: Theme.bracketL
-            color: Theme.accent
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
+            text: Style.bracketL
+            color: Color.accent
+            font.family: Style.font.family
+            font.pixelSize: Style.font.base
         }
         Text {
             text: root.muted ? "MUTE"
                              : "VOL " + String(root.volume).padStart(2, "0") + "%"
-            color: root.muted ? Theme.critical
-                              : (root.containsMouse ? Theme.highlight : Theme.text)
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
+            color: root.muted ? Color.urgent
+                              : (root.containsMouse ? Color.highlight : Color.foreground)
+            font.family: Style.font.family
+            font.pixelSize: Style.font.base
             Behavior on color { ColorAnimation { duration: 120 } }
         }
         Text {
-            text: Theme.bracketR
-            color: Theme.accent
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
+            text: Style.bracketR
+            color: Color.accent
+            font.family: Style.font.family
+            font.pixelSize: Style.font.base
         }
     }
 }

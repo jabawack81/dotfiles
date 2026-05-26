@@ -3,7 +3,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Services.Mpris
-import "../"
+import qs.Commons
 
 Row {
     id: root
@@ -29,9 +29,9 @@ Row {
     // Play/pause toggle
     Text {
         text: root.playing ? "⏸" : "⏵"
-        color: mpHover.containsMouse ? Theme.highlight : Theme.secondary
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
+        color: mpHover.containsMouse ? Color.highlight : Color.secondary
+        font.family: Style.font.family
+        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
 
         MouseArea {
@@ -49,9 +49,9 @@ Row {
         width: Math.min(implicitWidth, 240)
         elide: Text.ElideRight
         text: root.artist ? (root.artist + " — " + root.title) : root.title
-        color: Theme.text
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSizeSmall
+        color: Color.foreground
+        font.family: Style.font.family
+        font.pixelSize: Style.font.small
 
         MouseArea {
             anchors.fill: parent
@@ -63,9 +63,9 @@ Row {
     Text {
         visible: root.player && root.player.canGoPrevious
         text: "⏮"
-        color: prevHover.containsMouse ? Theme.highlight : Theme.textDim
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSizeSmall
+        color: prevHover.containsMouse ? Color.highlight : Color.textDim
+        font.family: Style.font.family
+        font.pixelSize: Style.font.small
         anchors.verticalCenter: parent.verticalCenter
         MouseArea {
             id: prevHover
@@ -78,9 +78,9 @@ Row {
     Text {
         visible: root.player && root.player.canGoNext
         text: "⏭"
-        color: nextHover.containsMouse ? Theme.highlight : Theme.textDim
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSizeSmall
+        color: nextHover.containsMouse ? Color.highlight : Color.textDim
+        font.family: Style.font.family
+        font.pixelSize: Style.font.small
         anchors.verticalCenter: parent.verticalCenter
         MouseArea {
             id: nextHover

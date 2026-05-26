@@ -1,14 +1,14 @@
-// Shared UI state across windows (bar ↔ dashboard popup).
 pragma Singleton
 import QtQuick
 
+// Shared UI state across windows (bar ↔ popups/panels).
 QtObject {
     property bool dashboardOpen: false
     property bool overviewOpen: false
+    property bool notificationCenterOpen: false
 
     // Notification center state. History holds plain snapshots (not live
     // Notification objects, which go invalid after dismiss).
-    property bool notificationCenterOpen: false
     property var notificationHistory: []   // [{ appName, summary, body, urgency, time }]
 
     function pushNotification(notif) {
@@ -19,7 +19,6 @@ QtObject {
             urgency: notif.urgency,
             time: Qt.formatDateTime(new Date(), "HH:mm"),
         };
-        // Newest first, cap at 50 to bound memory.
         notificationHistory = [snap, ...notificationHistory].slice(0, 50);
     }
 

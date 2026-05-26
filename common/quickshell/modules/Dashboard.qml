@@ -6,7 +6,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import Quickshell.Io
-import "../"
+import qs.Commons
 
 Scope {
     id: scope
@@ -24,7 +24,7 @@ Scope {
                 screen: modelData
 
                 anchors.top: true
-                margins.top: Theme.barHeight + 6
+                margins.top: Style.barHeight + 6
                 implicitWidth: 380
                 implicitHeight: content.implicitHeight + 24
                 color: "transparent"
@@ -45,8 +45,8 @@ Scope {
                     anchors.top: parent.top
                     width: 360
                     height: content.implicitHeight + 24
-                    color: Theme.bgPanel
-                    border.color: Theme.accent
+                    color: Color.surface
+                    border.color: Color.accent
                     border.width: 1
 
                     // Swallow clicks inside the panel so they don't close it
@@ -66,17 +66,17 @@ Scope {
                             Text {
                                 id: bigTime
                                 text: "00:00:00"
-                                color: Theme.accent
-                                font.family: Theme.fontFamily
+                                color: Color.accent
+                                font.family: Style.font.family
                                 font.pixelSize: 28
                                 font.bold: true
                             }
                             Text {
                                 id: bigDate
                                 text: ""
-                                color: Theme.textDim
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSize
+                                color: Color.textDim
+                                font.family: Style.font.family
+                                font.pixelSize: Style.font.base
                             }
                             Timer {
                                 interval: 1000
@@ -91,38 +91,38 @@ Scope {
                             }
                         }
 
-                        Rectangle { width: parent.width; height: 1; color: Theme.accentDim }
+                        Rectangle { width: parent.width; height: 1; color: Color.accentDim }
 
                         // === Calendar ===
                         Text {
                             text: "[ CALENDAR ]"
-                            color: Theme.secondary
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeSmall
+                            color: Color.secondary
+                            font.family: Style.font.family
+                            font.pixelSize: Style.font.small
                             font.bold: true
                         }
                         CalendarGrid {}
 
-                        Rectangle { width: parent.width; height: 1; color: Theme.accentDim }
+                        Rectangle { width: parent.width; height: 1; color: Color.accentDim }
 
                         // === System summary ===
                         Text {
                             text: "[ SYSTEM ]"
-                            color: Theme.secondary
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeSmall
+                            color: Color.secondary
+                            font.family: Style.font.family
+                            font.pixelSize: Style.font.small
                             font.bold: true
                         }
                         DashSystem {}
 
-                        Rectangle { width: parent.width; height: 1; color: Theme.accentDim }
+                        Rectangle { width: parent.width; height: 1; color: Color.accentDim }
 
                         // === Quick controls ===
                         Text {
                             text: "[ CONTROLS ]"
-                            color: Theme.secondary
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeSmall
+                            color: Color.secondary
+                            font.family: Style.font.family
+                            font.pixelSize: Style.font.small
                             font.bold: true
                         }
                         DashControls {}

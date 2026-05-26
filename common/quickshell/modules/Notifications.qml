@@ -5,7 +5,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Services.Notifications
-import "../"
+import qs.Commons
 
 Scope {
     id: scope
@@ -45,7 +45,7 @@ Scope {
 
                 anchors.top: true
                 anchors.right: true
-                margins.top: Theme.barHeight + 6
+                margins.top: Style.barHeight + 6
                 margins.right: 8
                 implicitWidth: 360
                 implicitHeight: Math.max(1, toastCol.implicitHeight)
@@ -66,13 +66,13 @@ Scope {
                             required property var modelData
                             width: 360
                             height: toastContent.implicitHeight + 20
-                            color: Theme.bgPanel
+                            color: Color.surface
                             border.width: 1
                             border.color: {
                                 // urgency: 0=low, 1=normal, 2=critical
-                                if (modelData.urgency === 2) return Theme.critical;
-                                if (modelData.urgency === 0) return Theme.accentDim;
-                                return Theme.accent;
+                                if (modelData.urgency === 2) return Color.urgent;
+                                if (modelData.urgency === 0) return Color.accentDim;
+                                return Color.accent;
                             }
 
                             // Auto-dismiss timer (critical notifications stay)
@@ -107,26 +107,26 @@ Scope {
                                     Text {
                                         text: "▶ " + (modelData.appName || "notify")
                                         color: parent.parent.parent.border.color
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSizeSmall
+                                        font.family: Style.font.family
+                                        font.pixelSize: Style.font.small
                                         font.bold: true
                                         width: parent.width - 16
                                         elide: Text.ElideRight
                                     }
                                     Text {
                                         text: "✕"
-                                        color: Theme.textDim
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSizeSmall
+                                        color: Color.textDim
+                                        font.family: Style.font.family
+                                        font.pixelSize: Style.font.small
                                     }
                                 }
 
                                 Text {
                                     width: parent.width
                                     text: modelData.summary
-                                    color: Theme.text
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSize
+                                    color: Color.foreground
+                                    font.family: Style.font.family
+                                    font.pixelSize: Style.font.base
                                     font.bold: true
                                     wrapMode: Text.WordWrap
                                     elide: Text.ElideRight
@@ -137,9 +137,9 @@ Scope {
                                     width: parent.width
                                     visible: modelData.body !== ""
                                     text: modelData.body
-                                    color: Theme.textDim
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSizeSmall
+                                    color: Color.textDim
+                                    font.family: Style.font.family
+                                    font.pixelSize: Style.font.small
                                     wrapMode: Text.WordWrap
                                     elide: Text.ElideRight
                                     maximumLineCount: 4

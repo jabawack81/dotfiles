@@ -7,7 +7,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Services.Pipewire
 import Quickshell.Io
-import "../"
+import qs.Commons
 
 Scope {
     id: scope
@@ -114,8 +114,8 @@ Scope {
 
                 Rectangle {
                     anchors.fill: parent
-                    color: Theme.bgPanel
-                    border.color: Theme.accent
+                    color: Color.surface
+                    border.color: Color.accent
                     border.width: 1
 
                     Column {
@@ -129,9 +129,9 @@ Scope {
                                 if (scope.osdMuted) return "VOL · MUTE";
                                 return "VOL " + scope.osdValue + "%";
                             }
-                            color: scope.osdMuted ? Theme.critical : Theme.accent
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize
+                            color: scope.osdMuted ? Color.urgent : Color.accent
+                            font.family: Style.font.family
+                            font.pixelSize: Style.font.base
                             font.bold: true
                         }
 
@@ -145,9 +145,9 @@ Scope {
                                     width: 12
                                     height: 8
                                     property bool lit: (index + 1) * 5 <= scope.osdValue
-                                    color: !lit ? Theme.bgInactive
-                                         : scope.osdMuted ? Theme.critical
-                                         : (scope.osdType === "brightness" ? Theme.warning : Theme.accent)
+                                    color: !lit ? Color.surfaceInactive
+                                         : scope.osdMuted ? Color.urgent
+                                         : (scope.osdType === "brightness" ? Color.warning : Color.accent)
                                 }
                             }
                         }

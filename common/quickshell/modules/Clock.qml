@@ -2,7 +2,7 @@
 // Updates every second. Click toggles the dashboard.
 import QtQuick
 import Quickshell
-import "../"
+import qs.Commons
 
 MouseArea {
     id: root
@@ -33,33 +33,33 @@ MouseArea {
         spacing: 6
 
         Text {
-            text: Theme.bracketL + root.dateText + Theme.bracketR
-            color: Theme.textDim
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
+            text: Style.bracketL + root.dateText + Style.bracketR
+            color: Color.textDim
+            font.family: Style.font.family
+            font.pixelSize: Style.font.small
             anchors.verticalCenter: parent.verticalCenter
         }
         Text {
-            text: Theme.bracketL
-            color: Theme.accent
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
+            text: Style.bracketL
+            color: Color.accent
+            font.family: Style.font.family
+            font.pixelSize: Style.font.base
             anchors.verticalCenter: parent.verticalCenter
         }
         Text {
             text: root.timeText
-            color: root.containsMouse ? Theme.highlight : Theme.text
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
+            color: root.containsMouse ? Color.highlight : Color.foreground
+            font.family: Style.font.family
+            font.pixelSize: Style.font.base
             font.bold: true
             anchors.verticalCenter: parent.verticalCenter
             Behavior on color { ColorAnimation { duration: 120 } }
         }
         Text {
-            text: Theme.bracketR
-            color: Theme.accent
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
+            text: Style.bracketR
+            color: Color.accent
+            font.family: Style.font.family
+            font.pixelSize: Style.font.base
             anchors.verticalCenter: parent.verticalCenter
         }
     }

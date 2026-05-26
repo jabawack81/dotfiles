@@ -5,7 +5,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
-import "../"
+import qs.Commons
 
 Scope {
     id: scope
@@ -53,9 +53,9 @@ Scope {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: "[ WORKSPACES · " + overviewWindow.modelData.name + " ]"
-                        color: Theme.accent
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize + 2
+                        color: Color.accent
+                        font.family: Style.font.family
+                        font.pixelSize: Style.font.base + 2
                         font.bold: true
                     }
 
@@ -82,9 +82,9 @@ Scope {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: "// click a workspace to switch · esc to close"
-                        color: Theme.textDim
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
+                        color: Color.textDim
+                        font.family: Style.font.family
+                        font.pixelSize: Style.font.small
                     }
                 }
             }

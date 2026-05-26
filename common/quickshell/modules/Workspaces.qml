@@ -5,7 +5,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
-import "../"
+import qs.Commons
 
 Row {
     id: root
@@ -29,10 +29,10 @@ Row {
     }
 
     Text {
-        text: Theme.bracketL + "WS" + Theme.bracketR
-        color: Theme.textDim
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSize
+        text: Style.bracketL + "WS" + Style.bracketR
+        color: Color.textDim
+        font.family: Style.font.family
+        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
     }
 
@@ -55,12 +55,12 @@ Row {
                 anchors.centerIn: parent
                 text: parent.isActive ? "●" + parent.modelData.id
                                       : String(parent.modelData.id)
-                color: parent.isActive ? Theme.accent
-                                       : (parent.hovered ? Theme.highlight
-                                                         : (parent.hasWindows ? Theme.text
-                                                                              : Theme.textDim))
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize
+                color: parent.isActive ? Color.accent
+                                       : (parent.hovered ? Color.highlight
+                                                         : (parent.hasWindows ? Color.foreground
+                                                                              : Color.textDim))
+                font.family: Style.font.family
+                font.pixelSize: Style.font.base
                 font.bold: parent.isActive
 
                 Behavior on color {

@@ -1,7 +1,7 @@
 // Notification bell — shows a count and toggles the notification center.
 // Glyph changes when there's history; click opens/closes the center panel.
 import QtQuick
-import "../"
+import qs.Commons
 
 MouseArea {
     id: root
@@ -19,25 +19,25 @@ MouseArea {
         spacing: 0
 
         Text {
-            text: Theme.bracketL
-            color: Theme.accent
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
+            text: Style.bracketL
+            color: Color.accent
+            font.family: Style.font.family
+            font.pixelSize: Style.font.base
         }
         Text {
             // Filled bell when there's history, hollow when empty
             text: root.count > 0 ? "󰂚 " + root.count : "󰂜"
-            color: root.containsMouse ? Theme.highlight
-                 : (root.count > 0 ? Theme.accent : Theme.textDim)
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
+            color: root.containsMouse ? Color.highlight
+                 : (root.count > 0 ? Color.accent : Color.textDim)
+            font.family: Style.font.family
+            font.pixelSize: Style.font.base
             Behavior on color { ColorAnimation { duration: 120 } }
         }
         Text {
-            text: Theme.bracketR
-            color: Theme.accent
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
+            text: Style.bracketR
+            color: Color.accent
+            font.family: Style.font.family
+            font.pixelSize: Style.font.base
         }
     }
 }

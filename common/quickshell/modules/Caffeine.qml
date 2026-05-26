@@ -4,7 +4,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../"
+import qs.Commons
 
 MouseArea {
     id: root
@@ -50,10 +50,10 @@ MouseArea {
 
     function stateColor() {
         switch (root.state) {
-            case "caffeine":  return Theme.accent;       // cyan
-            case "remote":    return Theme.secondary;    // green
-            case "hibernate": return Theme.warning;      // amber
-            default:          return Theme.textDim;
+            case "caffeine":  return Color.accent;       // cyan
+            case "remote":    return Color.secondary;    // green
+            case "hibernate": return Color.warning;      // amber
+            default:          return Color.textDim;
         }
     }
 
@@ -63,23 +63,23 @@ MouseArea {
         spacing: 0
 
         Text {
-            text: Theme.bracketL
-            color: Theme.accent
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
+            text: Style.bracketL
+            color: Color.accent
+            font.family: Style.font.family
+            font.pixelSize: Style.font.base
         }
         Text {
             text: root.stateLabel()
-            color: root.containsMouse ? Theme.highlight : root.stateColor()
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
+            color: root.containsMouse ? Color.highlight : root.stateColor()
+            font.family: Style.font.family
+            font.pixelSize: Style.font.base
             Behavior on color { ColorAnimation { duration: 120 } }
         }
         Text {
-            text: Theme.bracketR
-            color: Theme.accent
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSize
+            text: Style.bracketR
+            color: Color.accent
+            font.family: Style.font.family
+            font.pixelSize: Style.font.base
         }
     }
 }

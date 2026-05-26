@@ -2,7 +2,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
-import "../"
+import qs.Commons
 
 Rectangle {
     id: card
@@ -21,9 +21,9 @@ Rectangle {
 
     width: 240
     height: 140
-    color: Theme.bgPanel
+    color: Color.surface
     border.width: isActive ? 2 : 1
-    border.color: isActive ? Theme.accent : Theme.accentDim
+    border.color: isActive ? Color.accent : Color.accentDim
 
     MouseArea {
         anchors.fill: parent
@@ -40,13 +40,13 @@ Rectangle {
 
         Text {
             text: (card.isActive ? "● " : "") + "WS " + card.ws.id
-            color: card.isActive ? Theme.accent : Theme.text
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
+            color: card.isActive ? Color.accent : Color.foreground
+            font.family: Style.font.family
+            font.pixelSize: Style.font.small
             font.bold: true
         }
 
-        Rectangle { width: parent.width; height: 1; color: Theme.accentDim }
+        Rectangle { width: parent.width; height: 1; color: Color.accentDim }
 
         Column {
             width: parent.width
@@ -76,9 +76,9 @@ Rectangle {
                             const ipc = modelData.lastIpcObject;
                             return (ipc && ipc.title) || (ipc && ipc.class) || "window";
                         }
-                        color: Theme.textDim
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
+                        color: Color.textDim
+                        font.family: Style.font.family
+                        font.pixelSize: Style.font.small
                         elide: Text.ElideRight
                         maximumLineCount: 1
                     }

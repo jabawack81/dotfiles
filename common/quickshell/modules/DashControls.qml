@@ -5,7 +5,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Pipewire
-import "../"
+import qs.Commons
 
 Column {
     id: root
@@ -64,9 +64,9 @@ Column {
         Rectangle {
             width: caffText.implicitWidth + 20
             height: 26
-            color: caffArea.containsMouse ? Theme.bgInactive : Theme.bg
+            color: caffArea.containsMouse ? Color.surfaceInactive : Color.background
             border.width: 1
-            border.color: root.caffeineState !== "normal" ? Theme.accent : Theme.accentDim
+            border.color: root.caffeineState !== "normal" ? Color.accent : Color.accentDim
 
             Text {
                 id: caffText
@@ -79,9 +79,9 @@ Column {
                         default:          return "☕ NORM";
                     }
                 }
-                color: root.caffeineState !== "normal" ? Theme.accent : Theme.textDim
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeSmall
+                color: root.caffeineState !== "normal" ? Color.accent : Color.textDim
+                font.family: Style.font.family
+                font.pixelSize: Style.font.small
             }
             MouseArea {
                 id: caffArea
@@ -98,17 +98,17 @@ Column {
         Rectangle {
             width: wifiText.implicitWidth + 20
             height: 26
-            color: wifiArea.containsMouse ? Theme.bgInactive : Theme.bg
+            color: wifiArea.containsMouse ? Color.surfaceInactive : Color.background
             border.width: 1
-            border.color: root.wifiOn ? Theme.secondary : Theme.accentDim
+            border.color: root.wifiOn ? Color.secondary : Color.accentDim
 
             Text {
                 id: wifiText
                 anchors.centerIn: parent
                 text: root.wifiOn ? "󰖩 WIFI" : "󰖪 WIFI"
-                color: root.wifiOn ? Theme.secondary : Theme.textDim
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeSmall
+                color: root.wifiOn ? Color.secondary : Color.textDim
+                font.family: Style.font.family
+                font.pixelSize: Style.font.small
             }
             MouseArea {
                 id: wifiArea
@@ -126,17 +126,17 @@ Column {
             visible: root.btPresent
             width: btText.implicitWidth + 20
             height: 26
-            color: btArea.containsMouse ? Theme.bgInactive : Theme.bg
+            color: btArea.containsMouse ? Color.surfaceInactive : Color.background
             border.width: 1
-            border.color: root.btOn ? Theme.accent : Theme.accentDim
+            border.color: root.btOn ? Color.accent : Color.accentDim
 
             Text {
                 id: btText
                 anchors.centerIn: parent
                 text: root.btOn ? "󰂯 BT" : "󰂲 BT"
-                color: root.btOn ? Theme.accent : Theme.textDim
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeSmall
+                color: root.btOn ? Color.accent : Color.textDim
+                font.family: Style.font.family
+                font.pixelSize: Style.font.small
             }
             MouseArea {
                 id: btArea
@@ -162,9 +162,9 @@ Column {
 
         Text {
             text: "VOL " + root.volume + "%"
-            color: Theme.textDim
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
+            color: Color.textDim
+            font.family: Style.font.family
+            font.pixelSize: Style.font.small
         }
 
         // Track + fill + draggable handle
@@ -172,16 +172,16 @@ Column {
             id: track
             width: parent.width
             height: 8
-            color: Theme.bgInactive
+            color: Color.surfaceInactive
             border.width: 1
-            border.color: Theme.accentDim
+            border.color: Color.accentDim
 
             Rectangle {
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 width: parent.width * (root.volume / 100)
-                color: Theme.accent
+                color: Color.accent
             }
 
             MouseArea {
