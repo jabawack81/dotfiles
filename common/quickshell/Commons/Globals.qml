@@ -4,6 +4,7 @@ import QtQuick
 // Shared UI state across windows (bar ↔ popups/panels).
 QtObject {
     property bool overviewOpen: false
+    property bool omniOpen: false
     // Keyboard cursor for the workspace overview (the id currently selected
     // via Tab/arrows, distinct from the active workspace).
     property int overviewSelectedId: -1
