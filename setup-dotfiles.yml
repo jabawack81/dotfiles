@@ -115,6 +115,7 @@
       - eww
       - grimblast-git
       - hyprlauncher
+      - quickshell-git   # QML desktop shell (bar/omni); git tracks current Qt
 
     # Machine-specific packages
     shinkiro_packages:  # Desktop with AMD GPU
