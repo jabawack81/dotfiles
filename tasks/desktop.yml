@@ -299,6 +299,9 @@
       bindl=,switch:on:Lid Switch,exec,hyprctl keyword monitor "eDP-1, disable" && sudo -n systemctl stop open-fprintd.service
       # Lid opened: re-enable laptop screen and fingerprint sensor
       bindl=,switch:off:Lid Switch,exec,hyprctl keyword monitor "eDP-1, preferred, auto, 1" && sudo -n systemctl start open-fprintd.service
+
+      # Apply current lid state on startup (lid switch only fires on transitions, not on initial state)
+      exec-once = ~/dotfiles/lupus/hypr/lid-state-init.sh
     dest: "{{ config_dir }}/hypr/monitors.conf"
     mode: '0644'
     owner: "{{ target_user }}"
