@@ -18,14 +18,44 @@
     owner: "{{ target_user }}"
     group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
 
-- name: Symlink Claude agents directory
+- name: Check current state of ~/.claude/agents
+  stat:
+    path: "{{ target_home }}/.claude/agents"
+  register: claude_agents_path
+
+- name: Remove legacy ~/.claude/agents symlink (now a real directory)
   file:
-    src: "{{ dotfiles_dir }}/common/claude/agents"
-    dest: "{{ target_home }}/.claude/agents"
+    path: "{{ target_home }}/.claude/agents"
+    state: absent
+  when:
+    - claude_agents_path.stat.exists
+    - claude_agents_path.stat.islnk | default(false)
+
+- name: Ensure ~/.claude/agents directory exists
+  file:
+    path: "{{ target_home }}/.claude/agents"
+    state: directory
+    mode: '0755'
+    owner: "{{ target_user }}"
+    group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+
+- name: Find public Claude agents
+  find:
+    paths: "{{ dotfiles_dir }}/common/claude/agents"
+    patterns: "*.md"
+    file_type: file
+    recurse: no
+  register: public_claude_agents
+
+- name: Symlink public Claude agents into ~/.claude/agents
+  file:
+    src: "{{ item.path }}"
+    dest: "{{ target_home }}/.claude/agents/{{ item.path | basename }}"
     state: link
     force: yes
     owner: "{{ target_user }}"
     group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+  loop: "{{ public_claude_agents.files | default([]) }}"
 
 - name: Copy Claude settings.json (if not already present)
   copy:
@@ -62,6 +92,26 @@
     group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
   loop: "{{ private_claude_skills.files | default([]) }}"
   when: private_claude_skills is succeeded
+
+- name: Find private Claude agent supplements
+  find:
+    paths: "{{ dotfiles_dir }}/private-config/claude/agents"
+    patterns: "*.md"
+    file_type: file
+    recurse: no
+  register: private_claude_agents
+  ignore_errors: yes
+
+- name: Symlink private Claude agent supplements into ~/.claude/agents
+  file:
+    src: "{{ item.path }}"
+    dest: "{{ target_home }}/.claude/agents/{{ item.path | basename }}"
+    state: link
+    force: yes
+    owner: "{{ target_user }}"
+    group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+  loop: "{{ private_claude_agents.files | default([]) }}"
+  when: private_claude_agents is succeeded
 
 - name: Check if private Claude config exists
   stat:
