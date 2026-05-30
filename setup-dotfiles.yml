@@ -105,6 +105,11 @@
       - nvtop
       - smartmontools
 
+      # Network & Bluetooth (quickshell tiles use nmcli/bluetoothctl)
+      - networkmanager
+      - bluez
+      - bluez-utils
+
     aur_packages:
       - discord
       - slack-desktop
@@ -131,10 +136,7 @@
       - vulkan-intel
       - fprintd
       - libfprint
-      - networkmanager
       - network-manager-applet
-      - bluez
-      - bluez-utils
 
     lupus_packages:  # ThinkPad T470p with NVIDIA 940MX (proprietary 580xx driver)
       - linux-firmware-nvidia
