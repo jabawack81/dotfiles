@@ -77,15 +77,14 @@ BarPill {
                     title: "CLIPBOARD"
                     width: parent.width - wipeBtn.width
                 }
-                Text {
+                BarText {
+                    small: true
                     id: wipeBtn
                     text: "WIPE"
                     // Greyed out and inert when the clipboard is already empty.
                     property bool hasItems: scope.entries.length > 0
                     color: !hasItems ? Color.accentDim
                          : (wipeArea.containsMouse ? Color.urgent : Color.textDim)
-                    font.family: Style.font.family
-                    font.pixelSize: Style.font.small
                     font.bold: true
                     MouseArea {
                         id: wipeArea
@@ -110,12 +109,11 @@ BarPill {
                     anchors.fill: parent
                     anchors.leftMargin: 8
                     spacing: 6
-                    Text {
+                    BarText {
+                        small: true
                         anchors.verticalCenter: parent.verticalCenter
                         text: "❯"
                         color: Color.accent
-                        font.family: Style.font.family
-                        font.pixelSize: Style.font.small
                     }
                     TextInput {
                         id: searchInput
@@ -160,15 +158,14 @@ BarPill {
                     border.color: Color.accentDim
                     border.width: 1
 
-                    Text {
+                    BarText {
+                        small: true
                         anchors.fill: parent
                         anchors.leftMargin: 8
                         anchors.rightMargin: 8
                         verticalAlignment: Text.AlignVCenter
                         text: modelData.preview
                         color: clipArea.containsMouse ? Color.highlight : Color.foreground
-                        font.family: Style.font.family
-                        font.pixelSize: Style.font.small
                         elide: Text.ElideRight
                         maximumLineCount: 1
                     }

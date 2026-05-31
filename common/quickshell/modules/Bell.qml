@@ -31,15 +31,14 @@ BarPill {
                     title: "NOTIFICATIONS"
                     width: parent.width - clearBtn.width
                 }
-                Text {
+                BarText {
+                    small: true
                     id: clearBtn
                     text: "CLEAR"
                     // Greyed out and inert when there's nothing to clear.
                     property bool hasItems: Globals.notificationHistory.length > 0
                     color: !hasItems ? Color.accentDim
                          : (clearArea.containsMouse ? Color.urgent : Color.textDim)
-                    font.family: Style.font.family
-                    font.pixelSize: Style.font.small
                     font.bold: true
                     MouseArea {
                         id: clearArea
@@ -92,42 +91,38 @@ BarPill {
 
                         Row {
                             width: parent.width
-                            Text {
+                            BarText {
+                                small: true
                                 text: "▶ " + modelData.appName
                                 color: parent.parent.parent.border.color
-                                font.family: Style.font.family
-                                font.pixelSize: Style.font.small
                                 font.bold: true
                                 width: parent.width - 44
                                 elide: Text.ElideRight
                             }
-                            Text {
+                            BarText {
+                                small: true
                                 text: modelData.time
                                 color: Color.textDim
-                                font.family: Style.font.family
-                                font.pixelSize: Style.font.small
                                 horizontalAlignment: Text.AlignRight
                                 width: 44
                             }
                         }
-                        Text {
+                        BarText {
+                            small: true
                             width: parent.width
                             text: modelData.summary
                             color: Color.foreground
-                            font.family: Style.font.family
-                            font.pixelSize: Style.font.small
                             font.bold: true
                             wrapMode: Text.WordWrap
                             elide: Text.ElideRight
                             maximumLineCount: 2
                         }
-                        Text {
+                        BarText {
+                            small: true
                             width: parent.width
                             visible: modelData.body !== ""
                             text: modelData.body
                             color: Color.textDim
-                            font.family: Style.font.family
-                            font.pixelSize: Style.font.small
                             wrapMode: Text.WordWrap
                             elide: Text.ElideRight
                             maximumLineCount: 3

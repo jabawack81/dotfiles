@@ -6,6 +6,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import qs.Commons
+import qs.Ui
 
 Scope {
     id: scope
@@ -149,12 +150,11 @@ Scope {
                         }
                     }
 
-                    Text {
+                    BarText {
+                        small: true
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: "// tab·arrows move · enter select · 1-9 jump · esc close"
                         color: Color.textDim
-                        font.family: Style.font.family
-                        font.pixelSize: Style.font.small
                     }
                 }
             }

@@ -136,13 +136,12 @@ Column {
             border.width: 1
             border.color: root.btOn ? Color.accent : Color.accentDim
 
-            Text {
+            BarText {
+                small: true
                 id: btText
                 anchors.centerIn: parent
                 text: root.btOn ? "󰂯 BT" : "󰂲 BT"
                 color: root.btOn ? Color.accent : Color.textDim
-                font.family: Style.font.family
-                font.pixelSize: Style.font.small
             }
             MouseArea {
                 id: btArea

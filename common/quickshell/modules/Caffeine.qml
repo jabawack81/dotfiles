@@ -77,30 +77,27 @@ BarPill {
                     required property var modelData
                     property bool current: modelData.key === root.state
                     spacing: 8
-                    Text {
+                    BarText {
+                        small: true
                         width: 56
                         text: (parent.current ? "▶ " : "  ") + modelData.label
                         color: parent.current ? Color.accent : Color.textDim
-                        font.family: Style.font.family
-                        font.pixelSize: Style.font.small
                         font.bold: parent.current
                     }
-                    Text {
+                    BarText {
+                        small: true
                         text: modelData.desc
                         color: parent.current ? Color.foreground : Color.textDim
-                        font.family: Style.font.family
-                        font.pixelSize: Style.font.small
                     }
                 }
             }
 
             Item { width: 1; height: 2 }
 
-            Text {
+            BarText {
+                small: true
                 text: "L-click: cycle · R-click: reset"
                 color: Color.accentDim
-                font.family: Style.font.family
-                font.pixelSize: Style.font.small
             }
         }
     }

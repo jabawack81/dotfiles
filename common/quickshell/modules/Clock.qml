@@ -34,34 +34,27 @@ MouseArea {
         anchors.centerIn: parent
         spacing: 6
 
-        Text {
+        BarText {
+            small: true
             text: Style.bracketL + root.dateText + Style.bracketR
             color: Color.textDim
-            font.family: Style.font.family
-            font.pixelSize: Style.font.small
             anchors.verticalCenter: parent.verticalCenter
         }
-        Text {
+        BarText {
             text: Style.bracketL
             color: Color.accent
-            font.family: Style.font.family
-            font.pixelSize: Style.font.base
             anchors.verticalCenter: parent.verticalCenter
         }
-        Text {
+        BarText {
             text: root.timeText
             color: root.containsMouse || dash.visible ? Color.highlight : Color.foreground
-            font.family: Style.font.family
-            font.pixelSize: Style.font.base
             font.bold: true
             anchors.verticalCenter: parent.verticalCenter
             Behavior on color { ColorAnimation { duration: 120 } }
         }
-        Text {
+        BarText {
             text: Style.bracketR
             color: Color.accent
-            font.family: Style.font.family
-            font.pixelSize: Style.font.base
             anchors.verticalCenter: parent.verticalCenter
         }
     }
@@ -92,12 +85,10 @@ MouseArea {
                     font.pixelSize: Style.font.big
                     font.bold: true
                 }
-                Text {
+                BarText {
                     id: bigDate
                     text: ""
                     color: Color.textDim
-                    font.family: Style.font.family
-                    font.pixelSize: Style.font.base
                 }
                 Timer {
                     interval: 1000

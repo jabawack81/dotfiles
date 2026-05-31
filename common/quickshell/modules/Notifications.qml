@@ -6,6 +6,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Services.Notifications
 import qs.Commons
+import qs.Ui
 
 Scope {
     id: scope
@@ -107,42 +108,37 @@ Scope {
                                 // Header: app name + close hint
                                 Row {
                                     width: parent.width
-                                    Text {
+                                    BarText {
+                                        small: true
                                         text: "▶ " + (modelData.appName || "notify")
                                         color: parent.parent.parent.border.color
-                                        font.family: Style.font.family
-                                        font.pixelSize: Style.font.small
                                         font.bold: true
                                         width: parent.width - 16
                                         elide: Text.ElideRight
                                     }
-                                    Text {
+                                    BarText {
+                                        small: true
                                         text: "✕"
                                         color: Color.textDim
-                                        font.family: Style.font.family
-                                        font.pixelSize: Style.font.small
                                     }
                                 }
 
-                                Text {
+                                BarText {
                                     width: parent.width
                                     text: modelData.summary
                                     color: Color.foreground
-                                    font.family: Style.font.family
-                                    font.pixelSize: Style.font.base
                                     font.bold: true
                                     wrapMode: Text.WordWrap
                                     elide: Text.ElideRight
                                     maximumLineCount: 2
                                 }
 
-                                Text {
+                                BarText {
+                                    small: true
                                     width: parent.width
                                     visible: modelData.body !== ""
                                     text: modelData.body
                                     color: Color.textDim
-                                    font.family: Style.font.family
-                                    font.pixelSize: Style.font.small
                                     wrapMode: Text.WordWrap
                                     elide: Text.ElideRight
                                     maximumLineCount: 4

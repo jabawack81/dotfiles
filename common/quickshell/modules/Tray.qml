@@ -109,13 +109,11 @@ Row {
         anchors.verticalCenter: parent.verticalCenter
         onClicked: overflowPopup.toggle()
 
-        Text {
+        BarText {
             id: ovText
             anchors.centerIn: parent
             text: "⋯" + root.overflowItems.length
             color: overflowBtn.containsMouse || overflowPopup.visible ? Color.highlight : Color.textDim
-            font.family: Style.font.family
-            font.pixelSize: Style.font.base
             Behavior on color { ColorAnimation { duration: 120 } }
         }
 
@@ -174,14 +172,13 @@ Row {
                                 sourceSize.width: 18; sourceSize.height: 18
                                 width: 18; height: 18; smooth: true
                             }
-                            Text {
+                            BarText {
+                                small: true
                                 anchors.verticalCenter: parent.verticalCenter
                                 width: ovCol.width - 52
                                 text: ovRow.modelData.tooltipTitle || ovRow.modelData.title
                                       || ovRow.modelData.id || "tray item"
                                 color: ovRow.containsMouse ? Color.highlight : Color.foreground
-                                font.family: Style.font.family
-                                font.pixelSize: Style.font.small
                                 elide: Text.ElideRight
                             }
                         }
