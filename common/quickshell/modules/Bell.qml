@@ -4,43 +4,15 @@ import QtQuick
 import qs.Commons
 import qs.Ui
 
-MouseArea {
+BarPill {
     id: root
-    anchors.verticalCenter: parent.verticalCenter
-    implicitHeight: row.implicitHeight
-    implicitWidth: row.implicitWidth
-    hoverEnabled: true
+    // Filled bell when there's history, hollow when empty
+    content: count > 0 ? "󰂚 " + count : "󰂜"
+    baseColor: center.visible ? Color.highlight
+             : (count > 0 ? Color.accent : Color.textDim)
     onClicked: center.toggle()
 
     property int count: Globals.notificationHistory.length
-
-    Row {
-        id: row
-        anchors.verticalCenter: parent.verticalCenter
-        spacing: 0
-
-        Text {
-            text: Style.bracketL
-            color: Color.accent
-            font.family: Style.font.family
-            font.pixelSize: Style.font.base
-        }
-        Text {
-            // Filled bell when there's history, hollow when empty
-            text: root.count > 0 ? "󰂚 " + root.count : "󰂜"
-            color: root.containsMouse || center.visible ? Color.highlight
-                 : (root.count > 0 ? Color.accent : Color.textDim)
-            font.family: Style.font.family
-            font.pixelSize: Style.font.base
-            Behavior on color { ColorAnimation { duration: 120 } }
-        }
-        Text {
-            text: Style.bracketR
-            color: Color.accent
-            font.family: Style.font.family
-            font.pixelSize: Style.font.base
-        }
-    }
 
     PopupCard {
         id: center

@@ -7,12 +7,10 @@ import Quickshell.Io
 import qs.Commons
 import qs.Ui
 
-MouseArea {
+BarPill {
     id: root
-    anchors.verticalCenter: parent.verticalCenter
-    implicitHeight: row.implicitHeight
-    implicitWidth: row.implicitWidth
-    hoverEnabled: true
+    content: "󰅍"
+    baseColor: clipMenu.visible ? Color.highlight : Color.textDim
     onClicked: {
         if (!clipMenu.visible) { scope.filter = ""; root.refresh(); }
         clipMenu.toggle();
@@ -59,33 +57,6 @@ MouseArea {
         id: wipeProc
         command: ["cliphist", "wipe"]
         onExited: root.refresh()
-    }
-
-    // === Bar icon ===
-    Row {
-        id: row
-        anchors.verticalCenter: parent.verticalCenter
-        spacing: 0
-
-        Text {
-            text: Style.bracketL
-            color: Color.accent
-            font.family: Style.font.family
-            font.pixelSize: Style.font.base
-        }
-        Text {
-            text: "󰅍"
-            color: root.containsMouse || clipMenu.visible ? Color.highlight : Color.textDim
-            font.family: Style.font.family
-            font.pixelSize: Style.font.base
-            Behavior on color { ColorAnimation { duration: 120 } }
-        }
-        Text {
-            text: Style.bracketR
-            color: Color.accent
-            font.family: Style.font.family
-            font.pixelSize: Style.font.base
-        }
     }
 
     // === Popup ===
