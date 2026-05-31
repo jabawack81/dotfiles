@@ -8,6 +8,7 @@ import Quickshell.Wayland
 import Quickshell.Services.Pipewire
 import Quickshell.Io
 import qs.Commons
+import qs.Ui
 
 Scope {
     id: scope
