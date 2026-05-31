@@ -6,6 +6,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Pipewire
 import qs.Commons
+import qs.Ui
 
 Column {
     id: root
@@ -75,8 +76,9 @@ Column {
             border.width: 1
             border.color: root.caffeineState !== "normal" ? Color.accent : Color.accentDim
 
-            Text {
+            BarText {
                 id: caffText
+                small: true
                 anchors.centerIn: parent
                 text: {
                     switch (root.caffeineState) {
@@ -87,8 +89,6 @@ Column {
                     }
                 }
                 color: root.caffeineState !== "normal" ? Color.accent : Color.textDim
-                font.family: Style.font.family
-                font.pixelSize: Style.font.small
             }
             MouseArea {
                 id: caffArea
@@ -109,13 +109,12 @@ Column {
             border.width: 1
             border.color: root.wifiOn ? Color.secondary : Color.accentDim
 
-            Text {
+            BarText {
                 id: wifiText
+                small: true
                 anchors.centerIn: parent
                 text: root.wifiOn ? "󰖩 WIFI" : "󰖪 WIFI"
                 color: root.wifiOn ? Color.secondary : Color.textDim
-                font.family: Style.font.family
-                font.pixelSize: Style.font.small
             }
             MouseArea {
                 id: wifiArea
@@ -167,11 +166,10 @@ Column {
         width: parent.width
         spacing: 4
 
-        Text {
+        BarText {
+            small: true
             text: "VOL " + root.volume + "%"
             color: Color.textDim
-            font.family: Style.font.family
-            font.pixelSize: Style.font.small
         }
 
         // Track + fill + draggable handle

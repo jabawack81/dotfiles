@@ -28,11 +28,9 @@ Row {
     property string artist: player ? (player.trackArtist || "") : ""
 
     // Play/pause toggle
-    Text {
+    BarText {
         text: root.playing ? "⏸" : "⏵"
         color: mpHover.containsMouse ? Color.highlight : Color.secondary
-        font.family: Style.font.family
-        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
 
         MouseArea {
@@ -45,14 +43,12 @@ Row {
     }
 
     // Track title (clipped to keep the bar tidy)
-    Text {
+    BarText {
+        small: true
         anchors.verticalCenter: parent.verticalCenter
         width: Math.min(implicitWidth, 240)
         elide: Text.ElideRight
         text: root.artist ? (root.artist + " — " + root.title) : root.title
-        color: Color.foreground
-        font.family: Style.font.family
-        font.pixelSize: Style.font.small
 
         MouseArea {
             anchors.fill: parent
@@ -61,12 +57,11 @@ Row {
     }
 
     // Skip controls
-    Text {
+    BarText {
+        small: true
         visible: root.player && root.player.canGoPrevious
         text: "⏮"
         color: prevHover.containsMouse ? Color.highlight : Color.textDim
-        font.family: Style.font.family
-        font.pixelSize: Style.font.small
         anchors.verticalCenter: parent.verticalCenter
         MouseArea {
             id: prevHover
@@ -76,12 +71,11 @@ Row {
         }
         Behavior on color { ColorAnimation { duration: 120 } }
     }
-    Text {
+    BarText {
+        small: true
         visible: root.player && root.player.canGoNext
         text: "⏭"
         color: nextHover.containsMouse ? Color.highlight : Color.textDim
-        font.family: Style.font.family
-        font.pixelSize: Style.font.small
         anchors.verticalCenter: parent.verticalCenter
         MouseArea {
             id: nextHover

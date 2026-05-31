@@ -138,12 +138,11 @@ BarPill {
 
             Separator {}
 
-            Text {
+            BarText {
+                small: true
                 visible: root.filtered().length === 0
                 text: "// clipboard empty"
                 color: Color.textDim
-                font.family: Style.font.family
-                font.pixelSize: Style.font.small
             }
 
             ListView {

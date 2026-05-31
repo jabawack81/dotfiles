@@ -44,11 +44,10 @@ Rectangle {
         anchors.margins: 10
         spacing: 6
 
-        Text {
+        BarText {
+            small: true
             text: (card.isActive ? "● " : "") + "WS " + card.ws.id
             color: card.isActive ? Color.accent : Color.foreground
-            font.family: Style.font.family
-            font.pixelSize: Style.font.small
             font.bold: true
         }
 
@@ -73,7 +72,8 @@ Rectangle {
                         height: 16
                         smooth: true
                     }
-                    Text {
+                    BarText {
+                        small: true
                         anchors.verticalCenter: parent.verticalCenter
                         width: parent.width - 22
                         // Prefer Hyprland's live window title (e.g. "tmux"),
@@ -83,8 +83,6 @@ Rectangle {
                             return (ipc && ipc.title) || (ipc && ipc.class) || "window";
                         }
                         color: Color.textDim
-                        font.family: Style.font.family
-                        font.pixelSize: Style.font.small
                         elide: Text.ElideRight
                         maximumLineCount: 1
                     }

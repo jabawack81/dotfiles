@@ -54,12 +54,11 @@ BarPill {
 
             Separator {}
 
-            Text {
+            BarText {
+                small: true
                 visible: Globals.notificationHistory.length === 0
                 text: "// no notifications"
                 color: Color.textDim
-                font.family: Style.font.family
-                font.pixelSize: Style.font.small
             }
 
             ListView {
