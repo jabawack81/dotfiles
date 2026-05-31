@@ -8,19 +8,15 @@ config-file = ?"~/.config/omarchy/current/theme/ghostty.conf"
 # ==============================================================================
 
 # Window transparency (0.0 = fully transparent, 1.0 = opaque)
-background-opacity=0.7
+background-opacity=0.92
 
 # Blur radius for transparent background (macOS/some Linux compositors)
 background-blur-radius=30
 
-# Background image path
-background-image=~/.config/ghostty/bg.jpg
-
-# Background image transparency (0.0 = invisible, 1.0 = fully visible)
-background-image-opacity=0.3
-
-# How to fit the image: contain, cover, or stretch
-background-image-fit=cover
+# Background image (disabled — made text hard to read). Uncomment to re-enable.
+# background-image=~/.config/ghostty/bg.jpg
+# background-image-opacity=0.3
+# background-image-fit=cover
 
 # ==============================================================================
 # Padding
