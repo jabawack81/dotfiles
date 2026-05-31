@@ -68,6 +68,9 @@ Item {
             bluetoothctl show 2>/dev/null | grep -q 'Powered: yes' && echo on
             echo "count:$(bluetoothctl devices Connected 2>/dev/null | grep -c Device)"
         `]
+        // Reset before each run — onRead only ever sets these true, so without
+        // this a powered-off / removed adapter would stay showing ON.
+        onRunningChanged: if (running) { root.btPresent = false; root.btOn = false; root.btCount = 0; }
         stdout: SplitParser {
             splitMarker: "\n"
             onRead: function(l) {

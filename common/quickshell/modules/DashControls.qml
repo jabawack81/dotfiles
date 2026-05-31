@@ -44,6 +44,9 @@ Column {
     Process {
         id: btProc
         command: ["bash", "-c", "bluetoothctl show 2>/dev/null | grep -q 'Powered: yes' && echo on; bluetoothctl show 2>/dev/null | grep -q 'Controller' && echo present"]
+        // Reset before each run so a powered-off / removed adapter clears the
+        // flags — the onRead handlers only ever set them true.
+        onRunningChanged: if (running) { root.btPresent = false; root.btOn = false; }
         stdout: SplitParser {
             splitMarker: "\n"
             onRead: function(l) {
@@ -147,7 +150,7 @@ Column {
                 anchors.fill: parent
                 hoverEnabled: true
                 onClicked: {
-                    actionProc.command = ["bash", "-c", "bluetoothctl power " + (root.btOn ? "off" : "on")];
+                    actionProc.command = ["bluetoothctl", "power", root.btOn ? "off" : "on"];
                     actionProc.running = true;
                 }
             }

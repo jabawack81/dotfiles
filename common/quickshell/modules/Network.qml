@@ -43,7 +43,10 @@ BarPill {
                     root.content = "OFF";
                     return;
                 }
-                const [type, conn] = dev.split(":");
+                const [type, rawConn] = dev.split(":");
+                // Cap the SSID so a long network name can't stretch the island
+                // over the centre clock.
+                const conn = rawConn && rawConn.length > 20 ? rawConn.slice(0, 19) + "…" : rawConn;
                 if (gs && gs.includes("limited")) {
                     root.state = "limited";
                     root.content = (type === "wifi" ? "WIFI " : "ETH ") + "· NO NET";
