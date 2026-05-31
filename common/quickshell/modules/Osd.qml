@@ -124,15 +124,13 @@ Scope {
                         width: parent.width - 40
                         spacing: 8
 
-                        Text {
+                        BarText {
                             text: {
                                 if (scope.osdType === "brightness") return "BRIGHT " + scope.osdValue + "%";
                                 if (scope.osdMuted) return "VOL · MUTE";
                                 return "VOL " + scope.osdValue + "%";
                             }
                             color: scope.osdMuted ? Color.urgent : Color.accent
-                            font.family: Style.font.family
-                            font.pixelSize: Style.font.base
                             font.bold: true
                         }
 

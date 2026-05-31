@@ -6,6 +6,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Hyprland
 import qs.Commons
+import qs.Ui
 
 Row {
     id: root
@@ -28,11 +29,9 @@ Row {
         return result;
     }
 
-    Text {
+    BarText {
         text: Style.bracketL + "WS" + Style.bracketR
         color: Color.textDim
-        font.family: Style.font.family
-        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
     }
 
@@ -50,7 +49,7 @@ Row {
             anchors.verticalCenter: parent.verticalCenter
             onClicked: Hyprland.dispatch("workspace " + modelData.id)
 
-            Text {
+            BarText {
                 id: label
                 anchors.centerIn: parent
                 text: parent.isActive ? "●" + parent.modelData.id
@@ -59,8 +58,6 @@ Row {
                                        : (parent.hovered ? Color.highlight
                                                          : (parent.hasWindows ? Color.foreground
                                                                               : Color.textDim))
-                font.family: Style.font.family
-                font.pixelSize: Style.font.base
                 font.bold: parent.isActive
 
                 Behavior on color {

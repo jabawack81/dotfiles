@@ -2,6 +2,7 @@
 // Monday-first week layout to match UK convention.
 import QtQuick
 import qs.Commons
+import qs.Ui
 
 Column {
     id: root
@@ -25,11 +26,9 @@ Column {
     }
 
     // Month/year label
-    Text {
+    BarText {
+        small: true
         text: Qt.formatDateTime(root.now, "MMMM yyyy")
-        color: Color.foreground
-        font.family: Style.font.family
-        font.pixelSize: Style.font.small
         font.bold: true
     }
 
@@ -38,14 +37,13 @@ Column {
         spacing: 0
         Repeater {
             model: ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"]
-            delegate: Text {
+            delegate: BarText {
                 required property var modelData
+                small: true
                 width: 44
                 horizontalAlignment: Text.AlignHCenter
                 text: modelData
                 color: Color.accentDim
-                font.family: Style.font.family
-                font.pixelSize: Style.font.small
             }
         }
     }
@@ -71,12 +69,11 @@ Column {
                     border.color: Color.accent
                     border.width: 1
                 }
-                Text {
+                BarText {
                     anchors.centerIn: parent
+                    small: true
                     text: parent.modelData > 0 ? String(parent.modelData) : ""
                     color: parent.isToday ? Color.accent : Color.foreground
-                    font.family: Style.font.family
-                    font.pixelSize: Style.font.small
                     font.bold: parent.isToday
                 }
             }

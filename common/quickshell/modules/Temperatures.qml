@@ -4,6 +4,7 @@
 import QtQuick
 import Quickshell.Io
 import qs.Commons
+import qs.Ui
 
 Row {
     id: root
@@ -59,44 +60,34 @@ Row {
         return c >= 85;
     }
 
-    Text {
+    BarText {
         text: "CPU"
         color: Color.textDim
-        font.family: Style.font.family
-        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
     }
-    Text {
+    BarText {
         text: String(root.cpuTemp).padStart(2, "0") + "°"
         color: root.tempColor(root.cpuTemp)
-        font.family: Style.font.family
-        font.pixelSize: Style.font.base
         font.bold: root.isCritical(root.cpuTemp)
         anchors.verticalCenter: parent.verticalCenter
     }
 
-    Text {
+    BarText {
         visible: root.gpuPresent
         text: "│"
         color: Color.accentDim
-        font.family: Style.font.family
-        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
     }
-    Text {
+    BarText {
         visible: root.gpuPresent
         text: "GPU"
         color: Color.textDim
-        font.family: Style.font.family
-        font.pixelSize: Style.font.base
         anchors.verticalCenter: parent.verticalCenter
     }
-    Text {
+    BarText {
         visible: root.gpuPresent
         text: String(root.gpuTemp).padStart(2, "0") + "°"
         color: root.tempColor(root.gpuTemp)
-        font.family: Style.font.family
-        font.pixelSize: Style.font.base
         font.bold: root.isCritical(root.gpuTemp)
         anchors.verticalCenter: parent.verticalCenter
     }

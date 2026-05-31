@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Services.Mpris
 import qs.Commons
+import qs.Ui
 
 Row {
     id: root
