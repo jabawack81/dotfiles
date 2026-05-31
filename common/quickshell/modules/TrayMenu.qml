@@ -56,16 +56,15 @@ PopupCard {
                             color: parent.containsMouse ? Color.surfaceInactive : "transparent"
                         }
 
-                        Text {
+                        BarText {
                             id: entryText
+                            small: true
                             anchors.left: parent.left
                             anchors.leftMargin: 10
                             anchors.verticalCenter: parent.verticalCenter
                             text: modelData.text
                             color: !modelData.enabled ? Color.textDim
                                  : (parent.containsMouse ? Color.highlight : Color.foreground)
-                            font.family: Style.font.family
-                            font.pixelSize: Style.font.small
                         }
                     }
                 }
