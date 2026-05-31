@@ -2,7 +2,7 @@
 # Waybar module: caffeine/power state
 # States: normal, caffeine (stay awake), remote (PC on, no hibernate), hibernate
 
-STATE_FILE="$HOME/.cache/caffeine-state"
+STATE_FILE="${XDG_RUNTIME_DIR:-$HOME/.cache}/caffeine-state"
 state=$(cat "$STATE_FILE" 2>/dev/null || echo "normal")
 
 # Sync: if state says caffeine (no hypridle) but hypridle is running, reset

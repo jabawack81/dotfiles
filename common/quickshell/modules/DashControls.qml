@@ -55,7 +55,7 @@ Column {
     }
     FileView {
         id: caffFile
-        path: Quickshell.env("HOME") + "/.cache/caffeine-state"
+        path: (Quickshell.env("XDG_RUNTIME_DIR") || (Quickshell.env("HOME") + "/.cache")) + "/caffeine-state"
         blockLoading: true
         onLoaded: root.caffeineState = caffFile.text().trim() || "normal"
     }

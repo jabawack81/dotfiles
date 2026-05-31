@@ -48,7 +48,7 @@ BarPill {
 
     FileView {
         id: stateFile
-        path: Quickshell.env("HOME") + "/.cache/caffeine-state"
+        path: (Quickshell.env("XDG_RUNTIME_DIR") || (Quickshell.env("HOME") + "/.cache")) + "/caffeine-state"
         blockLoading: true
         onLoaded: root.state = stateFile.text().trim() || "normal"
     }

@@ -3,7 +3,7 @@
 # Each state runs hypridle with a different config (or kills it for caffeine)
 # Pass "reset" as argument to go directly to normal (right-click action)
 
-STATE_FILE="$HOME/.cache/caffeine-state"
+STATE_FILE="${XDG_RUNTIME_DIR:-$HOME/.cache}/caffeine-state"
 state=$(cat "$STATE_FILE" 2>/dev/null || echo "normal")
 
 restart_hypridle() {
