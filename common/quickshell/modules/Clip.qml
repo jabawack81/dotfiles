@@ -80,7 +80,10 @@ BarPill {
                 Text {
                     id: wipeBtn
                     text: "WIPE"
-                    color: wipeArea.containsMouse ? Color.urgent : Color.textDim
+                    // Greyed out and inert when the clipboard is already empty.
+                    property bool hasItems: scope.entries.length > 0
+                    color: !hasItems ? Color.accentDim
+                         : (wipeArea.containsMouse ? Color.urgent : Color.textDim)
                     font.family: Style.font.family
                     font.pixelSize: Style.font.small
                     font.bold: true
@@ -88,6 +91,7 @@ BarPill {
                         id: wipeArea
                         anchors.fill: parent
                         hoverEnabled: true
+                        enabled: wipeBtn.hasItems
                         onClicked: wipeProc.running = true
                     }
                     Behavior on color { ColorAnimation { duration: 120 } }

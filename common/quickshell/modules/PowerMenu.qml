@@ -76,7 +76,7 @@ MouseArea {
                         text: modelData.text
                         color: parent.containsMouse
                              ? (modelData.danger ? Color.urgent : Color.highlight)
-                             : (modelData.danger ? "#cc6666" : Color.foreground)
+                             : (modelData.danger ? Color.urgentDim : Color.foreground)
                         font.family: Style.font.family
                         font.pixelSize: Style.font.small
                     }

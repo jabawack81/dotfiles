@@ -65,7 +65,9 @@ Scope {
                         delegate: Rectangle {
                             required property var modelData
                             width: 360
-                            height: toastContent.implicitHeight + 20
+                            // Cap height as a safety net (summary/body are already
+                            // line-limited + elided) so a toast can't grow tall.
+                            height: Math.min(toastContent.implicitHeight + 20, 200)
                             color: Color.surface
                             border.width: 1
                             radius: Style.cornerRadius

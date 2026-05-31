@@ -17,6 +17,7 @@ QtObject {
     readonly property color highlight:  "#ff00cc"   // magenta (hover)
     readonly property color warning:    "#ffcc00"   // amber
     readonly property color urgent:     "#ff0040"   // red (critical)
+    readonly property color urgentDim:  "#cc6666"   // muted red (idle danger items)
     readonly property color textDim:    "#586e75"   // muted text
 
     // ── Surface backgrounds ───────────────────────────────────────────

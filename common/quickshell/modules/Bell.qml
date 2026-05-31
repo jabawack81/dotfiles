@@ -34,7 +34,10 @@ BarPill {
                 Text {
                     id: clearBtn
                     text: "CLEAR"
-                    color: clearArea.containsMouse ? Color.urgent : Color.textDim
+                    // Greyed out and inert when there's nothing to clear.
+                    property bool hasItems: Globals.notificationHistory.length > 0
+                    color: !hasItems ? Color.accentDim
+                         : (clearArea.containsMouse ? Color.urgent : Color.textDim)
                     font.family: Style.font.family
                     font.pixelSize: Style.font.small
                     font.bold: true
@@ -42,6 +45,7 @@ BarPill {
                         id: clearArea
                         anchors.fill: parent
                         hoverEnabled: true
+                        enabled: clearBtn.hasItems
                         onClicked: Globals.clearNotifications()
                     }
                     Behavior on color { ColorAnimation { duration: 120 } }
