@@ -104,8 +104,11 @@ QtObject {
         stdout: SplitParser {
             onRead: function(line) {
                 const parts = line.trim().split(/\s+/);
-                root.cpuTemp = Math.round(parseInt(parts[0]) / 1000);
-                root.gpuTemp = Math.round(parseInt(parts[1]) / 1000);
+                const cpu = parseInt(parts[0]);
+                const gpu = parseInt(parts[1]);
+                // Guard against missing/garbled output so the UI never shows NaN°.
+                root.cpuTemp = isFinite(cpu) ? Math.round(cpu / 1000) : 0;
+                root.gpuTemp = isFinite(gpu) ? Math.round(gpu / 1000) : 0;
                 root.gpuPresent = root.gpuTemp > 0;
             }
         }
