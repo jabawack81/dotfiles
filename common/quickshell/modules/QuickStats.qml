@@ -85,7 +85,7 @@ Item {
     // ── helpers ───────────────────────────────────────────────────────
     function heat(c) {
         if (c >= 85) return Color.urgent;
-        if (c >= 75) return "#ff8800";
+        if (c >= 75) return Color.heat;
         if (c >= 60) return Color.warning;
         return Color.secondary;
     }
@@ -105,9 +105,9 @@ Item {
 
         width: root.tileW
         height: 84
-        radius: 12
+        radius: Style.cornerRadius
         color: tileMouse.containsMouse ? Qt.rgba(0.2, 0.8, 1, 0.06) : Qt.rgba(1, 1, 1, 0.02)
-        border.color: tileMouse.containsMouse ? Color.accent : "#1a2c38"
+        border.color: tileMouse.containsMouse ? Color.accent : Color.omni.tileBorder
         border.width: 1
         Behavior on color { ColorAnimation { duration: 80 } }
         Behavior on border.color { ColorAnimation { duration: 80 } }

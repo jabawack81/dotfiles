@@ -39,10 +39,10 @@ Scope {
                 property int hpad: 14
                 implicitWidth: inner.implicitWidth + hpad * 2
                 height: Style.barHeight
-                radius: 11
+                radius: Style.cornerRadius
                 gradient: Gradient {
-                    GradientStop { position: 0.0; color: "#0b1016" }
-                    GradientStop { position: 1.0; color: "#070b0f" }
+                    GradientStop { position: 0.0; color: Color.surfaceRaised }
+                    GradientStop { position: 1.0; color: Color.surfaceDeep }
                 }
                 border.color: Color.accent
                 border.width: 1

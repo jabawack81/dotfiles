@@ -21,7 +21,7 @@ BarPill {
             case "lunch":    return Color.warning;
             case "weekend":  return Color.highlight;
             case "info":     return Color.warning;
-            case "warning":  return "#cb4b16";   // orange
+            case "warning":  return Color.heat;   // orange
             case "critical": return Color.urgent;
             default:         return Color.foreground;
         }

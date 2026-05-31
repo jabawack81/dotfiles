@@ -181,8 +181,8 @@ Scope {
                         anchors.centerIn: parent
                         width: Math.min(880, parent.width - 80)
                         height: 520
-                        radius: 14
-                        color: "#0b1016"
+                        radius: Style.cornerRadius
+                        color: Color.surfaceRaised
                         border.color: Color.accent
                         border.width: 1
                         // layered outer glow
@@ -267,7 +267,7 @@ Scope {
                                         width: ListView.view.width
                                         height: 52
                                         property bool sel: index === scope.selected
-                                        color: sel ? "#16334a" : "transparent"
+                                        color: sel ? Color.omni.rowSelected : "transparent"
 
                                         // selected accent bar
                                         Rectangle {
@@ -283,8 +283,8 @@ Scope {
                                             Rectangle {  // icon chip
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 width: 34; height: 34; radius: 9
-                                                color: parent.parent.sel ? "#0e2a1f" : "#101820"
-                                                border.color: parent.parent.sel ? Color.secondary : "#1d3340"
+                                                color: parent.parent.sel ? Color.omni.chipSelected : Color.omni.chip
+                                                border.color: parent.parent.sel ? Color.secondary : Color.omni.chipBorder
                                                 border.width: 1
                                                 Image {
                                                     anchors.centerIn: parent
@@ -327,7 +327,7 @@ Scope {
                                 }
 
                                 // vertical divider
-                                Rectangle { width: 1; height: parent.height; color: "#13202a" }
+                                Rectangle { width: 1; height: parent.height; color: Color.omni.divider }
 
                                 // Preview pane
                                 Item {
@@ -343,7 +343,7 @@ Scope {
 
                                         Rectangle {
                                             width: 74; height: 74; radius: 16
-                                            color: "#0e2a1f"; border.color: Color.secondary; border.width: 1
+                                            color: Color.omni.chipSelected; border.color: Color.secondary; border.width: 1
                                             Image {
                                                 anchors.centerIn: parent
                                                 width: 40; height: 40; sourceSize.width: 40; sourceSize.height: 40
@@ -375,7 +375,7 @@ Scope {
                             // Footer
                             Rectangle {
                                 width: parent.width; height: 44
-                                color: "#070b0f"
+                                color: Color.surfaceDeep
                                 Row {
                                     anchors.fill: parent
                                     anchors.leftMargin: 30; anchors.rightMargin: 30

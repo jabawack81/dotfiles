@@ -49,8 +49,8 @@ Row {
 
     // Heat gradient: green (cool) → amber → orange → red (critical)
     function tempColor(c) {
-        if (c >= 85) return Color.urgent;   // red
-        if (c >= 75) return "#ff8800";        // orange
+        if (c >= 85) return Color.urgent;     // red
+        if (c >= 75) return Color.heat;       // orange
         if (c >= 60) return Color.warning;    // amber
         return Color.secondary;               // green — running cool
     }

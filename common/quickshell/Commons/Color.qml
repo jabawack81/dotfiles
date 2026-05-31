@@ -23,6 +23,24 @@ QtObject {
     readonly property color surface:        "#0a0a0a"  // panels/popups
     readonly property color surfaceInactive: "#111111" // inactive rows
 
+    // Elevated surfaces (floating islands, popup cards, omni) — slightly
+    // blue-tinted darks, a touch lighter than the flat `surface`.
+    readonly property color surfaceRaised:  "#0b1016"  // island / card body
+    readonly property color surfaceDeep:    "#070b0f"  // gradient end / footers
+
+    // Heat-gradient mid step (75–85°C), between warning (amber) and urgent (red).
+    readonly property color heat:           "#ff8800"
+
+    // ── Omni / quick-panel internal shades ────────────────────────────
+    readonly property QtObject omni: QtObject {
+        readonly property color rowSelected:  "#16334a"  // selected result row
+        readonly property color chipSelected: "#0e2a1f"  // selected icon chip (green tint)
+        readonly property color chip:         "#101820"  // idle icon chip
+        readonly property color chipBorder:   "#1d3340"  // idle icon chip border
+        readonly property color divider:      "#13202a"  // vertical rule
+        readonly property color tileBorder:   "#1a2c38"  // quick-stat tile border
+    }
+
     // ── Per-surface roles ─────────────────────────────────────────────
     readonly property QtObject bar: QtObject {
         readonly property color background: root.background
