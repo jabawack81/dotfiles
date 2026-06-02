@@ -68,7 +68,12 @@
     state: link
     force: yes
   with_items:
-    - utils.zsh
+    - until-failure.zsh
+    - version-managers.zsh
+    - brew.zsh
+    - run.zsh
+    - tmux-claude.zsh
+    - fastfetch.zsh
     - ruby_aliases.zsh
     - bedtime-prompt.zsh
   when: oh_my_zsh_installed.stat.exists
