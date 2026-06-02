@@ -62,72 +62,149 @@ function clean_version_manager {
   local manager=$1
   local keep_latest=0
   local HELP=false
-  
-  # Parse options
+
   shift
   while getopts "k:h" opt; do
     case ${opt} in
-    k) keep_latest=$OPTARG ;;
-    h) HELP=true ;;
+      k) keep_latest=$OPTARG ;;
+      h) HELP=true ;;
     esac
   done
-  
-  if [ "$HELP" = true ] || [ -z "$manager" ]; then
-    echo "Usage: clean_version_manager MANAGER [-k NUM]"
-    echo "  MANAGER   Version manager (rbenv, nodenv, etc.)"
-    echo "  -k NUM    Keep the latest NUM versions"
-    echo "  -h        Show this help message"
-    echo ""
-    echo "Example: clean_version_manager rbenv -k 2"
+
+  if [[ "$HELP" == true || -z "$manager" ]]; then
+    cat <<EOF
+Usage: clean_version_manager MANAGER [-k NUM]
+  MANAGER   Version manager (rbenv, nodenv)
+  -k NUM    Pre-exclude the latest NUM versions from the picker
+  -h        Show this help
+
+Interactive: pick versions to uninstall via fzf.
+  Tab/Shift-Tab  toggle selection
+  Enter          confirm
+  Esc            cancel
+Each version's preview lists projects pinning it (slow first scan).
+EOF
     return 0
   fi
-  
-  # Check if manager exists
-  if ! command -v $manager &> /dev/null; then
+
+  if ! command -v "$manager" &>/dev/null; then
     echo "Error: $manager not found"
     return 1
   fi
-  
-  local versions=($($manager versions --bare | sort -V))
-  local total=${#versions[@]}
-  
-  if [ $keep_latest -gt 0 ] && [ $keep_latest -lt $total ]; then
-    echo "Keeping the latest $keep_latest versions"
-    versions=("${versions[@]:0:$((total - keep_latest))}")
+  if ! command -v fzf &>/dev/null; then
+    echo "Error: fzf is required for the interactive picker"
+    return 1
   fi
-  
-  for ver in "${versions[@]}"; do
-    echo -e "\nVersion: $ver"
-    
-    # Try to find projects using this version
-    local usage_info=""
-    if [ "$manager" = "rbenv" ]; then
-      usage_info=$(find ~ -name ".ruby-version" -type f 2>/dev/null | xargs grep -l "^$ver$" 2>/dev/null | head -5)
-    elif [ "$manager" = "nodenv" ]; then
-      usage_info=$(find ~ -name ".node-version" -type f 2>/dev/null | xargs grep -l "^$ver$" 2>/dev/null | head -5)
+
+  local version_file
+  case "$manager" in
+    rbenv)  version_file=".ruby-version" ;;
+    nodenv) version_file=".node-version" ;;
+    *) echo "Unknown manager: $manager (expected rbenv or nodenv)"; return 1 ;;
+  esac
+
+  local global_version
+  global_version=$("$manager" global 2>/dev/null | head -1)
+
+  local -a versions
+  versions=( $("$manager" versions --bare 2>/dev/null | sort -V) )
+  local total=${#versions[@]}
+
+  if (( keep_latest > 0 && keep_latest < total )); then
+    versions=( "${versions[@]:0:$((total - keep_latest))}" )
+  fi
+
+  if (( ${#versions[@]} == 0 )); then
+    echo "No versions to consider."
+    return 0
+  fi
+
+  echo "Scanning ~/ for $version_file pins…"
+  typeset -A pins_by_version
+  local f pinned
+  while IFS= read -r f; do
+    [[ -f "$f" ]] || continue
+    pinned=$(tr -d '[:space:]' < "$f")
+    [[ -z "$pinned" ]] && continue
+    pins_by_version[$pinned]+="$f"$'\n'
+  done < <(find ~ \
+    \( -name node_modules -o -name .git -o -name .rbenv -o -name .nodenv \) -prune \
+    -o -type f -name "$version_file" -print 2>/dev/null)
+
+  local tmp_dir
+  tmp_dir=$(mktemp -d)
+
+  {
+    local v marker usage
+    for v in "${versions[@]}"; do
+      marker=""
+      [[ "$v" == "$global_version" ]] && marker=" (global default)"
+      usage="${pins_by_version[$v]}"
+      {
+        printf "Version: %s%s\n\n" "$v" "$marker"
+        if [[ -n "$usage" ]]; then
+          echo "Pinned by:"
+          printf "%s" "$usage" | sed 's/^/  /'
+        else
+          echo "Not pinned by any project under ~/"
+        fi
+      } > "$tmp_dir/$v"
+    done
+
+    local selected
+    selected=$(printf '%s\n' "${versions[@]}" | fzf \
+      --multi \
+      --prompt="$manager > " \
+      --header="Tab: select · Enter: confirm · Esc: cancel · global: ${global_version:-none}" \
+      --preview="cat '$tmp_dir/{}'" \
+      --preview-window="right:60%:wrap")
+
+    if [[ -z "$selected" ]]; then
+      echo "No versions selected."
+      return 0
     fi
-    
-    if [ -n "$usage_info" ]; then
-      echo "  Used in:"
-      echo "$usage_info" | sed 's/^/    /'
-    else
-      echo "  Not found in any projects"
+
+    echo ""
+    echo "Will uninstall:"
+    printf '%s\n' "$selected" | sed 's/^/  /'
+    echo ""
+    printf "Proceed? [y/N]: "
+    read -r confirm
+    if [[ ! "$confirm" =~ ^[yY] ]]; then
+      echo "Aborted."
+      return 0
     fi
-    
-    printf "Uninstall? [y/N]: "
-    read -r uninstall
-    if [[ "$uninstall" =~ ^[yY] ]]; then
-      $manager uninstall -f $ver
-      echo "  Uninstalled $ver"
-    else
-      echo "  Keeping $ver"
-    fi
-  done
+
+    while IFS= read -r v; do
+      [[ -z "$v" ]] && continue
+      echo "→ Uninstalling $v…"
+      "$manager" uninstall -f "$v"
+    done <<< "$selected"
+
+    echo "Done."
+  } always {
+    [[ -n "$tmp_dir" && -d "$tmp_dir" ]] && rm -rf "$tmp_dir"
+  }
 }
 
 # Convenience aliases
 alias clean_rbenv='clean_version_manager rbenv'
 alias clean_nodenv='clean_version_manager nodenv'
+
+# One-shot brew refresh: fetch metadata, upgrade everything, reclaim disk.
+# `brew cleanup -s` removes old formula versions left after upgrade and
+# scrubs the download cache. `brew autoremove` then drops dependencies
+# no longer required by any explicitly-installed formula.
+do_the_brew_thing() {
+  echo "first we update"
+  brew update || return 1
+  echo "then we upgrade"
+  brew upgrade
+  echo "then we tidy up"
+  brew cleanup -s
+  echo "then we drop orphaned deps"
+  brew autoremove
+}
 
 # Tmux + Claude shortcuts
 alias tc='tmux-claude.sh'
