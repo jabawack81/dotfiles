@@ -78,6 +78,7 @@ Then open tmux and press `prefix` + `I` to install plugins.
   - `ARCHITECTURE.md`: Project architecture overview
   - `ANSIBLE.md`: Ansible playbook documentation
   - `HYPRLAND_CONFIG.md`: Hyprland window manager config
+  - `HYPRLAND_KEYBINDINGS_COMPARISON.md`: Shinkiro vs Lupus keybinding diff
   - `SETUP.md`: Private config and initial setup
   - `TESTING.md`: Ansible testing and validation guide
   - `NEOVIM_TROUBLESHOOTING.md`: LSP and Mason debugging guide
