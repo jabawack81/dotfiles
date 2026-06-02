@@ -74,6 +74,7 @@
     - run.zsh
     - tmux-claude.zsh
     - fastfetch.zsh
+    - nvim_update_aliases.zsh
     - ruby_aliases.zsh
     - bedtime-prompt.zsh
   when: oh_my_zsh_installed.stat.exists
