@@ -151,6 +151,19 @@ done
 SCRIPT
     chmod +x "$tmp_dir/list.sh"
 
+    # Helper script that promotes the highlighted line's version to global.
+    # Lifted out of the --bind value because fzf's bind parser counts parens
+    # and gets confused by inline `$(echo {} | awk ...)`. Keeping the bind
+    # value's parens flat sidesteps that.
+    cat > "$tmp_dir/promote.sh" <<SCRIPT
+#!/bin/bash
+manager="$manager"
+entry="\$1"
+version=\$(echo "\$entry" | awk '{print \$NF}')
+[[ -n "\$version" ]] && "\$manager" global "\$version"
+SCRIPT
+    chmod +x "$tmp_dir/promote.sh"
+
     local selected
     # Alt-g promotes the highlighted version to be the new global default
     # and reloads the list so the * marker moves. The preview path uses
@@ -161,7 +174,7 @@ SCRIPT
       --header="Tab: select · Alt-g: set as global · Enter: confirm · Esc: cancel · '*' = global" \
       --preview="cat $tmp_dir/\$(echo {} | awk '{print \$NF}')" \
       --preview-window="right:60%:wrap" \
-      --bind="alt-g:execute-silent($manager global \$(echo {} | awk '{print \$NF}'))+reload($tmp_dir/list.sh)")
+      --bind="alt-g:execute-silent($tmp_dir/promote.sh {})+reload($tmp_dir/list.sh)")
 
     if [[ -z "$selected" ]]; then
       echo "No versions selected."
@@ -417,18 +430,29 @@ rm -f "\$globals_file"
 SCRIPT
     chmod +x "$tmp_dir/list.sh"
 
+    # Helper that promotes the highlighted entry. Lifted out of --bind for
+    # the same reason as in clean_version_manager: fzf's bind parser counts
+    # parens and breaks on inline `awk '{print $(NF-1), $NF}'` because the
+    # `)` of `$(NF-1)` closes execute-silent prematurely.
+    cat > "$tmp_dir/promote.sh" <<'SCRIPT'
+#!/bin/bash
+entry="$1"
+plugin=$(echo "$entry" | awk '{print $(NF-1)}')
+version=$(echo "$entry" | awk '{print $NF}')
+[[ -n "$plugin" && -n "$version" ]] && asdf set -u "$plugin" "$version"
+SCRIPT
+    chmod +x "$tmp_dir/promote.sh"
+
     local selected
     # Alt-g promotes the highlighted entry to be that plugin's current/global
-    # default. The entry is "<marker> <plugin> <version>" — awk's NF-1 and NF
-    # give plugin and version reliably for both "* p v" and "  p v" formats.
-    # fzf's {} is already shell-escaped — don't add extra quotes around it.
+    # default. fzf's {} is already shell-escaped — don't add extra quotes.
     selected=$("$tmp_dir/list.sh" | fzf \
       --multi \
       --prompt="asdf > " \
       --header="Tab: select · Alt-g: set as global · Enter: confirm · Esc: cancel · '*' = global" \
       --preview="cat \"$tmp_dir/\$(echo {} | awk '{print \$(NF-1), \$NF}')\"" \
       --preview-window="right:60%:wrap" \
-      --bind="alt-g:execute-silent(asdf set -u \$(echo {} | awk '{print \$(NF-1), \$NF}'))+reload($tmp_dir/list.sh)")
+      --bind="alt-g:execute-silent($tmp_dir/promote.sh {})+reload($tmp_dir/list.sh)")
 
     if [[ -z "$selected" ]]; then
       echo "No versions selected."
