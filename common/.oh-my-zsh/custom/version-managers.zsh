@@ -316,3 +316,41 @@ EOF
     [[ -n "$tmp_dir" && -d "$tmp_dir" ]] && rm -rf "$tmp_dir"
   }
 }
+
+# Unified entry point: detect which version managers are installed and
+# dispatch to the right cleanup command. Skips the tool picker if only one
+# is available. For asdf, opens the multi-plugin picker; scope to a single
+# plugin with `clean_asdf <plugin>` directly.
+function clean_versions {
+  local -a available
+  command -v rbenv  &>/dev/null && available+=( rbenv )
+  command -v nodenv &>/dev/null && available+=( nodenv )
+  command -v asdf   &>/dev/null && available+=( asdf )
+
+  if (( ${#available[@]} == 0 )); then
+    echo "No supported version managers found (rbenv, nodenv, asdf)."
+    return 1
+  fi
+
+  local tool
+  if (( ${#available[@]} == 1 )); then
+    tool="${available[1]}"
+    echo "Only $tool is installed — going straight in."
+  else
+    if ! command -v fzf &>/dev/null; then
+      echo "Error: fzf is required to pick between managers"
+      echo "Installed: ${available[*]}"
+      return 1
+    fi
+    tool=$(printf '%s\n' "${available[@]}" | fzf \
+      --prompt="manager > " \
+      --header="Pick a version manager to clean up" \
+      --height=30% --reverse)
+    [[ -z "$tool" ]] && { echo "Aborted."; return 0; }
+  fi
+
+  case "$tool" in
+    rbenv|nodenv) clean_version_manager "$tool" "$@" ;;
+    asdf)         clean_asdf "$@" ;;
+  esac
+}
