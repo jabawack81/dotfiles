@@ -133,3 +133,186 @@ EOF
 
 alias clean_rbenv='clean_version_manager rbenv'
 alias clean_nodenv='clean_version_manager nodenv'
+
+# Interactive cleanup for asdf-managed versions across plugins.
+# `clean_asdf` shows "<plugin> <version>" entries via an fzf multi-select picker.
+# Pass a plugin name to restrict the picker to that plugin: `clean_asdf ruby`.
+# Each entry's preview lists the .tool-versions files pinning it.
+function clean_asdf {
+  local plugin_filter=""
+  local keep_latest=0
+  local HELP=false
+
+  # Optional first positional arg = plugin filter (must not look like a flag)
+  if [[ -n "${1:-}" && "${1:0:1}" != "-" ]]; then
+    plugin_filter=$1
+    shift
+  fi
+
+  while getopts "k:h" opt; do
+    case $opt in
+      k) keep_latest=$OPTARG ;;
+      h) HELP=true ;;
+    esac
+  done
+
+  if [[ "$HELP" == true ]]; then
+    cat <<EOF
+Usage: clean_asdf [PLUGIN] [-k NUM]
+  PLUGIN    Restrict picker to a specific plugin (e.g. ruby, nodejs, python)
+  -k NUM    Per plugin, pre-exclude the latest NUM versions
+  -h        Show this help
+
+Interactive: pick versions to uninstall via fzf.
+  Tab/Shift-Tab  toggle selection
+  Enter          confirm
+  Esc            cancel
+Each entry's preview lists .tool-versions files pinning it (one-time ~/ scan).
+EOF
+    return 0
+  fi
+
+  if ! command -v asdf &>/dev/null; then
+    echo "Error: asdf not found"
+    return 1
+  fi
+  if ! command -v fzf &>/dev/null; then
+    echo "Error: fzf is required for the interactive picker"
+    return 1
+  fi
+
+  # Which plugins to scan
+  local -a plugins
+  if [[ -n "$plugin_filter" ]]; then
+    if ! asdf plugin list 2>/dev/null | grep -qx "$plugin_filter"; then
+      echo "Error: asdf plugin '$plugin_filter' is not installed"
+      return 1
+    fi
+    plugins=( "$plugin_filter" )
+  else
+    plugins=( ${(@f)"$(asdf plugin list 2>/dev/null)"} )
+    if (( ${#plugins[@]} == 0 )); then
+      echo "No asdf plugins installed."
+      return 0
+    fi
+  fi
+
+  # Build "<plugin> <version>" entries. `asdf list <plugin>` indents each
+  # version and may prefix the current one with `*` — strip both.
+  local -a entries
+  local plugin
+  for plugin in "${plugins[@]}"; do
+    local -a plugin_versions
+    plugin_versions=( ${(@f)"$(asdf list "$plugin" 2>/dev/null | sed -E 's/^[[:space:]*]+//')"} )
+
+    if (( keep_latest > 0 && keep_latest < ${#plugin_versions[@]} )); then
+      plugin_versions=( "${plugin_versions[@]:0:$((${#plugin_versions[@]} - keep_latest))}" )
+    fi
+
+    local v
+    for v in "${plugin_versions[@]}"; do
+      [[ -z "$v" ]] && continue
+      entries+=( "$plugin $v" )
+    done
+  done
+
+  if (( ${#entries[@]} == 0 )); then
+    echo "No versions to consider."
+    return 0
+  fi
+
+  # Fast lookup of which entries actually exist (used to filter `asdf current`
+  # output which can include placeholders like "Not installed").
+  typeset -A entry_set
+  local e
+  for e in "${entries[@]}"; do entry_set[$e]=1; done
+
+  # Identify global / currently-selected versions per plugin. `asdf current`
+  # prints "<plugin>  <version>  <source>" with multi-space padding; read
+  # collapses whitespace.
+  typeset -A is_global
+  local p v _src
+  while read -r p v _src; do
+    [[ -z "$p" || "$p" == "Name" ]] && continue
+    [[ -n "${entry_set[$p $v]:-}" ]] && is_global["$p $v"]=1
+  done < <(asdf current 2>/dev/null)
+
+  # Scan ~/ for .tool-versions files. Each line: "<tool> <version> [...]" —
+  # ignore extra fields (legacy fallback versions).
+  echo "Scanning ~/ for .tool-versions pins…"
+  typeset -A pins_by_entry
+  local f line
+  while IFS= read -r f; do
+    [[ -f "$f" ]] || continue
+    while IFS= read -r line; do
+      # Skip comments and blanks
+      [[ -z "$line" || "${line:0:1}" == "#" ]] && continue
+      local fp=${line%% *}
+      local rest=${line#* }
+      local fv=${rest%% *}
+      [[ -z "$fp" || -z "$fv" || "$fp" == "$line" ]] && continue
+      pins_by_entry["$fp $fv"]+="$f"$'\n'
+    done < "$f"
+  done < <(find ~ \
+    \( -name node_modules -o -name .git -o -name .asdf -o -name .rbenv -o -name .nodenv \) -prune \
+    -o -type f -name ".tool-versions" -print 2>/dev/null)
+
+  local tmp_dir
+  tmp_dir=$(mktemp -d)
+
+  {
+    local entry marker usage
+    for entry in "${entries[@]}"; do
+      marker=""
+      [[ -n "${is_global[$entry]:-}" ]] && marker=" (global / current)"
+      usage="${pins_by_entry[$entry]:-}"
+      # Use the entry string verbatim as the filename (incl. space). Fine on
+      # any sane FS; the preview command quotes it.
+      {
+        printf "%s%s\n\n" "$entry" "$marker"
+        if [[ -n "$usage" ]]; then
+          echo "Pinned by:"
+          printf "%s" "$usage" | sed 's/^/  /'
+        else
+          echo "Not pinned by any .tool-versions under ~/"
+        fi
+      } > "$tmp_dir/$entry"
+    done
+
+    local selected
+    selected=$(printf '%s\n' "${entries[@]}" | fzf \
+      --multi \
+      --prompt="asdf > " \
+      --header="Tab: select · Enter: confirm · Esc: cancel" \
+      --preview="cat \"$tmp_dir/{}\"" \
+      --preview-window="right:60%:wrap")
+
+    if [[ -z "$selected" ]]; then
+      echo "No versions selected."
+      return 0
+    fi
+
+    echo ""
+    echo "Will uninstall:"
+    printf '%s\n' "$selected" | sed 's/^/  /'
+    echo ""
+    printf "Proceed? [y/N]: "
+    read -r confirm
+    if [[ ! "$confirm" =~ ^[yY] ]]; then
+      echo "Aborted."
+      return 0
+    fi
+
+    while IFS= read -r entry; do
+      [[ -z "$entry" ]] && continue
+      local up=${entry%% *}
+      local uv=${entry#* }
+      echo "→ Uninstalling $up $uv…"
+      asdf uninstall "$up" "$uv"
+    done <<< "$selected"
+
+    echo "Done."
+  } always {
+    [[ -n "$tmp_dir" && -d "$tmp_dir" ]] && rm -rf "$tmp_dir"
+  }
+}
