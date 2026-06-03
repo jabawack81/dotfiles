@@ -24,8 +24,11 @@ Usage: clean_version_manager MANAGER [-k NUM]
 
 Interactive: pick versions to uninstall via fzf.
   Tab/Shift-Tab  toggle selection
+  Alt-g          set highlighted version as the global default
   Enter          confirm
   Esc            cancel
+The current global is marked with '*'. It can't be uninstalled directly —
+use Alt-g to promote a different version first, then it becomes deletable.
 Each version's preview lists projects pinning it (slow first scan).
 EOF
     return 0
@@ -79,6 +82,7 @@ EOF
   tmp_dir=$(mktemp -d)
 
   {
+    # Build preview files (keyed by version, no marker prefix)
     local v marker usage
     for v in "${versions[@]}"; do
       marker=""
@@ -95,61 +99,90 @@ EOF
       } > "$tmp_dir/$v"
     done
 
+    # Write a small bash helper that fzf re-runs on every reload to refresh
+    # the global-default marker. Doing this in a script (rather than inline
+    # in --bind) keeps the global-query live: when Alt-g promotes a new
+    # version, the next reload picks up the change.
+    cat > "$tmp_dir/list.sh" <<SCRIPT
+#!/bin/bash
+manager="$manager"
+keep_latest=$keep_latest
+g=\$("\$manager" global 2>/dev/null | head -1)
+
+versions=()
+while IFS= read -r line; do versions+=("\$line"); done \
+  < <("\$manager" versions --bare 2>/dev/null | sort -V)
+
+end=\$(( \${#versions[@]} - keep_latest ))
+(( end < 0 )) && end=0
+
+for (( i=0; i<end; i++ )); do
+  v="\${versions[\$i]}"
+  if [[ "\$v" == "\$g" ]]; then echo "* \$v"
+  else                          echo "  \$v"
+  fi
+done
+SCRIPT
+    chmod +x "$tmp_dir/list.sh"
+
     local selected
-    selected=$(printf '%s\n' "${versions[@]}" | fzf \
+    # Alt-g promotes the highlighted version to be the new global default
+    # and reloads the list so the * marker moves. The preview path uses
+    # $NF (last whitespace field) so it works for both "* X" and "  X".
+    selected=$("$tmp_dir/list.sh" | fzf \
       --multi \
       --prompt="$manager > " \
-      --header="Tab: select · Enter: confirm · Esc: cancel · global: ${global_version:-none}" \
-      --preview="cat $tmp_dir/{}" \
-      --preview-window="right:60%:wrap")
+      --header="Tab: select · Alt-g: set as global · Enter: confirm · Esc: cancel · '*' = global" \
+      --preview="cat $tmp_dir/\$(echo {} | awk '{print \$NF}')" \
+      --preview-window="right:60%:wrap" \
+      --bind="alt-g:execute-silent($manager global \$(echo {} | awk '{print \$NF}'))+reload($tmp_dir/list.sh)")
 
     if [[ -z "$selected" ]]; then
       echo "No versions selected."
       return 0
     fi
 
-    echo ""
+    # Re-query global — Alt-g may have changed it mid-picker.
+    local current_global
+    current_global=$("$manager" global 2>/dev/null | head -1)
+
+    # Strip the "* " / "  " marker and split into to_remove vs skipped.
+    local -a to_remove skipped
+    while IFS= read -r line; do
+      [[ -z "$line" ]] && continue
+      v="${line##* }"
+      if [[ -n "$current_global" && "$v" == "$current_global" ]]; then
+        skipped+=( "$v" )
+      else
+        to_remove+=( "$v" )
+      fi
+    done <<< "$selected"
+
+    if (( ${#skipped[@]} > 0 )); then
+      echo "Skipped (still the current global): ${(j:, :)skipped}"
+      echo "Use Alt-g on a different version in the picker first to promote a new global."
+      echo ""
+    fi
+
+    if (( ${#to_remove[@]} == 0 )); then
+      echo "Nothing to uninstall."
+      return 0
+    fi
+
     echo "Will uninstall:"
-    printf '%s\n' "$selected" | sed 's/^/  /'
+    printf '  %s\n' "${to_remove[@]}"
     echo ""
-
-    # Detect whether the user is about to nuke their global default.
-    # Without this guard, anything that goes through this manager's shims
-    # (next time they open a shell, run npm, run mason, etc.) breaks until
-    # they pick a new global.
-    local hits_global=false
-    if [[ -n "$global_version" ]]; then
-      while IFS= read -r v; do
-        if [[ "$v" == "$global_version" ]]; then
-          hits_global=true
-          break
-        fi
-      done <<< "$selected"
+    printf "Proceed? [y/N]: "
+    read -r confirm
+    if [[ ! "$confirm" =~ ^[yY] ]]; then
+      echo "Aborted."
+      return 0
     fi
 
-    if $hits_global; then
-      echo "⚠️  This will remove '$global_version' — the current $manager global default."
-      echo "   You'll need to run '$manager global <other>' before $manager can resolve again."
-      printf "Type the version to confirm removal: "
-      read -r confirm
-      if [[ "$confirm" != "$global_version" ]]; then
-        echo "Aborted."
-        return 0
-      fi
-    else
-      printf "Proceed? [y/N]: "
-      read -r confirm
-      if [[ ! "$confirm" =~ ^[yY] ]]; then
-        echo "Aborted."
-        return 0
-      fi
-    fi
-
-    while IFS= read -r v; do
-      [[ -z "$v" ]] && continue
+    for v in "${to_remove[@]}"; do
       echo "→ Uninstalling $v…"
       "$manager" uninstall -f "$v"
-    done <<< "$selected"
+    done
 
     echo "Done."
   } always {
