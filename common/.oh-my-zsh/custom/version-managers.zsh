@@ -112,11 +112,37 @@ EOF
     echo "Will uninstall:"
     printf '%s\n' "$selected" | sed 's/^/  /'
     echo ""
-    printf "Proceed? [y/N]: "
-    read -r confirm
-    if [[ ! "$confirm" =~ ^[yY] ]]; then
-      echo "Aborted."
-      return 0
+
+    # Detect whether the user is about to nuke their global default.
+    # Without this guard, anything that goes through this manager's shims
+    # (next time they open a shell, run npm, run mason, etc.) breaks until
+    # they pick a new global.
+    local hits_global=false
+    if [[ -n "$global_version" ]]; then
+      while IFS= read -r v; do
+        if [[ "$v" == "$global_version" ]]; then
+          hits_global=true
+          break
+        fi
+      done <<< "$selected"
+    fi
+
+    if $hits_global; then
+      echo "⚠️  This will remove '$global_version' — the current $manager global default."
+      echo "   You'll need to run '$manager global <other>' before $manager can resolve again."
+      printf "Type the version to confirm removal: "
+      read -r confirm
+      if [[ "$confirm" != "$global_version" ]]; then
+        echo "Aborted."
+        return 0
+      fi
+    else
+      printf "Proceed? [y/N]: "
+      read -r confirm
+      if [[ ! "$confirm" =~ ^[yY] ]]; then
+        echo "Aborted."
+        return 0
+      fi
     fi
 
     while IFS= read -r v; do
@@ -301,11 +327,35 @@ EOF
     echo "Will uninstall:"
     printf '%s\n' "$selected" | sed 's/^/  /'
     echo ""
-    printf "Proceed? [y/N]: "
-    read -r confirm
-    if [[ ! "$confirm" =~ ^[yY] ]]; then
-      echo "Aborted."
-      return 0
+
+    # Detect whether the selection includes any plugin's current/global
+    # default. asdf can have one per plugin, so list them all.
+    # NB: $entry is already declared `local` higher up — don't redeclare,
+    # or zsh will echo its current value (the last-iterated entry).
+    local -a hits
+    while IFS= read -r entry; do
+      [[ -z "$entry" ]] && continue
+      [[ -n "${is_global[$entry]:-}" ]] && hits+=( "$entry" )
+    done <<< "$selected"
+
+    if (( ${#hits[@]} > 0 )); then
+      echo "⚠️  This will remove the current/global default for:"
+      printf '   %s\n' "${hits[@]}"
+      echo "   You'll need to set a new version for each affected plugin"
+      echo "   (e.g. 'asdf set -u <plugin> <version>') before asdf can resolve again."
+      printf "Type 'yes' to confirm: "
+      read -r confirm
+      if [[ "$confirm" != "yes" ]]; then
+        echo "Aborted."
+        return 0
+      fi
+    else
+      printf "Proceed? [y/N]: "
+      read -r confirm
+      if [[ ! "$confirm" =~ ^[yY] ]]; then
+        echo "Aborted."
+        return 0
+      fi
     fi
 
     while IFS= read -r entry; do
