@@ -3,22 +3,34 @@
 #   bin/rails    → pick from `bin/rails -T` + run via `bin/rails`
 #   Rakefile     → pick from `rake -T` + run via `bundle exec rake`
 
-# Internal: pipe a task list into fzf, parse the chosen column, then exec
-# the supplied command with the picked task as its final argument.
-# stdin     candidate list
-# $1        fzf prompt label
-# $2        awk field to extract from the picked row
-# $3..      command to run with the picked task appended
+# Internal: run a producer, fzf-pick from its output, then exec a command.
+#
+# The producer is invoked *inside* this helper via $(...) rather than piped
+# into it from outside. The piped-from-outside form (producer | helper) leaves
+# fzf reading from the long-lived outer pipe, which can confuse fzf's TTY
+# setup in some terminals and fail with "Input/output error". Keeping the
+# producer pipe self-contained inside $(...) sidesteps it.
+#
+# $1   fzf prompt label
+# $2   awk field to extract from the picked row
+# $3   producer function name (called with no args; stdout is the task list)
+# $4.. command to run with the picked task appended
 _run_pick_and_exec() {
-  local prompt=$1 field=$2
-  shift 2
+  local prompt=$1 field=$2 producer=$3
+  shift 3
   local task
-  task=$(fzf --prompt="  $prompt > " --height=50% --reverse --ansi \
+  task=$("$producer" 2>/dev/null \
+         | fzf --prompt="  $prompt > " --height=50% --reverse --ansi \
          | awk -v f="$field" '{print $f}')
   [[ -z "$task" ]] && return 0
   echo "▶ $* $task"
   "$@" "$task"
 }
+
+# Task list producers. Defined as functions so _run_pick_and_exec can call
+# them by name without going through a pipe.
+_run_rails_tasks() { bin/rails -T; }
+_run_rake_tasks()  { bundle exec rake -T; }
 
 function run() {
   if ! command -v fzf &>/dev/null; then
@@ -44,10 +56,10 @@ function run() {
     npm run "$script"
 
   elif [[ -x bin/rails ]]; then
-    bin/rails -T 2>/dev/null | _run_pick_and_exec "rails" 2 bin/rails
+    _run_pick_and_exec "rails" 2 _run_rails_tasks bin/rails
 
   elif [[ -f Rakefile ]]; then
-    bundle exec rake -T 2>/dev/null | _run_pick_and_exec "rake" 2 bundle exec rake
+    _run_pick_and_exec "rake" 2 _run_rake_tasks bundle exec rake
 
   else
     echo "❌ No package.json, bin/rails, or Rakefile found in $PWD"
