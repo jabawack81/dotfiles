@@ -224,8 +224,12 @@ Usage: clean_asdf [PLUGIN] [-k NUM]
 
 Interactive: pick versions to uninstall via fzf.
   Tab/Shift-Tab  toggle selection
+  Alt-g          set highlighted entry as current/global for its plugin
   Enter          confirm
   Esc            cancel
+Current/global entries are marked with '*'. They can't be uninstalled
+directly — use Alt-g to promote a different version for that plugin
+first, then the old one becomes deletable.
 Each entry's preview lists .tool-versions files pinning it (one-time ~/ scan).
 EOF
     return 0
@@ -340,64 +344,118 @@ EOF
       } > "$tmp_dir/$entry"
     done
 
+    # Write a helper that fzf re-runs on reload to refresh the * markers.
+    # Same shape as the rbenv/nodenv version but slightly more involved
+    # because each line is "<marker> <plugin> <version>" and the global
+    # check is a per-plugin set rather than a single string. Avoid bash 4
+    # associative arrays — /bin/bash on macOS is still 3.2; use a temp
+    # file + grep -Fx for membership instead.
+    cat > "$tmp_dir/list.sh" <<SCRIPT
+#!/bin/bash
+plugin_filter="$plugin_filter"
+keep_latest=$keep_latest
+
+plugins=()
+if [[ -n "\$plugin_filter" ]]; then
+  plugins=("\$plugin_filter")
+else
+  while IFS= read -r p; do plugins+=("\$p"); done < <(asdf plugin list 2>/dev/null)
+fi
+
+globals_file=\$(mktemp)
+asdf current 2>/dev/null | while read -r p v _rest; do
+  [[ -z "\$p" || "\$p" == "Name" ]] && continue
+  echo "\$p \$v"
+done > "\$globals_file"
+
+for plugin in "\${plugins[@]}"; do
+  versions=()
+  while IFS= read -r line; do
+    line=\$(echo "\$line" | sed -E 's/^[[:space:]*]+//')
+    [[ -z "\$line" ]] && continue
+    versions+=("\$line")
+  done < <(asdf list "\$plugin" 2>/dev/null)
+
+  end=\$(( \${#versions[@]} - keep_latest ))
+  (( end < 0 )) && end=0
+
+  for (( i=0; i<end; i++ )); do
+    entry="\$plugin \${versions[\$i]}"
+    if grep -qFx "\$entry" "\$globals_file"; then echo "* \$entry"
+    else                                          echo "  \$entry"
+    fi
+  done
+done
+
+rm -f "\$globals_file"
+SCRIPT
+    chmod +x "$tmp_dir/list.sh"
+
     local selected
-    # fzf's {} is already shell-escaped (single-quoted) — DO NOT wrap it in
-    # extra double quotes here, or the embedded single quotes end up as
-    # literal characters in the path lookup.
-    selected=$(printf '%s\n' "${entries[@]}" | fzf \
+    # Alt-g promotes the highlighted entry to be that plugin's current/global
+    # default. The entry is "<marker> <plugin> <version>" — awk's NF-1 and NF
+    # give plugin and version reliably for both "* p v" and "  p v" formats.
+    # fzf's {} is already shell-escaped — don't add extra quotes around it.
+    selected=$("$tmp_dir/list.sh" | fzf \
       --multi \
       --prompt="asdf > " \
-      --header="Tab: select · Enter: confirm · Esc: cancel" \
-      --preview="cat $tmp_dir/{}" \
-      --preview-window="right:60%:wrap")
+      --header="Tab: select · Alt-g: set as global · Enter: confirm · Esc: cancel · '*' = global" \
+      --preview="cat \"$tmp_dir/\$(echo {} | awk '{print \$(NF-1), \$NF}')\"" \
+      --preview-window="right:60%:wrap" \
+      --bind="alt-g:execute-silent(asdf set -u \$(echo {} | awk '{print \$(NF-1), \$NF}'))+reload($tmp_dir/list.sh)")
 
     if [[ -z "$selected" ]]; then
       echo "No versions selected."
       return 0
     fi
 
-    echo ""
-    echo "Will uninstall:"
-    printf '%s\n' "$selected" | sed 's/^/  /'
-    echo ""
+    # Re-query asdf current — Alt-g may have changed which entries are global.
+    typeset -A is_global_now
+    while read -r cur_plugin cur_version cur_src; do
+      [[ -z "$cur_plugin" || "$cur_plugin" == "Name" ]] && continue
+      [[ -n "${entry_set[$cur_plugin $cur_version]:-}" ]] && is_global_now["$cur_plugin $cur_version"]=1
+    done < <(asdf current 2>/dev/null)
 
-    # Detect whether the selection includes any plugin's current/global
-    # default. asdf can have one per plugin, so list them all.
-    # NB: $entry is already declared `local` higher up — don't redeclare,
-    # or zsh will echo its current value (the last-iterated entry).
-    local -a hits
-    while IFS= read -r entry; do
-      [[ -z "$entry" ]] && continue
-      [[ -n "${is_global[$entry]:-}" ]] && hits+=( "$entry" )
+    # Strip the "<marker> " prefix (2 chars) and split into to_remove vs skipped.
+    local -a to_remove skipped
+    while IFS= read -r line; do
+      [[ -z "$line" ]] && continue
+      entry="${line:2}"
+      if [[ -n "${is_global_now[$entry]:-}" ]]; then
+        skipped+=( "$entry" )
+      else
+        to_remove+=( "$entry" )
+      fi
     done <<< "$selected"
 
-    if (( ${#hits[@]} > 0 )); then
-      echo "⚠️  This will remove the current/global default for:"
-      printf '   %s\n' "${hits[@]}"
-      echo "   You'll need to set a new version for each affected plugin"
-      echo "   (e.g. 'asdf set -u <plugin> <version>') before asdf can resolve again."
-      printf "Type 'yes' to confirm: "
-      read -r confirm
-      if [[ "$confirm" != "yes" ]]; then
-        echo "Aborted."
-        return 0
-      fi
-    else
-      printf "Proceed? [y/N]: "
-      read -r confirm
-      if [[ ! "$confirm" =~ ^[yY] ]]; then
-        echo "Aborted."
-        return 0
-      fi
+    if (( ${#skipped[@]} > 0 )); then
+      echo "Skipped (still current/global):"
+      printf '  %s\n' "${skipped[@]}"
+      echo "Use Alt-g on a different version in the picker first to promote a new global."
+      echo ""
     fi
 
-    while IFS= read -r entry; do
-      [[ -z "$entry" ]] && continue
+    if (( ${#to_remove[@]} == 0 )); then
+      echo "Nothing to uninstall."
+      return 0
+    fi
+
+    echo "Will uninstall:"
+    printf '  %s\n' "${to_remove[@]}"
+    echo ""
+    printf "Proceed? [y/N]: "
+    read -r confirm
+    if [[ ! "$confirm" =~ ^[yY] ]]; then
+      echo "Aborted."
+      return 0
+    fi
+
+    for entry in "${to_remove[@]}"; do
       local up=${entry%% *}
       local uv=${entry#* }
       echo "→ Uninstalling $up $uv…"
       asdf uninstall "$up" "$uv"
-    done <<< "$selected"
+    done
 
     echo "Done."
   } always {
