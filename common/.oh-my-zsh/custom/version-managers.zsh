@@ -100,7 +100,7 @@ EOF
       --multi \
       --prompt="$manager > " \
       --header="Tab: select · Enter: confirm · Esc: cancel · global: ${global_version:-none}" \
-      --preview="cat '$tmp_dir/{}'" \
+      --preview="cat $tmp_dir/{}" \
       --preview-window="right:60%:wrap")
 
     if [[ -z "$selected" ]]; then
@@ -199,17 +199,18 @@ EOF
 
   # Build "<plugin> <version>" entries. `asdf list <plugin>` indents each
   # version and may prefix the current one with `*` — strip both.
-  local -a entries
-  local plugin
+  # Hoist loop-locals outside the for so subsequent iterations don't trigger
+  # zsh's "re-declared local with existing value" print (which surfaces as
+  # spurious lines like "v=3.13.0" before the scan message).
+  local -a entries plugin_versions
+  local plugin v
   for plugin in "${plugins[@]}"; do
-    local -a plugin_versions
     plugin_versions=( ${(@f)"$(asdf list "$plugin" 2>/dev/null | sed -E 's/^[[:space:]*]+//')"} )
 
     if (( keep_latest > 0 && keep_latest < ${#plugin_versions[@]} )); then
       plugin_versions=( "${plugin_versions[@]:0:$((${#plugin_versions[@]} - keep_latest))}" )
     fi
 
-    local v
     for v in "${plugin_versions[@]}"; do
       [[ -z "$v" ]] && continue
       entries+=( "$plugin $v" )
@@ -229,12 +230,13 @@ EOF
 
   # Identify global / currently-selected versions per plugin. `asdf current`
   # prints "<plugin>  <version>  <source>" with multi-space padding; read
-  # collapses whitespace.
+  # collapses whitespace. Variable names avoid clashing with the loop `v`
+  # above so the local declaration doesn't trigger zsh's re-declare echo.
   typeset -A is_global
-  local p v _src
-  while read -r p v _src; do
-    [[ -z "$p" || "$p" == "Name" ]] && continue
-    [[ -n "${entry_set[$p $v]:-}" ]] && is_global["$p $v"]=1
+  local cur_plugin cur_version cur_src
+  while read -r cur_plugin cur_version cur_src; do
+    [[ -z "$cur_plugin" || "$cur_plugin" == "Name" ]] && continue
+    [[ -n "${entry_set[$cur_plugin $cur_version]:-}" ]] && is_global["$cur_plugin $cur_version"]=1
   done < <(asdf current 2>/dev/null)
 
   # Scan ~/ for .tool-versions files. Each line: "<tool> <version> [...]" —
@@ -280,11 +282,14 @@ EOF
     done
 
     local selected
+    # fzf's {} is already shell-escaped (single-quoted) — DO NOT wrap it in
+    # extra double quotes here, or the embedded single quotes end up as
+    # literal characters in the path lookup.
     selected=$(printf '%s\n' "${entries[@]}" | fzf \
       --multi \
       --prompt="asdf > " \
       --header="Tab: select · Enter: confirm · Esc: cancel" \
-      --preview="cat \"$tmp_dir/{}\"" \
+      --preview="cat $tmp_dir/{}" \
       --preview-window="right:60%:wrap")
 
     if [[ -z "$selected" ]]; then
