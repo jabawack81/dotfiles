@@ -1,10 +1,14 @@
-# Run a command in a loop until it fails, or until MAX_RUNS successes.
-# Useful for hunting flaky tests: until_failure -r 50 -n npm test
+# until-failure.zsh — run a command in a loop until it fails, or until
+# MAX_RUNS successes. Useful for hunting flaky tests:
+#   until_failure -r 50 -n npm test
 #
 # -r NUM    max runs (default 10)
 # -m MSG    notification message (default 'Max runs reached')
 # -n        send a ntfy.sh notification when done (needs $NTFY_TOPIC)
 # -h        help
+#
+# Optional: ntfy.sh push (set $NTFY_TOPIC, use -n). No other dependencies.
+# Install: source this from ~/.zshrc (or drop in ~/.oh-my-zsh/custom/).
 
 # Internal: post a ntfy.sh notification, silently no-op if disabled or
 # $NTFY_TOPIC is unset.

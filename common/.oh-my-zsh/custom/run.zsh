@@ -1,7 +1,9 @@
-# Context-aware task runner: fzf picker for the current project type.
+# run.zsh — context-aware task runner: fzf picker for the current project.
 #   package.json → pick from `scripts` + run via `npm`
 #   bin/rails    → pick from `bin/rails -T` + run via `bin/rails`
 #   Rakefile     → pick from `rake -T` + run via `bundle exec rake`
+# Usage: `run` in a project dir, pick a task, Enter. Requires fzf.
+# Install: source this from ~/.zshrc (or drop in ~/.oh-my-zsh/custom/).
 
 # Internal: run a producer, fzf-pick from its output, then exec a command.
 #

@@ -1,6 +1,32 @@
-# Interactive cleanup for rbenv / nodenv installed versions.
-# `clean_rbenv` / `clean_nodenv` open an fzf multi-select picker;
-# each version's preview lists projects pinning it (one-time ~/ scan).
+# ============================================================================
+# version-managers.zsh — interactive cleanup for installed language versions
+# ============================================================================
+#
+# Reclaim disk by uninstalling old rbenv / nodenv / asdf versions through an
+# fzf multi-select picker. Each version's preview lists the projects that pin
+# it (scanned from your home dir), so you can see what you'd break before you
+# delete. The active global default is protected — you can't uninstall it
+# directly; promote another version first (Alt-g) and it becomes deletable.
+#
+# Commands:
+#   clean_versions          Detect installed managers and pick which to clean
+#   clean_rbenv  [-k N]     Clean rbenv versions  (-k keeps the latest N)
+#   clean_nodenv [-k N]     Clean nodenv versions
+#   clean_asdf   [-k N]     Clean asdf plugin versions (pick a plugin first)
+#   …append -h to any for full help.
+#
+# Picker keys:  Tab toggle · Alt-g set highlighted as global · Enter confirm
+#               · Esc cancel.  The current global is marked with '*'.
+#
+# Requires:  fzf, plus whichever managers you use (rbenv / nodenv / asdf).
+#
+# Install (standalone, no dotfiles framework needed):
+#   1. Save this file somewhere, e.g. ~/.config/zsh/version-managers.zsh
+#   2. Add to ~/.zshrc:   source ~/.config/zsh/version-managers.zsh
+#   3. Restart your shell (or `source ~/.zshrc`), then run `clean_versions`.
+#   (oh-my-zsh users can instead drop it in ~/.oh-my-zsh/custom/ — it's
+#    sourced automatically.)
+# ============================================================================
 
 function clean_version_manager {
   local manager=$1
