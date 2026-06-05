@@ -74,6 +74,25 @@
     owner: "{{ target_user }}"
     group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
 
+- name: Find public Claude skills
+  find:
+    paths: "{{ dotfiles_dir }}/common/claude/skills"
+    file_type: directory
+    recurse: no
+  register: public_claude_skills
+  ignore_errors: yes
+
+- name: Symlink public Claude skills into ~/.claude/skills
+  file:
+    src: "{{ item.path }}"
+    dest: "{{ target_home }}/.claude/skills/{{ item.path | basename }}"
+    state: link
+    force: yes
+    owner: "{{ target_user }}"
+    group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+  loop: "{{ public_claude_skills.files | default([]) }}"
+  when: public_claude_skills is succeeded
+
 - name: Find private Claude skills
   find:
     paths: "{{ dotfiles_dir }}/private-config/claude/skills"
