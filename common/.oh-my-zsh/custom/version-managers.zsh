@@ -341,25 +341,67 @@ EOF
     [[ -n "${entry_set[$cur_plugin $cur_version]:-}" ]] && is_global["$cur_plugin $cur_version"]=1
   done < <(asdf current 2>/dev/null)
 
-  # Scan ~/ for .tool-versions files. Each line: "<tool> <version> [...]" —
-  # ignore extra fields (legacy fallback versions).
-  echo "Scanning ~/ for .tool-versions pins…"
+  # Scan ~/ for pin files. Includes the canonical `.tool-versions` plus the
+  # legacy per-language files that asdf plugins can opt into via
+  # `legacy-version-file-getter` (configured via `legacy_version_file = yes`
+  # in ~/.asdfrc). We can't tell whether a given asdf install has that
+  # turned on, so we always record the pin — at worst the preview shows a
+  # legacy file that asdf won't actually honor.
+  echo "Scanning ~/ for asdf pin files…"
   typeset -A pins_by_entry
-  local f line
+  local f line fp rest fv legacy_v
   while IFS= read -r f; do
     [[ -f "$f" ]] || continue
-    while IFS= read -r line; do
-      # Skip comments and blanks
-      [[ -z "$line" || "${line:0:1}" == "#" ]] && continue
-      local fp=${line%% *}
-      local rest=${line#* }
-      local fv=${rest%% *}
-      [[ -z "$fp" || -z "$fv" || "$fp" == "$line" ]] && continue
-      pins_by_entry["$fp $fv"]+="$f"$'\n'
-    done < "$f"
+    case "$(basename -- "$f")" in
+      .tool-versions)
+        # Each line: "<tool> <version> [...]" — ignore extras (legacy
+        # fallback versions on the same line).
+        while IFS= read -r line; do
+          [[ -z "$line" || "${line:0:1}" == "#" ]] && continue
+          fp=${line%% *}
+          rest=${line#* }
+          fv=${rest%% *}
+          [[ -z "$fp" || -z "$fv" || "$fp" == "$line" ]] && continue
+          pins_by_entry["$fp $fv"]+="$f"$'\n'
+        done < "$f"
+        ;;
+      .ruby-version)
+        legacy_v=$(tr -d '[:space:]' < "$f")
+        [[ -n "$legacy_v" ]] && pins_by_entry["ruby $legacy_v"]+="$f"$'\n'
+        ;;
+      .node-version|.nvmrc)
+        # Record under both common plugin names — only the one that
+        # matches an actual installed entry shows up in the preview.
+        legacy_v=$(tr -d '[:space:]' < "$f")
+        [[ -n "$legacy_v" ]] && {
+          pins_by_entry["nodejs $legacy_v"]+="$f"$'\n'
+          pins_by_entry["node $legacy_v"]+="$f"$'\n'
+        }
+        ;;
+      .python-version)
+        legacy_v=$(tr -d '[:space:]' < "$f")
+        [[ -n "$legacy_v" ]] && pins_by_entry["python $legacy_v"]+="$f"$'\n'
+        ;;
+      .terraform-version)
+        legacy_v=$(tr -d '[:space:]' < "$f")
+        [[ -n "$legacy_v" ]] && pins_by_entry["terraform $legacy_v"]+="$f"$'\n'
+        ;;
+      .go-version)
+        legacy_v=$(tr -d '[:space:]' < "$f")
+        [[ -n "$legacy_v" ]] && {
+          pins_by_entry["golang $legacy_v"]+="$f"$'\n'
+          pins_by_entry["go $legacy_v"]+="$f"$'\n'
+        }
+        ;;
+    esac
   done < <(find ~ \
     \( -name node_modules -o -name .git -o -name .asdf -o -name .rbenv -o -name .nodenv \) -prune \
-    -o -type f -name ".tool-versions" -print 2>/dev/null)
+    -o -type f \( -name ".tool-versions" \
+                  -o -name ".ruby-version" \
+                  -o -name ".node-version" -o -name ".nvmrc" \
+                  -o -name ".python-version" \
+                  -o -name ".terraform-version" \
+                  -o -name ".go-version" \) -print 2>/dev/null)
 
   local tmp_dir
   tmp_dir=$(mktemp -d)
