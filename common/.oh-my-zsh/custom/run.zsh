@@ -25,6 +25,7 @@ _run_pick_and_exec() {
   local task
   task=$("$producer" 2>/dev/null \
          | fzf --prompt="  $prompt > " --height=50% --reverse --ansi \
+               --header="Saved to shell history — press ↑ at your prompt to re-run" \
          | awk -v f="$field" '{print $f}')
   [[ -z "$task" ]] && return 0
 
@@ -88,6 +89,7 @@ function run() {
     script=$(jq -r '.scripts // {} | to_entries[] | "\(.key)\t\(.value)"' package.json \
       | column -t -s $'\t' \
       | fzf --prompt="  npm run > " --height=50% --reverse --ansi \
+            --header="Saved to shell history — press ↑ at your prompt to re-run" \
             --preview='echo {} | sed -E "s/^[^[:space:]]+[[:space:]]+//"' \
             --preview-window=down:3:wrap \
       | awk '{print $1}')
