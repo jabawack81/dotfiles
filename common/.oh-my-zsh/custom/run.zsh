@@ -62,6 +62,8 @@ _run_pick_and_exec() {
   fi
 
   echo "▶ $* $task"
+  # Single-quote the task name so [brackets] don't glob-expand on Up+Enter.
+  print -s "$* '$task'"
   "$@" "$task"
 }
 
@@ -91,6 +93,7 @@ function run() {
       | awk '{print $1}')
     [[ -z "$script" ]] && return 0
     echo "▶ npm run $script"
+    print -s "npm run '$script'"
     npm run "$script"
 
   elif [[ -x bin/rails ]]; then
