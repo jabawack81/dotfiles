@@ -3,6 +3,8 @@
 #   bin/rails    → pick from `bin/rails -T` + run via `bin/rails`
 #   Rakefile     → pick from `rake -T` + run via `bundle exec rake`
 # Usage: `run` in a project dir, pick a task, Enter. Requires fzf.
+# Rake tasks that declare arguments (e.g. `task:name[arg1,arg2]`) get a
+# per-argument prompt — leave any value empty to skip it.
 # Install: source this from ~/.zshrc (or drop in ~/.oh-my-zsh/custom/).
 
 # Internal: run a producer, fzf-pick from its output, then exec a command.
@@ -25,6 +27,40 @@ _run_pick_and_exec() {
          | fzf --prompt="  $prompt > " --height=50% --reverse --ansi \
          | awk -v f="$field" '{print $f}')
   [[ -z "$task" ]] && return 0
+
+  # Rake declares argument names in [brackets], e.g.
+  # `manual_tasks:delete_complaint_note[complaint_note_id,execute]`.
+  # Without prompting, those names get passed as VALUES (running with the
+  # literal string "complaint_note_id"). Prompt for each one instead and
+  # rebuild the invocation.
+  if [[ "$task" == *\[*\]* ]]; then
+    local base="${task%%\[*}"
+    local arg_spec="${task#*\[}"
+    arg_spec="${arg_spec%\]}"
+
+    echo "Task takes arguments — press Enter to skip any:"
+    local -a values
+    local arg val
+    for arg in ${(s:,:)arg_spec}; do
+      printf "  %s: " "$arg"
+      read -r val
+      values+=( "$val" )
+    done
+
+    # Drop trailing empties: Rake treats `task[a,]` and `task[a]` the same
+    # for missing trailing args. Interior empties (`task[a,,c]`) are kept
+    # because position matters there.
+    while (( ${#values[@]} > 0 )) && [[ -z "${values[${#values[@]}]}" ]]; do
+      values=( "${values[@]:0:$((${#values[@]}-1))}" )
+    done
+
+    if (( ${#values[@]} > 0 )); then
+      task="${base}[${(j:,:)values}]"
+    else
+      task="$base"
+    fi
+  fi
+
   echo "▶ $* $task"
   "$@" "$task"
 }
