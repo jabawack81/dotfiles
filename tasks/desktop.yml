@@ -308,6 +308,16 @@
     group: "{{ target_user }}"
   when: hostname == 'lupus'
 
+- name: Wire lupus hypr overrides into hyprland.conf (sourced from dotfiles checkout)
+  lineinfile:
+    path: "{{ config_dir }}/hypr/hyprland.conf"
+    line: "source = ~/dotfiles/lupus/hypr/{{ item }}"
+    state: present
+  loop:
+    - windows.conf
+    - bindings.conf
+  when: hostname == 'lupus'
+
 - name: Apply lupus waybar customizations (Omarchy overlay)
   block:
     - name: Ensure gpu-status script is executable
