@@ -533,6 +533,16 @@
   become: "{{ not running_as_root }}"
   when: hostname == 'lupus'
 
+- name: Install NVIDIA suspend fix for lupus (remove GPU from PCI on sleep)
+  copy:
+    src: "{{ dotfiles_dir }}/lupus/hypr/nvidia-suspend-fix.sh"
+    dest: /usr/lib/systemd/system-sleep/nvidia-gpu-toggle
+    mode: '0755'
+    owner: root
+    group: root
+  become: "{{ not running_as_root }}"
+  when: hostname == 'lupus'
+
 - name: Allow passwordless open-fprintd stop/start on lupus (for lid switch)
   copy:
     dest: /etc/sudoers.d/open-fprintd
