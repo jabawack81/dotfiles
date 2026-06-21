@@ -9,7 +9,7 @@ Side-by-side comparison of Hyprland keybindings between the two machines, so you
 
 Omarchy bindings reflect the `basecamp/omarchy` repo (`dev` branch) at the time this doc was written. If your installed Omarchy version differs, verify with `omarchy-menu-keybindings` (Super + K).
 
-User-level overrides on lupus go in `~/.config/hypr/bindings.lua`. To replace an Omarchy default, `hl.unbind("SUPER + X")` first, then `o.bind(...)`. The dotfiles repo does not currently track that file — adding it would belong in `lupus/hypr/` plus an ansible task.
+User-level overrides on lupus go in `.conf` files sourced *after* the Omarchy defaults (later source wins), not in a Lua file. The dotfiles-tracked overrides live in `lupus/hypr/bindings.conf`, sourced from `~/.config/hypr/hyprland.conf`; the `source =` line is wired up by the lupus task in `tasks/desktop.yml`. To replace an Omarchy default, add an `unbind = SUPER, X` before the new `bindd = ...`. (Earlier revisions of this doc described a `~/.config/hypr/bindings.lua` / `hl.unbind` / `o.bind` system — that mechanism does not exist on this Omarchy version.)
 
 ---
 
@@ -20,13 +20,13 @@ User-level overrides on lupus go in `~/.config/hypr/bindings.lua`. To replace an
 | Terminal                | `Super + Q`            | `Super + Return`                 | **Conflict**   | align to `Super + Return` for muscle memory, less collision risk                                                                                                                        |
 | Browser                 | `Super + F`            | `Super + Shift + B` / `+ Return` | **Conflict**   | align to `Super + Shift + B` for muscle memory, less collision risk                                                                                                                     |
 | File manager            | `Super + E` (thunar)   | `Super + Shift + F` (nautilus)   | **Conflict**   | align to `Super + Shift + F` for muscle memory, less collision risk                                                                                                                     |
-| App launcher / menu     | `Super + R`            | `Super + Space` (walker)         | **Conflict**   | ✅ **Decided**: drop hyprlauncher on shinkiro; `Super + Space` already opens quickshell:omni — promote it to the primary launcher on both machines (omni for shinkiro, walker for lupus) |
+| App launcher / menu     | `Super + R`            | `Super + Space` (walker)         | **Conflict**   | ✅ **Applied**: drop hyprlauncher on shinkiro; `Super + Space` already opens quickshell:omni — promote it to the primary launcher on both machines (omni for shinkiro, walker for lupus) |
 | Editor                  | —                      | `Super + Shift + N`              | Lupus only     |                                                                                                                                                                                         |
 | Discord                 | `Super + D`            | —                                | Shinkiro only  |                                                                                                                                                                                         |
 | Steam                   | `Super + G`            | —                                | Shinkiro only  |                                                                                                                                                                                         |
-| Telegram                | `Super + T`            | —                                | Shinkiro only  | ✅ **Decided**: remove the Telegram binding from shinkiro (rarely used) — frees `Super + T` for Toggle floating                                                                          |
-| Toggle floating         | `Super + V`            | `Super + T`                      | **Conflict**   | ✅ **Decided**: align to `Super + T` on shinkiro (Telegram binding removed, no longer blocks)                                                                                            |
-| Lock screen             | `Super + L` (hyprlock) | `Super + Ctrl + L`               | **Conflict**   | ✅ **Decided**: align to `Super + Ctrl + L` — `Super + L` left unbound on shinkiro for now (could later mirror Omarchy's "toggle workspace layout")                                      |
+| Telegram                | `Super + T`            | —                                | Shinkiro only  | ✅ **Applied**: remove the Telegram binding from shinkiro (rarely used) — frees `Super + T` for Toggle floating                                                                          |
+| Toggle floating         | `Super + V`            | `Super + T`                      | **Conflict**   | ✅ **Applied**: align to `Super + T` on shinkiro (Telegram binding removed, no longer blocks)                                                                                            |
+| Lock screen             | `Super + L` (hyprlock) | `Super + Ctrl + L`               | **Conflict**   | ✅ **Applied**: align to `Super + Ctrl + L` — `Super + L` left unbound on shinkiro for now (could later mirror Omarchy's "toggle workspace layout")                                      |
 | Show keybinding help    | `Super + Shift + /`    | `Super + K`                      | Both, diff key | align to `Super + K` for muscle memory, less collision risk                                                                                                                             |
 | Emoji picker            | —                      | `Super + Ctrl + E`               | Lupus only     |                                                                                                                                                                                         |
 | Audio / BT / Wifi menus | —                      | `Super + Ctrl + A/B/W`           | Lupus only     |                                                                                                                                                                                         |
@@ -48,7 +48,7 @@ Notes:
 | Focus left/right/up/down                          | `Super + Arrow`                     | `Super + Arrow`                                              | **Same** ✓    |                                                                                                                                         |
 | Swap window left/right/up/down                    | —                                   | `Super + Shift + Arrow`                                      | Lupus only    |                                                                                                                                         |
 | Move window to workspace 1-10                     | `Super + Shift + 1-0`               | `Super + Shift + 1-0`                                        | **Same** ✓    |                                                                                                                                         |
-| Move window to next/prev workspace (same monitor) | `Super + Ctrl + Shift + Left/Right` | —                                                            | Shinkiro only | ✅ **Decided**: port to lupus using plain `movetoworkspace, r+1`/`r-1` (shinkiro parity script doesn't apply to a single-monitor laptop) |
+| Move window to next/prev workspace (same monitor) | `Super + Ctrl + Shift + Left/Right` | —                                                            | Shinkiro only | ✅ **Applied**: port to lupus using plain `movetoworkspace, r+1`/`r-1` (shinkiro parity script doesn't apply to a single-monitor laptop) |
 | Toggle window split (dwindle)                     | `Super + J`                         | `Super + J`                                                  | **Same** ✓    |                                                                                                                                         |
 | Pseudo window                                     | `Super + P`                         | `Super + P`                                                  | **Same** ✓    |                                                                                                                                         |
 | Kill / close active window                        | `Super + C`                         | `Super + W`                                                  | **Conflict**  | align to `Super + W` for muscle memory, less collision risk                                                                             |
@@ -59,7 +59,7 @@ Notes:
 | Maximize (full width)                             | —                                   | `Super + Alt + F`                                            | Lupus only    |                                                                                                                                         |
 | Pop window out (float + pin)                      | —                                   | `Super + O`                                                  | Lupus only    |                                                                                                                                         |
 | Move/resize with mouse                            | `Super + LMB` / `RMB`               | `Super + LMB` / `RMB`                                        | **Same** ✓    |                                                                                                                                         |
-| Resize window (keyboard)                          | —                                   | `Super + [`/`]` (+ Shift/Alt/Ctrl for direction & magnitude) | Lupus only    | ✅ **Decided**: port to shinkiro; GB layout on both machines so the `[`/`]` symbols line up — will verify keycodes when applying         |
+| Resize window (keyboard)                          | —                                   | `Super + [`/`]` (+ Shift/Alt/Ctrl for direction & magnitude) | Lupus only    | ✅ **Applied**: port to shinkiro; GB layout on both machines so the `[`/`]` symbols line up — will verify keycodes when applying         |
 
 Notes:
 
@@ -75,13 +75,13 @@ Notes:
 | Switch to workspace 1-10                   | `Super + 1-0`                          | `Super + 1-0` (keycode-based, layout-safe) | **Same** ✓    |                                                                                                                                                                                                                                      |
 | Cycle workspace on **current monitor**     | `Super + Ctrl + Left/Right`            | —                                          | Shinkiro only | ⏭ **Skipped**: keeping Omarchy's group-nav on `Super + Ctrl + Left/Right` is more valuable than the workspace cycling muscle memory; will use `Super + Tab` instead on both machines                                                 |
 | Cycle workspace on current monitor (mouse) | `Super + Ctrl + Scroll`                | —                                          | Shinkiro only | align to `Super + Ctrl + Scroll` for muscle memory, no collision risk                                                                                                                                                                |
-| Next / previous workspace (any monitor)    | —                                      | `Super + Tab` / `Super + Shift + Tab`      | Lupus only    | ✅ **Decided**: align to `Super + Tab` / `Super + Shift + Tab` on shinkiro — ⚠️ requires moving quickshell:overview off `Super + Tab` (pick a new key when applying; e.g. `Super + Shift + Tab` if you don't need previous-workspace) |
+| Next / previous workspace (any monitor)    | —                                      | `Super + Tab` / `Super + Shift + Tab`      | Lupus only    | ✅ **Applied**: align to `Super + Tab` / `Super + Shift + Tab` on shinkiro — ⚠️ requires moving quickshell:overview off `Super + Tab` (pick a new key when applying; e.g. `Super + Shift + Tab` if you don't need previous-workspace) |
 | Last (former) workspace                    | —                                      | `Super + Ctrl + Tab`                       | Lupus only    | align to `Super + Ctrl + Tab` for muscle memory, no collision risk                                                                                                                                                                   |
 | Scroll through workspaces                  | `Super + Scroll`                       | `Super + Scroll`                           | **Same** ✓    |                                                                                                                                                                                                                                      |
-| New empty workspace on current monitor     | `Super + N` (parity-aware on shinkiro) | —                                          | Shinkiro only | ✅ **Decided**: port to lupus using plain `workspace, emptym` (no parity script needed on single-monitor laptop)                                                                                                                      |
-| Move workspace to another monitor          | —                                      | `Super + Shift + Alt + Arrow`              | Lupus only    | ✅ **Decided**: port to shinkiro — mostly moot on lupus laptop unless docked, but harmless to have everywhere                                                                                                                         |
+| New empty workspace on current monitor     | `Super + N` (parity-aware on shinkiro) | —                                          | Shinkiro only | ✅ **Applied**: port to lupus using plain `workspace, emptym` (no parity script needed on single-monitor laptop)                                                                                                                      |
+| Move workspace to another monitor          | —                                      | `Super + Shift + Alt + Arrow`              | Lupus only    | ✅ **Applied**: port to shinkiro — mostly moot on lupus laptop unless docked, but harmless to have everywhere                                                                                                                         |
 | Toggle special workspace (scratchpad)      | `Super + S`                            | `Super + S`                                | **Same** ✓    |                                                                                                                                                                                                                                      |
-| Move window to scratchpad                  | `Super + Shift + S`                    | `Super + Alt + S`                          | **Conflict**  | ✅ **Decided**: align to `Super + Shift + S` on lupus — leave Omarchy's `Super + Alt + S` in place as a redundant secondary binding (no need to unbind)                                                                               |
+| Move window to scratchpad                  | `Super + Shift + S`                    | `Super + Alt + S`                          | **Conflict**  | ✅ **Applied**: align to `Super + Shift + S` on lupus — leave Omarchy's `Super + Alt + S` in place as a redundant secondary binding (no need to unbind)                                                                               |
 
 Notes:
 
@@ -207,16 +207,18 @@ Not really "keybindings", but in the same config:
 
 ## How to apply a port on lupus
 
-Omarchy reads `~/.config/hypr/bindings.lua` after its defaults. Example for the workspace cycling case:
+Lupus parity bindings are tracked in `lupus/hypr/bindings.conf` and sourced from `~/.config/hypr/hyprland.conf` *after* the Omarchy defaults, so they override on conflict. The `source =` line is wired up idempotently by the lupus task in `tasks/desktop.yml`, so a fresh `setup-dotfiles.yml` run picks it up.
 
-```lua
--- Remove omarchy's group-nav on these chords first
-hl.unbind("SUPER + CTRL + LEFT")
-hl.unbind("SUPER + CTRL + RIGHT")
+To add another port, append to `lupus/hypr/bindings.conf`. If the chord is already bound by an Omarchy default, `unbind` it first. Example for the workspace cycling case:
 
--- Shinkiro-style workspace cycling on current monitor
-o.bind("SUPER + CTRL + LEFT",  "Previous workspace (current monitor)", hl.dsp.workspace({ workspace = "m-1" }))
-o.bind("SUPER + CTRL + RIGHT", "Next workspace (current monitor)",     hl.dsp.workspace({ workspace = "m+1" }))
+```conf
+# Remove Omarchy's group-nav on these chords first
+unbind = SUPER CTRL, LEFT
+unbind = SUPER CTRL, RIGHT
+
+# Shinkiro-style workspace cycling on current monitor
+bindd = SUPER CTRL, LEFT,  Previous workspace (current monitor), workspace, m-1
+bindd = SUPER CTRL, RIGHT, Next workspace (current monitor),     workspace, m+1
 ```
 
-If you decide to make this a tracked dotfile, the cleanest spot is `lupus/hypr/bindings.lua` plus an ansible task that symlinks (or copies) it to `~/.config/hypr/bindings.lua`. Omarchy's post-update hook in `tasks/desktop.yml` already runs after updates — re-applying a symlinked file is automatic, but copying would need the hook to re-write it.
+After editing, validate with `hyprctl reload` then `hyprctl configerrors` (Hyprland auto-reloads on save, but this confirms it parsed cleanly).
