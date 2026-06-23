@@ -113,23 +113,46 @@
   loop: "{{ private_claude_agents.files | default([]) }}"
   when: private_claude_agents is succeeded
 
+# ~/.claude/CLAUDE.md is a generated wrapper (home-dir only, never committed) that
+# imports the public and private layers by reference. This keeps the committed public
+# CLAUDE.md a clean, self-contained ruleset, while letting both layers be live symlinks
+# so edits flow straight back to their repos without re-provisioning.
 - name: Check if private Claude config exists
   stat:
     path: "{{ dotfiles_dir }}/private-config/claude/CLAUDE.private.md"
   register: claude_private_config
 
-- name: Assemble CLAUDE.md (public + private)
-  shell: >
-    cat "{{ dotfiles_dir }}/common/claude/CLAUDE.md"
-    "{{ dotfiles_dir }}/private-config/claude/CLAUDE.private.md"
-    > "{{ target_home }}/.claude/CLAUDE.md"
+- name: Symlink public Claude rules layer
+  file:
+    src: "{{ dotfiles_dir }}/common/claude/CLAUDE.md"
+    dest: "{{ target_home }}/.claude/CLAUDE.public.md"
+    state: link
+    force: yes
+    owner: "{{ target_user }}"
+    group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+
+- name: Symlink private Claude rules layer
+  file:
+    src: "{{ dotfiles_dir }}/private-config/claude/CLAUDE.private.md"
+    dest: "{{ target_home }}/.claude/CLAUDE.private.md"
+    state: link
+    force: yes
+    owner: "{{ target_user }}"
+    group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
   when: claude_private_config.stat.exists
 
-- name: Copy CLAUDE.md (public only)
+- name: Remove stale private Claude rules symlink when absent
+  file:
+    path: "{{ target_home }}/.claude/CLAUDE.private.md"
+    state: absent
+  when: not claude_private_config.stat.exists
+
+- name: Generate ~/.claude/CLAUDE.md wrapper (imports public + optional private)
   copy:
-    src: "{{ dotfiles_dir }}/common/claude/CLAUDE.md"
     dest: "{{ target_home }}/.claude/CLAUDE.md"
+    content: |-
+      @~/.claude/CLAUDE.public.md
+      {{ '@~/.claude/CLAUDE.private.md' if claude_private_config.stat.exists else '' }}
     owner: "{{ target_user }}"
     group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
     mode: '0644'
-  when: not claude_private_config.stat.exists
