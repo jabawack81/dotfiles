@@ -10,6 +10,7 @@ description: >-
   review this", "run the review workflow", "tear this apart", "review until it
   converges", or when an artifact's numbers/claims may be wrong or stale and the
   user will act on them. Domain-specialized variants can delegate their loop here.
+argument-hint: "[file/dir/diff path or plain-language description of what to review]"
 ---
 
 # Adversarial Review — Iterative, Until Converged
@@ -29,6 +30,16 @@ spot-check, or recommendations the user will act on. **Don't** bother for short
 ideas, journals, status notes, or anything where being wrong costs nothing.
 
 ## Step 0 — Establish the target (ask only if ambiguous)
+
+If the skill was invoked with an argument, **that argument is your target**: $ARGUMENTS
+
+- Use it directly — don't ask what to review. It may be a **path** (file, dir, or
+  diff ref like `HEAD~3..HEAD`) or a **plain-language description** ("the auth
+  module", "last night's migration"); resolve a description to the concrete
+  file(s) / diff / live source before snapshotting.
+- If the argument line above is blank (skill triggered by phrasing rather than a
+  typed `/adversarial-review <target>`), fall back to detecting or confirming the
+  target as below.
 
 Adapt the loop to what's being reviewed. Detect or confirm:
 
