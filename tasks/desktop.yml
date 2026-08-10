@@ -283,25 +283,7 @@
 
 - name: Configure monitor for lupus (1080p laptop screen)
   copy:
-    content: |
-      # Lupus monitor config (ThinkPad T470p - 14" 1920x1080)
-      # Managed by dotfiles playbook - re-applied via omarchy post-update hook
-
-      env = GDK_SCALE,1
-      # Default for any monitor: use preferred mode (EDID default, usually 60Hz native)
-      # Avoid `highres` which picks 4K@30Hz on the dock's BenQ EL2870U — too much for 940MX
-      monitor=,preferred,auto,1
-      # Dock monitors (BenQ EL2870U): force 1920x1080@60Hz, NVIDIA 940MX can't handle 4K smoothly
-      monitor=DP-4,1920x1080@60,auto,1
-      monitor=DP-5,1920x1080@60,auto,1
-
-      # Lid closed: disable laptop screen and fingerprint sensor
-      bindl=,switch:on:Lid Switch,exec,hyprctl keyword monitor "eDP-1, disable" && sudo -n systemctl stop open-fprintd.service
-      # Lid opened: re-enable laptop screen and fingerprint sensor
-      bindl=,switch:off:Lid Switch,exec,hyprctl keyword monitor "eDP-1, preferred, auto, 1" && sudo -n systemctl start open-fprintd.service
-
-      # Apply current lid state on startup (lid switch only fires on transitions, not on initial state)
-      exec-once = ~/dotfiles/lupus/hypr/lid-state-init.sh
+    src: "{{ dotfiles_dir }}/lupus/hypr/monitors.conf"
     dest: "{{ config_dir }}/hypr/monitors.conf"
     mode: '0644'
     owner: "{{ target_user }}"
@@ -338,41 +320,43 @@
       debug:
         msg: "{{ waybar_apply_result.stdout }}"
 
-    - name: Ensure omarchy hooks directory exists
+    - name: Ensure omarchy hooks directories exist
       file:
-        path: "{{ config_dir }}/omarchy/hooks"
+        path: "{{ config_dir }}/omarchy/hooks/{{ item }}"
         state: directory
         mode: '0755'
         owner: "{{ target_user }}"
         group: "{{ target_user }}"
+      loop:
+        - ""
+        - post-boot.d
 
-    - name: Install omarchy post-update hook
+    - name: Install omarchy recovery hooks (re-apply lupus customizations)
       copy:
         content: |
           #!/bin/bash
-          # Re-apply lupus customizations after Omarchy updates.
-          # Omarchy migrations may reset configs, so we re-apply our patches.
+          # Re-apply lupus customizations after Omarchy {{ item.when }}.
+          # Omarchy migrations/updates can reset configs, so we restore our patches.
 
           DOTFILES_DIR="{{ dotfiles_dir }}"
-          MONITORS_CONF="$HOME/.config/hypr/monitors.conf"
 
-          # Re-apply monitor config (1080p, scale 1)
-          echo "Running post-update hook: re-applying lupus monitor config..."
-          printf '%s\n' \
-            '# Lupus monitor config (ThinkPad T470p - 14" 1920x1080)' \
-            '# Managed by dotfiles playbook - re-applied via omarchy post-update hook' \
-            '' \
-            'env = GDK_SCALE,1' \
-            'monitor=,highres,auto,1' \
-            > "$MONITORS_CONF"
+          # Re-apply monitor config from the single tracked source
+          echo "Re-applying lupus monitor config..."
+          cp "$DOTFILES_DIR/lupus/hypr/monitors.conf" "$HOME/.config/hypr/monitors.conf"
 
           # Re-apply waybar customizations
-          echo "Running post-update hook: re-applying lupus waybar customizations..."
+          echo "Re-applying lupus waybar customizations..."
           "$DOTFILES_DIR/lupus/waybar/apply-customizations.sh"
-        dest: "{{ config_dir }}/omarchy/hooks/post-update"
+        dest: "{{ config_dir }}/omarchy/hooks/{{ item.dest }}"
         mode: '0755'
         owner: "{{ target_user }}"
         group: "{{ target_user }}"
+      loop:
+        # post-update: runs during `omarchy update` (after migrations).
+        # post-boot.d/: runs on every login as a safety net if an update was
+        # interrupted or the post-update hook failed.
+        - { dest: 'post-update', when: 'updates' }
+        - { dest: 'post-boot.d/lupus-waybar', when: 'boot' }
   when: hostname == 'lupus'
 
 - name: Setup bedtime reminder system

@@ -12,6 +12,16 @@ DOTFILES_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 export LUPUS_WAYBAR="$DOTFILES_DIR/lupus/waybar"
 WAYBAR_CONFIG="$HOME/.config/waybar/config.jsonc"
 WAYBAR_STYLE="$HOME/.config/waybar/style.css"
+LOGFILE="$HOME/.local/state/lupus-waybar.log"
+mkdir -p "$(dirname "$LOGFILE")"
+
+# Surface a problem loudly: log it and (if a session is available) notify.
+warn_loudly() {
+  local msg="$1"
+  echo "  WARNING: $msg"
+  echo "$(date '+%F %T') $msg" >> "$LOGFILE"
+  command -v notify-send >/dev/null 2>&1 && notify-send -u critical "Waybar customization" "$msg" || true
+}
 
 echo "Applying lupus waybar customizations..."
 
@@ -45,7 +55,10 @@ fi
 # --- 2. Patch waybar config.jsonc using Python (safe JSON manipulation) ---
 # This avoids fragile sed patterns that can corrupt JSON by matching
 # module definition keys instead of array entries.
-python3 << 'PYEOF'
+# Exit status 3 means an anchor was missing and a module had to be appended
+# as a fallback (the caller surfaces this loudly).
+PATCH_STATUS=0
+python3 << 'PYEOF' || PATCH_STATUS=$?
 import json
 import sys
 import os
@@ -93,54 +106,31 @@ else:
 
 # Modify modules-right
 modules_right = config.get("modules-right", [])
+warnings = []
 
-# Add custom/caffeine after group/tray-expander
-if "custom/caffeine" not in modules_right:
+def ensure_module(name, anchor, offset):
+    """Place `name` relative to `anchor` (offset 0 = before, 1 = after).
+    If the anchor is missing (Omarchy reshuffled its default bar), append at
+    the end so the module is never silently dropped, and record a warning so
+    the caller can flag that the anchors need updating."""
+    global changed
+    if name in modules_right:
+        print(f"  {name} already in modules-right")
+        return
+    changed = True
     try:
-        idx = modules_right.index("group/tray-expander")
-        modules_right.insert(idx + 1, "custom/caffeine")
-        changed = True
-        print("  Added custom/caffeine to modules-right")
+        idx = modules_right.index(anchor)
+        modules_right.insert(idx + offset, name)
+        print(f"  Added {name} to modules-right (near {anchor})")
     except ValueError:
-        print("  WARNING: group/tray-expander not found in modules-right")
-else:
-    print("  custom/caffeine already in modules-right")
+        modules_right.append(name)
+        warnings.append(f"anchor '{anchor}' missing for {name}; appended at end as fallback")
+        print(f"  WARNING: anchor '{anchor}' missing for {name}; appended at end")
 
-# Add custom/gpu before cpu
-if "custom/gpu" not in modules_right:
-    try:
-        idx = modules_right.index("cpu")
-        modules_right.insert(idx, "custom/gpu")
-        changed = True
-        print("  Added custom/gpu to modules-right")
-    except ValueError:
-        print("  WARNING: cpu not found in modules-right")
-else:
-    print("  custom/gpu already in modules-right")
-
-# Add custom/fan after custom/gpu
-if "custom/fan" not in modules_right:
-    try:
-        idx = modules_right.index("custom/gpu")
-        modules_right.insert(idx + 1, "custom/fan")
-        changed = True
-        print("  Added custom/fan to modules-right")
-    except ValueError:
-        print("  WARNING: custom/gpu not found in modules-right")
-else:
-    print("  custom/fan already in modules-right")
-
-# Add memory after cpu
-if "memory" not in modules_right:
-    try:
-        idx = modules_right.index("cpu")
-        modules_right.insert(idx + 1, "memory")
-        changed = True
-        print("  Added memory to modules-right")
-    except ValueError:
-        print("  WARNING: cpu not found in modules-right")
-else:
-    print("  memory already in modules-right")
+ensure_module("custom/caffeine", "group/tray-expander", 1)
+ensure_module("custom/gpu", "cpu", 0)
+ensure_module("custom/fan", "custom/gpu", 1)  # depends on gpu, inserted above
+ensure_module("memory", "cpu", 1)
 
 config["modules-right"] = modules_right
 
@@ -151,7 +141,19 @@ if changed:
     print("  Config written successfully")
 else:
     print("  No config changes needed")
+
+# Signal the shell wrapper that anchors drifted so it can alert loudly.
+if warnings:
+    sys.exit(3)
 PYEOF
+
+# If patching had to fall back (anchors changed in Omarchy's default bar),
+# the modules are still present but possibly mis-ordered — make it visible.
+if [ "$PATCH_STATUS" -eq 3 ]; then
+  warn_loudly "Omarchy's default waybar layout changed; lupus modules were appended as a fallback. Update the anchors in apply-customizations.sh."
+elif [ "$PATCH_STATUS" -ne 0 ]; then
+  warn_loudly "waybar config patching failed (status $PATCH_STATUS) — see $WAYBAR_CONFIG"
+fi
 
 # --- 3. Add custom CSS import if missing ---
 IMPORT_LINE="@import \"$LUPUS_WAYBAR/custom-style.css\";"

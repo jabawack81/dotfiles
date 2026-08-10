@@ -61,6 +61,18 @@
   become: "{{ running_as_root }}"
   become_user: "{{ target_user if running_as_root else omit }}"
 
+- name: Remove stale oh-my-zsh custom symlinks (renamed/split away)
+  file:
+    path: "{{ oh_my_zsh_dir }}/custom/{{ item }}"
+    state: absent
+  with_items:
+    # utils.zsh was split into single-concern files; a dangling symlink here
+    # makes oh-my-zsh error on every shell start.
+    - utils.zsh
+  when: oh_my_zsh_installed.stat.exists
+  become: "{{ running_as_root }}"
+  become_user: "{{ target_user if running_as_root else omit }}"
+
 - name: Link oh-my-zsh custom files
   file:
     src: "{{ dotfiles_dir }}/common/.oh-my-zsh/custom/{{ item }}"
