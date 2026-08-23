@@ -287,6 +287,41 @@ upgrade time.
 Note that rebuilding a `-git` package pulls the latest upstream source, so
 expect possible QML churn in `~/.config/quickshell`.
 
+### "Sorry, try again" / every task fails after the first few
+
+Your password is probably fine — the account is locked. `pam_faillock` denies
+after 3 failed sudo attempts (`unlock_time=600`), and once locked it rejects
+the *correct* password too, so Ansible reports `Duplicate become password
+prompt` and then `Timed out waiting for become success` on every later task.
+
+```bash
+faillock --user "$USER"          # entries marked V are still counting
+sudo faillock --user "$USER" --reset
+```
+
+Check with `sudo -v` before a `-K` run: it fails in a second and tells you
+whether the problem is the password or a lockout, instead of burying it under
+a cascade of unrelated "unreachable" errors.
+
+What used to trip this was the AUR task itself. yay cannot run as root, so it
+escalates via its own `sudo`; with no tty and no askpass, each package in the
+loop burned an attempt and locked the account by the third one. That task now
+hands sudo a real askpass — see below.
+
+### AUR packages did not install but the task said "changed"
+
+Fixed, but worth knowing the shape. The task used to end in `|| true` with the
+`shell` module, which always reports `changed`, so a run that installed
+nothing looked completely successful. Cross-check against `/var/log/pacman.log`
+if you are ever unsure whether an install really happened.
+
+It now queries `pacman -Qq` first and only acts on genuinely missing packages,
+so `changed` means something was installed. A failed build is `ignore_errors`,
+which still shows in the recap as `ignored=N` rather than disappearing.
+
+Without a become password (no `-K`, no NOPASSWD) it prints the `yay -S ...`
+command to run by hand instead of pretending to have done the work.
+
 ### Permissions issues
 - The playbook uses `become: yes` for system-level tasks
 - User-level tasks run without sudo

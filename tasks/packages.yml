@@ -98,16 +98,85 @@
     - is_personal_machine
     - not is_omarchy_machine
 
+# yay refuses to run as root, so it escalates on its own via sudo. Running as a
+# normal user under Ansible there is no tty for sudo to prompt on, and every
+# failed attempt counts toward pam_faillock (deny=3) — which locked the account
+# partway through the run and failed every become task after it. The old task
+# also ended in `|| true`, so it reported "changed" for all ten packages while
+# installing nothing.
+#
+# So: work out what is actually missing, hand sudo a working askpass, and let a
+# genuine build failure be visible.
 - name: Install AUR packages with yay
-  shell: |
-    export SUDO_ASKPASS=/usr/bin/false
-    yay -S --noconfirm --norebuild --noredownload {{ item }} || true
-  loop: "{{ aur_packages }}"
   when:
     - is_personal_machine
     - not is_omarchy_machine
-  become: "{{ running_as_root }}"
-  become_user: "{{ target_user if running_as_root else omit }}"
+  block:
+    - name: Check which AUR packages are already installed
+      command: pacman -Qq {{ item | quote }}
+      register: aur_query
+      loop: "{{ aur_packages }}"
+      changed_when: false
+      failed_when: false
+      check_mode: no
+
+    - name: Collect the missing AUR packages
+      set_fact:
+        aur_missing: "{{ aur_query.results | selectattr('rc', 'ne', 0) | map(attribute='item') | list }}"
+
+    # When running as root a temporary NOPASSWD sudoers drop-in is already in
+    # place (see above), so no askpass is needed. Otherwise we need the become
+    # password Ansible collected with -K.
+    - name: Decide how yay should authenticate
+      set_fact:
+        yay_askpass: "{{ (ansible_facts['env']['XDG_RUNTIME_DIR'] | default('/tmp')) ~ '/ansible-yay-askpass' }}"
+        yay_can_escalate: "{{ running_as_root or (ansible_become_password | default('')) | length > 0 }}"
+
+    - name: Report AUR packages that need installing by hand
+      debug:
+        msg: >-
+          {{ aur_missing | length }} AUR package(s) missing and no become password
+          is available, so they were not installed: {{ aur_missing | join(', ') }}.
+          Install them with: yay -S {{ aur_missing | join(' ') }}
+      when:
+        - aur_missing | length > 0
+        - not yay_can_escalate
+
+    - name: Install missing AUR packages
+      when:
+        - aur_missing | length > 0
+        - yay_can_escalate
+      block:
+        - name: Create askpass helper for yay
+          copy:
+            dest: "{{ yay_askpass }}"
+            mode: '0700'
+            content: |
+              #!/bin/sh
+              printf '%s\n' {{ (ansible_become_password | default('')) | quote }}
+          no_log: true
+          when: not running_as_root
+
+        - name: Install AUR packages with yay
+          command: >-
+            yay -S --noconfirm --norebuild --noredownload
+            {{ '--sudoflags -A' if not running_as_root else '' }}
+            -- {{ item | quote }}
+          environment:
+            SUDO_ASKPASS: "{{ yay_askpass }}"
+          loop: "{{ aur_missing }}"
+          become: "{{ running_as_root }}"
+          become_user: "{{ target_user if running_as_root else omit }}"
+          register: yay_install
+          # A single flaky AUR build should not abort the whole playbook, but
+          # unlike `|| true` this still shows up in the recap as ignored.
+          ignore_errors: yes
+      always:
+        - name: Remove the yay askpass helper
+          file:
+            path: "{{ yay_askpass }}"
+            state: absent
+          when: not running_as_root
 
 - name: Remove temporary sudo configuration
   file:
