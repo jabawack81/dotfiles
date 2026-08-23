@@ -6,14 +6,18 @@
 
 This guide explains every configuration option in your Hyprland setup, what it does, and how to modify it.
 
-> **Format note.** Since Hyprland 0.56 the live configs are Lua
+> **Format note.** Since Hyprland 0.56 the configs are Lua
 > (`common/hypr/common.lua`, `<host>/hypr/hyprland.lua`). The hyprlang `.conf`
-> files are kept only as a rollback and stop working in Hyprland 0.57.
+> files are gone — support for them is removed in Hyprland 0.57.
 >
 > The *settings* documented below — what each option means and what values it
-> takes — are unchanged. Only the syntax and the quoted line numbers refer to
-> the legacy `.conf` files. See the mapping table in the
-> [Lua migration](#lua-migration) section at the end.
+> takes — are unchanged; only the syntax differs. Some code samples further
+> down are still written in the old `.conf` syntax. Read them for the values,
+> and use the [Lua migration](#lua-migration) mapping tables at the end to
+> translate the form.
+>
+> `hyprlock`, `hypridle` and `hyprpaper` are separate programs and still use
+> hyprlang, so their `.conf` files are unaffected.
 
 ---
 
@@ -36,7 +40,7 @@ This guide explains every configuration option in your Hyprland setup, what it d
 
 ## Program Variables
 
-**File:** `common.conf` (Lines 7-11)
+**File:** `common/hypr/common.lua` — MY PROGRAMS
 
 Variables let you define programs once and reuse them throughout the config. This makes it easy to swap applications.
 
@@ -66,7 +70,7 @@ $terminal = alacritty    # Instead of ghostty
 
 ## Environment Variables
 
-**File:** `common.conf` (Lines 17-18)
+**File:** `common/hypr/common.lua` — ENVIRONMENT VARIABLES
 
 Environment variables control system-wide settings that affect how Hyprland and applications interact.
 
@@ -94,7 +98,7 @@ env = HYPRCURSOR_SIZE,24
 
 ## General Settings
 
-**File:** `common.conf` (Lines 25-42)
+**File:** `common/hypr/common.lua` — LOOK AND FEEL (`general`)
 
 The `general` block controls fundamental window behavior and visual layout.
 
@@ -245,7 +249,7 @@ Original:        After Split:
 
 ## Decoration & Visual Effects
 
-**File:** `common.conf` (Lines 45-68)
+**File:** `common/hypr/common.lua` — LOOK AND FEEL (`decoration`)
 
 The `decoration` block controls how windows look - corners, shadows, transparency, and blur.
 
@@ -379,7 +383,7 @@ blur {
 
 ## Animations
 
-**File:** `common.conf` (Lines 71-98)
+**File:** `common/hypr/common.lua` — `hl.curve` / `hl.animation` calls
 
 Animations control how visual elements move and transition. They make the UI feel responsive.
 
@@ -506,7 +510,7 @@ animation = workspacesOut, 1, 1.94, almostLinear, fade
 
 ## Layout Management
 
-**File:** `common.conf` (Lines 101-109)
+**File:** `common/hypr/common.lua` — LOOK AND FEEL (`dwindle`, `master`)
 
 ### Dwindle Layout
 
@@ -562,7 +566,7 @@ master {
 
 ## Input Configuration
 
-**File:** `common.conf` (Lines 122-136)
+**File:** `common/hypr/common.lua` — INPUT
 
 Controls how Hyprland responds to keyboard and mouse input.
 
@@ -637,7 +641,7 @@ touchpad {
 
 ## Keybindings
 
-**File:** `common.conf` (Lines 143-214)
+**File:** `common/hypr/common.lua` — KEYBINDINGS
 
 Keybindings control all keyboard shortcuts. Format: `bind = MODIFIERS, KEY, action, param`
 
@@ -840,7 +844,7 @@ bindl = , XF86AudioStop, exec, playerctl stop              # Media Stop (desktop
 
 ## Window Rules
 
-**File:** `common.conf` (Lines 227-243)
+**File:** `common/hypr/common.lua` — WINDOWS AND WORKSPACES
 
 Window rules apply behavior to windows matching specific patterns.
 
@@ -904,7 +908,7 @@ windowrule {
 
 ## Monitor Configuration
 
-**File:** `hyprland.conf` (Lines 12-13)
+**File:** `shinkiro/hypr/hyprland.lua` — MONITORS
 
 Configure multiple displays and their layout.
 
@@ -990,7 +994,7 @@ monitor = DP-1, 3840x2160@30, 0x0, 1.5
 
 ## Autostart Programs
 
-**File:** `hyprland.conf` (Lines 20)
+**File:** `shinkiro/hypr/hyprland.lua` — AUTOSTART
 
 Programs that launch automatically when Hyprland starts.
 
@@ -1436,19 +1440,19 @@ animation = global, 1, 2, linear
 
 ## Lua migration
 
-Hyprland 0.56 replaced the hyprlang `.conf` format with Lua. Hyprland loads
-`~/.config/hypr/hyprland.lua` in preference to `hyprland.conf`, so both can sit
-side by side; deleting or renaming the `.lua` file rolls back to the old one.
-Support for `.conf` is removed in 0.57.
+Hyprland 0.56 replaced the hyprlang `.conf` format with Lua, and 0.57 removes
+`.conf` support entirely. Hyprland loads `~/.config/hypr/hyprland.lua` in
+preference to `hyprland.conf` when both exist, which made the switch reversible
+while it was being verified; the `.conf` files have since been deleted.
 
 Files in this repo:
 
-| Machine  | Lua config                                            | Legacy `.conf` (rollback only)                |
-|----------|-------------------------------------------------------|-----------------------------------------------|
-| shared   | `common/hypr/common.lua`                              | `common/hypr/common.conf`                     |
-| shinkiro | `shinkiro/hypr/hyprland.lua`                          | `shinkiro/hypr/hyprland.conf`                 |
-| kyrios   | `kyrios/hypr/hyprland.lua`                            | `kyrios/hypr/hyprland.conf`                   |
-| lupus    | not converted — Omarchy still ships a hyprlang config | `lupus/hypr/{monitors,bindings,windows}.conf` |
+| Machine  | Config                                                                                     |
+|----------|--------------------------------------------------------------------------------------------|
+| shared   | `common/hypr/common.lua` — returns a table so host configs can override binds              |
+| shinkiro | `shinkiro/hypr/hyprland.lua`                                                               |
+| kyrios   | `kyrios/hypr/hyprland.lua`                                                                 |
+| lupus    | still hyprlang: `lupus/hypr/{monitors,bindings,windows}.conf`, sourced by Omarchy's config |
 
 Syntax mapping for everything used here:
 
