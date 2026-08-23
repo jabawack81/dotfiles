@@ -1,6 +1,8 @@
 -- Kyrios (Laptop) specific Hyprland configuration
 
-require("~/.config/hypr_common/common")
+local common  = require("~/.config/hypr_common/common")
+local mainMod = common.mainMod
+local D       = common.D
 
 ------------------
 ---- MONITORS ----
@@ -31,3 +33,11 @@ hl.device({
     name        = "epic-mouse-v1",
     sensitivity = -0.5,
 })
+
+---------------------
+---- KEYBINDINGS ----
+---------------------
+
+-- Super+N is bound per machine rather than in common.lua; this is the plain
+-- single-monitor behaviour. See the note in common.lua for why.
+hl.bind(mainMod .. " + N", hl.dsp.focus({ workspace = "emptym" }), D "New workspace (monitor)")

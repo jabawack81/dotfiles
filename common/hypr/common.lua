@@ -207,9 +207,12 @@ hl.bind(mainMod .. " + bracketright",         hl.dsp.window.resize({ x = 40,  y 
 hl.bind(mainMod .. " + SHIFT + bracketleft",  hl.dsp.window.resize({ x = 0,   y = -40, relative = true }), { repeating = true, description = "Shrink window vertically" })
 hl.bind(mainMod .. " + SHIFT + bracketright", hl.dsp.window.resize({ x = 0,   y = 40,  relative = true }), { repeating = true, description = "Grow window vertically" })
 
--- New empty workspace on the current monitor.
--- shinkiro replaces this with a parity-aware script; see its hyprland.lua.
-M.newWorkspaceBind = hl.bind(mainMod .. " + N", hl.dsp.focus({ workspace = "emptym" }), D "New workspace (monitor)")
+-- Super+N (new empty workspace) is bound per machine, not here.
+--
+-- It used to be bound centrally and then unbound + replaced by shinkiro. That
+-- registered fine (hyprctl binds showed exactly one Super+N with the right
+-- description) but the key did nothing when pressed, and it was the only bind
+-- in this config built that way. Each host now binds it directly.
 
 -- Show keybinding cheat sheet (Super+K, aligned with Omarchy)
 hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("~/.config/hypr_common/show-keybinds.sh"), D "Show keybindings")

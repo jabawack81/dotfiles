@@ -55,9 +55,9 @@ hl.env("QT_QPA_PLATFORMTHEME", "qt5ct") -- change to qt6ct if you have that
 hl.bind(mainMod .. " + CTRL + SHIFT + right", hl.dsp.exec_cmd("~/.config/hypr/move-window-on-monitor.sh next"), D "Move window to next workspace (monitor)")
 hl.bind(mainMod .. " + CTRL + SHIFT + left",  hl.dsp.exec_cmd("~/.config/hypr/move-window-on-monitor.sh prev"), D "Move window to prev workspace (monitor)")
 
--- Override the common Super+N: pick the next free workspace with the correct
--- parity for the current monitor.
-common.newWorkspaceBind:unbind()
+-- Super+N: next free workspace with the correct parity for the focused
+-- monitor (odd on DP-2, even on DP-3). Bound here rather than overriding a
+-- shared bind — see the note in common.lua.
 hl.bind(mainMod .. " + N", hl.dsp.exec_cmd("~/.config/hypr/new-workspace-on-monitor.sh"), D "New workspace (monitor, parity-aware)")
 
 ------------------------------
