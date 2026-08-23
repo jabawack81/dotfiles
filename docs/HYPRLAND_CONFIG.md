@@ -1,10 +1,19 @@
 # Hyprland Complete Configuration Guide
 
 **System:** Shinkiro (Desktop PC)  
-**Hyprland Version:** v3  
-**Last Updated:** January 2026
+**Hyprland Version:** 0.56  
+**Last Updated:** August 2026
 
 This guide explains every configuration option in your Hyprland setup, what it does, and how to modify it.
+
+> **Format note.** Since Hyprland 0.56 the live configs are Lua
+> (`common/hypr/common.lua`, `<host>/hypr/hyprland.lua`). The hyprlang `.conf`
+> files are kept only as a rollback and stop working in Hyprland 0.57.
+>
+> The *settings* documented below — what each option means and what values it
+> takes — are unchanged. Only the syntax and the quoted line numbers refer to
+> the legacy `.conf` files. See the mapping table in the
+> [Lua migration](#lua-migration) section at the end.
 
 ---
 
@@ -1411,20 +1420,88 @@ animation = global, 1, 2, linear
 
 ### Most Important Keybindings
 
-| Combo | Action |
-|-------|--------|
-| Super+Q | Open Terminal |
-| Super+E | Open File Manager |
-| Super+R | Open App Launcher |
-| Super+C | Close Window |
-| Super+Arrow | Move Focus |
-| Super+1-9 | Switch Workspace |
-| Super+Shift+1-9 | Move to Workspace |
-| Super+V | Float/Tile |
-| Super+L | Lock Screen |
+| Combo           | Action            |
+|-----------------|-------------------|
+| Super+Return    | Open terminal     |
+| Super+Shift+F   | Open file manager |
+| Super+Space     | Open app launcher |
+| Super+W         | Close window      |
+| Super+Arrow     | Move focus        |
+| Super+1-9       | Switch workspace  |
+| Super+Shift+1-9 | Move to workspace |
+| Super+T         | Float/tile        |
+| Super+Ctrl+L    | Lock screen       |
 
 ---
 
-**Last Updated:** January 2026  
-**Hyprland Version:** v3  
+## Lua migration
+
+Hyprland 0.56 replaced the hyprlang `.conf` format with Lua. Hyprland loads
+`~/.config/hypr/hyprland.lua` in preference to `hyprland.conf`, so both can sit
+side by side; deleting or renaming the `.lua` file rolls back to the old one.
+Support for `.conf` is removed in 0.57.
+
+Files in this repo:
+
+| Machine  | Lua config                                            | Legacy `.conf` (rollback only)                |
+|----------|-------------------------------------------------------|-----------------------------------------------|
+| shared   | `common/hypr/common.lua`                              | `common/hypr/common.conf`                     |
+| shinkiro | `shinkiro/hypr/hyprland.lua`                          | `shinkiro/hypr/hyprland.conf`                 |
+| kyrios   | `kyrios/hypr/hyprland.lua`                            | `kyrios/hypr/hyprland.conf`                   |
+| lupus    | not converted — Omarchy still ships a hyprlang config | `lupus/hypr/{monitors,bindings,windows}.conf` |
+
+Syntax mapping for everything used here:
+
+| hyprlang `.conf`                             | Lua                                                                                     |
+|----------------------------------------------|-----------------------------------------------------------------------------------------|
+| `source = ~/.config/hypr_common/common.conf` | `require("~/.config/hypr_common/common")`                                               |
+| `$terminal = ghostty`                        | `local terminal = "ghostty"`                                                            |
+| `env = KEY,VAL`                              | `hl.env("KEY", "VAL")`                                                                  |
+| `general { gaps_in = 5 }`                    | `hl.config({ general = { gaps_in = 5 } })`                                              |
+| `col.active_border = A B 45deg`              | `col = { active_border = { colors = {"A","B"}, angle = 45 } }`                          |
+| `bezier = name,a,b,c,d`                      | `hl.curve("name", { type = "bezier", points = { {a,b}, {c,d} } })`                      |
+| `animation = leaf, 1, 4.79, curve`           | `hl.animation({ leaf = "leaf", enabled = true, speed = 4.79, bezier = "curve" })`       |
+| `monitor = DP-2, 3840x2160@60, 0x0, 1.5`     | `hl.monitor({ output = "DP-2", mode = "3840x2160@60", position = "0x0", scale = 1.5 })` |
+| `workspace = 1, monitor:DP-2`                | `hl.workspace_rule({ workspace = "1", monitor = "DP-2" })`                              |
+| `exec-once = foo`                            | `hl.on("hyprland.start", function() hl.exec_cmd("foo") end)`                            |
+| `exec = foo`                                 | `hl.exec_cmd("foo")` at the top level (re-runs on every reload)                         |
+| `device { name = x }`                        | `hl.device({ name = "x" })`                                                             |
+| `bind = SUPER, W, killactive`                | `hl.bind("SUPER + W", hl.dsp.window.close())`                                           |
+| `binde = ...` (repeat)                       | third arg `{ repeating = true }`                                                        |
+| `bindl = ...` (locked)                       | third arg `{ locked = true }`                                                           |
+| `bindel = ...`                               | third arg `{ locked = true, repeating = true }`                                         |
+| `bindm = ...` (mouse)                        | plain `hl.bind` with a `mouse:272` key                                                  |
+| `bindd = MOD, K, Description, dispatch`      | third arg `{ description = "Description" }`                                             |
+| `unbind = SUPER, N`                          | `hl.unbind("SUPER + N")`, or `handle:unbind()` on the value `hl.bind` returned          |
+| `windowrule = match:class X, float = on`     | `hl.window_rule({ match = { class = "X" }, float = true })`                             |
+
+Dispatcher mapping for everything used here:
+
+| Dispatcher                         | Lua                                                               |
+|------------------------------------|-------------------------------------------------------------------|
+| `exec, cmd`                        | `hl.dsp.exec_cmd("cmd")`                                          |
+| `killactive`                       | `hl.dsp.window.close()`                                           |
+| `exit`                             | `hl.dsp.exit()`                                                   |
+| `pseudo`                           | `hl.dsp.window.pseudo()`                                          |
+| `togglefloating`                   | `hl.dsp.window.float({ action = "toggle" })`                      |
+| `layoutmsg, togglesplit`           | `hl.dsp.layout("togglesplit")`                                    |
+| `movefocus, l`                     | `hl.dsp.focus({ direction = "left" })`                            |
+| `workspace, 3` / `e+1` / `emptym`  | `hl.dsp.focus({ workspace = 3 })` (any selector string works)     |
+| `movetoworkspace, 3`               | `hl.dsp.window.move({ workspace = 3 })`                           |
+| `movetoworkspacesilent, special:x` | `hl.dsp.window.move({ workspace = "special:x", follow = false })` |
+| `togglespecialworkspace, magic`    | `hl.dsp.workspace.toggle_special("magic")`                        |
+| `movecurrentworkspacetomonitor, l` | `hl.dsp.workspace.move({ monitor = "l" })`                        |
+| `resizeactive, -40 0`              | `hl.dsp.window.resize({ x = -40, y = 0, relative = true })`       |
+| `movewindow` (mouse)               | `hl.dsp.window.drag()`                                            |
+| `resizewindow` (mouse)             | `hl.dsp.window.resize()`                                          |
+| `global, quickshell:omni`          | `hl.dsp.global("quickshell:omni")`                                |
+
+Reference material shipped with the package: `/usr/share/hypr/hyprland.lua`
+(annotated example) and `/usr/share/hypr/stubs/hl.meta.lua` (LSP type stubs —
+point `lua_ls` at it for completion on the `hl` API).
+
+---
+
+**Last Updated:** August 2026  
+**Hyprland Version:** 0.56  
 **System:** Shinkiro (Dual 4K, AMD)

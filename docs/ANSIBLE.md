@@ -131,7 +131,7 @@ dotfiles/
 
 ### Hyprland Configuration
 - Machine-specific configs source the common configuration
-- Uses absolute paths (~/.config/hypr/common.conf) for reliability
+- Uses absolute paths (~/.config/hypr_common/common.lua) for reliability
 
 ### Waybar Configuration
 - Modular design with common base and machine-specific overrides
@@ -260,7 +260,7 @@ ansible-playbook setup-dotfiles.yml
 ## Troubleshooting
 
 ### Hyprland hotkeys not working
-- Check that hyprland.conf properly sources common.conf
+- Check that hyprland.lua properly requires common.lua
 - Verify symlinks: `ls -la ~/.config/hypr/`
 
 ### Waybar not starting

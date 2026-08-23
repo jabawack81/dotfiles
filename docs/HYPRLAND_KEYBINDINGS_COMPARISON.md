@@ -2,10 +2,10 @@
 
 Side-by-side comparison of Hyprland keybindings between the two machines, so you can decide what to align.
 
-| Machine  | Config source                                                        |
-|----------|----------------------------------------------------------------------|
-| Shinkiro | This repo: `common/hypr/common.conf` + `shinkiro/hypr/hyprland.conf` |
-| Lupus    | Omarchy defaults (`~/.local/share/omarchy/default/hypr/bindings/`)   |
+| Machine  | Config source                                                      |
+|----------|--------------------------------------------------------------------|
+| Shinkiro | This repo: `common/hypr/common.lua` + `shinkiro/hypr/hyprland.lua` |
+| Lupus    | Omarchy defaults (`~/.local/share/omarchy/default/hypr/bindings/`) |
 
 Omarchy bindings reflect the `basecamp/omarchy` repo (`dev` branch) at the time this doc was written. If your installed Omarchy version differs, verify with `omarchy-menu-keybindings` (Super + K).
 

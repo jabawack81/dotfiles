@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # Show all active Hyprland keybindings in fuzzel
-# Dynamically reads from hyprctl so new bindings are always picked up
+# Dynamically reads from hyprctl so new bindings are always picked up.
+#
+# Under the Lua config every bind reports dispatcher "__lua", so the label
+# comes from the bind's own description field. The dispatcher heuristics
+# below are the fallback for binds without one (plugins, Omarchy defaults,
+# and the legacy .conf files).
 
 decode_modmask() {
     local mask=$1
@@ -101,11 +106,14 @@ friendly_description() {
 }
 
 # Parse bindings from hyprctl and format them
-hyprctl binds -j | jq -r '.[] | "\(.modmask)|\(.key)|\(.dispatcher)|\(.arg)|\(.mouse)"' | while IFS='|' read -r modmask key dispatcher arg mouse; do
+hyprctl binds -j | jq -r '.[] | "\(.description)|\(.modmask)|\(.key)|\(.dispatcher)|\(.arg)|\(.mouse)"' | while IFS='|' read -r description modmask key dispatcher arg mouse; do
     mods=$(decode_modmask "$modmask")
     key=$(friendly_key "$key")
-    desc=$(friendly_description "$dispatcher" "$arg")
-
+    if [[ -n "$description" ]]; then
+        desc="$description"
+    else
+        desc=$(friendly_description "$dispatcher" "$arg")
+    fi
     if [[ -n "$mods" ]]; then
         combo="$mods + $key"
     else
