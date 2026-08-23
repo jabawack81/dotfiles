@@ -53,6 +53,18 @@ start_quickshell() {
     stop_dunst  # quickshell's NotificationServer takes over the D-Bus name
 
     local cmd; cmd=$(command -v qs || command -v quickshell)
+
+    # quickshell links Qt's *private* API, so a qt6 upgrade can leave it unable
+    # to resolve symbols. The respawn loop below can never fix that, and would
+    # burn five restarts and five notifications before giving up — so probe once
+    # up front (~30ms) and bail straight to waybar with the actual remedy.
+    local probe
+    if ! probe=$("$cmd" --version 2>&1) && [[ "$probe" == *"symbol lookup error"* ]]; then
+        notify-send -u critical "Bar launcher" \
+            "quickshell is ABI-broken against the installed Qt6 — rebuild with: yay -S --rebuild quickshell-git" 2>/dev/null || true
+        echo waybar > "$PREF_FILE"
+        start_waybar
+    fi
     local restarts=0 window_start
     window_start=$(date +%s)
 

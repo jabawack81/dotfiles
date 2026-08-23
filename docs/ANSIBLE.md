@@ -267,6 +267,26 @@ ansible-playbook setup-dotfiles.yml
 - Check the waybar-launcher.sh script is executable
 - Look for multiple waybar instances: `ps aux | grep waybar`
 
+### Bar reverted to waybar when it should be quickshell
+Almost always a Qt6 upgrade, not a Hyprland or config fault. `quickshell-git`
+links Qt's *private* API, which has no ABI guarantee, so a `qt6-base` or
+`qt6-declarative` bump can leave it unable to resolve symbols.
+
+```bash
+qs --version                      # "symbol lookup error" confirms it
+yay -S --rebuild quickshell-git   # the fix
+~/.config/scripts/bar-switch.sh quickshell
+```
+
+`bar-launcher.sh` probes for this at startup and falls back to waybar with a
+notification naming the fix, persisting `waybar` into `~/.cache/preferred-bar`
+— which is why the wrong bar sticks across reboots long after the upgrade that
+caused it. The `50-quickshell-qt6.hook` pacman hook also prints a banner at
+upgrade time.
+
+Note that rebuilding a `-git` package pulls the latest upstream source, so
+expect possible QML churn in `~/.config/quickshell`.
+
 ### Permissions issues
 - The playbook uses `become: yes` for system-level tasks
 - User-level tasks run without sudo

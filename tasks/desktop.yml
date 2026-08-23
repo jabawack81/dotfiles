@@ -588,3 +588,24 @@
         group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
         mode: '0644'
   when: hostname == 'kyrios'
+
+# quickshell-git links Qt's private API, so every qt6 upgrade can break it with
+# a symbol lookup error. The only visible symptom is the status bar quietly
+# falling back to waybar, often days later — these two make it loud instead.
+- name: Install quickshell Qt6 compatibility check script
+  copy:
+    src: "{{ dotfiles_dir }}/common/scripts/quickshell-qt6-check.sh"
+    dest: /usr/local/bin/quickshell-qt6-check
+    mode: '0755'
+    owner: root
+    group: root
+  become: "{{ not running_as_root }}"
+
+- name: Install pacman hook to flag quickshell breakage after Qt6 upgrades
+  copy:
+    src: "{{ dotfiles_dir }}/common/pacman-hooks/50-quickshell-qt6.hook"
+    dest: /etc/pacman.d/hooks/50-quickshell-qt6.hook
+    mode: '0644'
+    owner: root
+    group: root
+  become: "{{ not running_as_root }}"

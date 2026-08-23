@@ -1,0 +1,19 @@
+# quickshell-git links Qt's *private* API, which carries no ABI guarantee, so
+# every qt6 upgrade can break it with a symbol lookup error. quickshell ships
+# its own check hook, but its output scrolls past in a normal upgrade and the
+# only symptom hours later is the bar silently falling back to waybar.
+#
+# This hook makes the breakage impossible to miss and names the fix.
+# Managed by dotfiles: common/pacman-hooks/50-quickshell-qt6.hook
+
+[Trigger]
+Operation = Upgrade
+Type = Package
+Target = qt6-base
+Target = qt6-declarative
+Target = qt6-wayland
+
+[Action]
+Description = Checking quickshell against the new Qt6...
+When = PostTransaction
+Exec = /usr/local/bin/quickshell-qt6-check
