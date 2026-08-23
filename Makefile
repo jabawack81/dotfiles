@@ -40,6 +40,9 @@ menu:
 	@echo -e "  $(GREEN)make git-log$(RESET)         Show recent git commits"
 	@echo -e "  $(GREEN)make docs$(RESET)            Display documentation index"
 	@echo ""
+	@echo -e "$(BOLD)Security:$(RESET)"
+	@echo -e "  $(GREEN)make aur-check$(RESET)       Scan for AUR supply-chain compromise indicators"
+	@echo ""
 	@echo -e "$(BOLD)Maintenance:$(RESET)"
 	@echo -e "  $(GREEN)make update-nvim$(RESET)     Update neovim plugins"
 	@echo -e "  $(GREEN)make clean-nvim$(RESET)      Clean neovim (interactive options)"
@@ -87,6 +90,10 @@ install-deps:
 # STATUS & INFORMATION
 # ============================================================================
 
+aur-check:
+	@echo -e "$(BOLD)$(BLUE)Scanning for AUR supply-chain indicators...$(RESET)"
+	@$(DOTFILES_DIR)/common/scripts/aur-ioc-check.sh $(if $(LIST),--list $(LIST),)
+
 status:
 	@echo -e "$(BOLD)$(BLUE)════════════════════════════════════════════════════$(RESET)"
 	@echo -e "$(BOLD)Git Status:$(RESET)"
@@ -128,6 +135,9 @@ docs:
 	@echo ""
 	@echo -e "$(BOLD)Hyprland Configuration:$(RESET)"
 	@echo -e "  $(GREEN)docs/HYPRLAND_CONFIG.md$(RESET)     - Complete Hyprland settings guide"
+	@echo ""
+	@echo -e "$(BOLD)Security:$(RESET)"
+	@echo -e "  $(GREEN)docs/AUR_SUPPLY_CHAIN.md$(RESET)    - AUR compromise checks (make aur-check)"
 	@echo ""
 	@echo -e "$(BOLD)Project Information:$(RESET)"
 	@echo -e "  $(GREEN)docs/ARCHITECTURE.md$(RESET)        - Project architecture and design"

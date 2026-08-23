@@ -37,6 +37,12 @@ This will:
 - `make clean` - Remove old backups and cache
 - `make sync` - Pull latest changes from remote
 
+**Security** (via Makefile):
+- `make aur-check` - Scan for AUR supply-chain compromise indicators
+- `make aur-check LIST=names.txt` - Also match installed AUR packages against a name list
+
+See [docs/AUR_SUPPLY_CHAIN.md](docs/AUR_SUPPLY_CHAIN.md) for what it checks and why.
+
 **Publishing** (via Makefile):
 - `make push-changes` - Commit and push changes
 
