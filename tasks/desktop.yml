@@ -603,7 +603,7 @@
 
 - name: Install pacman hook to flag quickshell breakage after Qt6 upgrades
   copy:
-    src: "{{ dotfiles_dir }}/common/pacman-hooks/50-quickshell-qt6.hook"
+    src: "{{ dotfiles_dir }}/pacman-hooks/50-quickshell-qt6.hook"
     dest: /etc/pacman.d/hooks/50-quickshell-qt6.hook
     mode: '0644'
     owner: root
