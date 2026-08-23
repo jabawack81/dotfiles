@@ -66,6 +66,17 @@
     msg: "Found configs: {{ common_configs.files | map(attribute='path') | map('basename') | list }}"
   when: is_personal_machine
 
+# The four non-omarchy tasks below (stat -> backup -> remove -> symlink) must
+# share one exclusion list. They drifted once: 'git' was excluded from the
+# symlink step but not the removal step, so ~/.config/git was deleted on every
+# run and never recreated. Anything added to one list goes in all four.
+#
+# Why each is excluded: thunar/waybar/eww/hypr get bespoke symlink tasks in
+# desktop.yml; claude is built up file-by-file in claude.yml; bin holds the
+# eww binary, symlinked into ~/.local/bin by desktop.yml; wayland-sessions is
+# installed system-wide to /usr/share earlier in this file; git is wired up by
+# absolute path via core.excludesfile in devtools.yml, so it needs no
+# ~/.config entry at all.
 - name: Handle common configs with backup
   block:
     - name: Check existing configs (non-omarchy)
@@ -76,7 +87,7 @@
       when:
         - is_personal_machine
         - not is_omarchy_machine
-        - item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'claude']
+        - item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'git', 'claude', 'wayland-sessions']
 
     - name: Check existing configs (omarchy)
       stat:
@@ -96,7 +107,7 @@
         - item.stat is defined
         - item.stat.exists
         - not item.stat.islnk
-        - item.item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'claude']
+        - item.item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'git', 'claude', 'wayland-sessions']
       loop_control:
         label: "{{ item.item.path | basename }}"
 
@@ -123,7 +134,7 @@
         - item.stat is defined
         - item.stat.exists
         - not item.stat.islnk
-        - item.item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'claude', 'wayland-sessions']
+        - item.item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'git', 'claude', 'wayland-sessions']
       loop_control:
         label: "{{ item.item.path | basename }}"
 
@@ -153,7 +164,7 @@
       when:
         - is_personal_machine
         - not is_omarchy_machine
-        - item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'git', 'claude', 'wayland-sessions']  # handled separately
+        - item.path | basename not in ['thunar', 'waybar', 'eww', 'bin', 'hypr', 'git', 'claude', 'wayland-sessions']
 
     - name: Create symlinks for common configs (omarchy machine)
       file:
