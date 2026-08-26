@@ -1,5 +1,5 @@
 ---
-# Desktop environment — Hyprland, waybar, GTK, eww, bedtime, lupus/omarchy
+# Desktop environment — Hyprland, waybar, GTK, bedtime, lupus/omarchy
 
 - name: Setup Hyprland with clean symlink structure
   block:
@@ -422,39 +422,6 @@
           To enable bedtime timer, run as your user (not root):
           systemctl --user enable --now bedtime-reminder.timer
           {% endif %}
-  when:
-    - is_personal_machine
-    - not is_omarchy_machine
-
-- name: Setup eww widget system
-  block:
-    - name: Create local bin directory
-      file:
-        path: "{{ ansible_facts['env'].HOME }}/.local/bin"
-        state: directory
-        mode: '0755'
-
-    - name: Symlink eww binary
-      file:
-        src: "{{ dotfiles_dir }}/common/bin/eww"
-        dest: "{{ ansible_facts['env'].HOME }}/.local/bin/eww"
-        state: link
-        force: yes
-
-    - name: Create eww config directory
-      file:
-        path: "{{ config_dir }}/eww"
-        state: directory
-        mode: '0755'
-
-    - name: Symlink machine-specific eww files
-      file:
-        src: "{{ item }}"
-        dest: "{{ config_dir }}/eww/{{ item | basename }}"
-        state: link
-        force: yes
-      with_fileglob:
-        - "{{ dotfiles_dir }}/{{ hostname }}/eww/*"
   when:
     - is_personal_machine
     - not is_omarchy_machine

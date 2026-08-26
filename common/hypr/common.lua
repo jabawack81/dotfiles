@@ -272,18 +272,4 @@ hl.window_rule({
     no_focus = true,
 })
 
--- EWW window rules - keep dashboard windows as desktop widgets
-hl.window_rule({
-    name  = "eww_dashboard",
-    match = { class = "^(eww)$" },
-
-    float            = true,
-    no_focus         = true,
-    no_initial_focus = true,
-    border_size      = 0,
-    no_shadow        = true,
-    pin              = true,
-    no_anim          = true,
-})
-
 return M

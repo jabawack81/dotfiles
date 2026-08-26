@@ -87,7 +87,7 @@ git_user_email: "your.email@example.com"
 # SSH Signing Key
 ssh_signing_key: "ssh-ed25519 AAAAC3Nza..."
 
-# Weather API (optional, for eww widgets)
+# Weather API (optional)
 weather_api_key: "your_api_key"
 weather_city_id: "your_city_id"
 ```

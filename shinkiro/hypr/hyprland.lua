@@ -31,7 +31,7 @@ end
 
 hl.on("hyprland.start", function()
     hl.exec_cmd("systemctl --user start hyprpolkitagent")
-    hl.exec_cmd("~/.config/scripts/bar-launcher.sh & ~/.config/eww/eww-launcher.sh")
+    hl.exec_cmd("~/.config/scripts/bar-launcher.sh")
     hl.exec_cmd("hypridle")
     hl.exec_cmd("xhost +si:localuser:root")
     hl.exec_cmd("hyprpaper")

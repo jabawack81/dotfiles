@@ -125,7 +125,6 @@ Built-in diagnostic capabilities:
 - **Special configs**:
   - GPU temperature monitoring (AMD)
   - No battery module in waybar
-  - eww widgets configured for larger screen
   - Dual monitor workspace rules
 
 ### lupus (Laptop - Omarchy)
@@ -164,7 +163,7 @@ All TUI applications are configured with the Nord theme for visual consistency:
 Personal machines include:
 - **Hyprland**: Tiling compositor with modular machine-specific configs
 - **waybar**: Status bar with machine-specific modules (battery for laptop, GPU temp for desktop)
-- **eww**: Widget system with system monitoring, weather, and app launcher
+- **quickshell**: QML desktop shell — bar, notifications, OSD, workspace overview, omni menu
 - **hyprlauncher**: Application launcher (Hypr ecosystem) with dark theme via hyprtoolkit
 - **dunst**: Notification daemon with custom icons
 - **wlogout**: Session logout menu

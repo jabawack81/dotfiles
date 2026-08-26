@@ -84,7 +84,6 @@ Since the hostname determines the OS, the playbook only needs to check `is_perso
 | **Desktop Environment** |
 | hypr/ | ✅ | ❌ | ❌ | Hyprland compositor config |
 | waybar/ | ✅ | ❌ | ❌ | Status bar configuration |
-| eww/ | ✅ Machine-specific | ❌ | ❌ | Widget system (shinkiro/kyrios only) |
 | hyprtoolkit.conf | ✅ | ❌ | ❌ | Hypr ecosystem theming (in hypr/) |
 | dunst/ | ✅ | ❌ | ❌ | Notification daemon |
 | wlogout/ | ✅ | ❌ | ❌ | Logout menu |
@@ -112,7 +111,7 @@ dotfiles/
 ├── common/           # Shared configs for personal machines
 │   ├── hypr/
 │   ├── waybar/
-│   ├── eww/
+│   ├── quickshell/
 │   ├── btop/
 │   ├── ghostty/
 │   ├── nvim/
@@ -122,8 +121,7 @@ dotfiles/
 │   └── waybar/
 ├── shinkiro/        # Desktop-specific configs
 │   ├── hypr/
-│   ├── waybar/
-│   └── eww/
+│   └── waybar/
 └── setup-dotfiles.yml
 ```
 
@@ -137,10 +135,6 @@ dotfiles/
 - Modular design with common base and machine-specific overrides
 - Common modules shared between machines
 - Machine-specific configs for hardware differences
-
-### eww Widget System
-- Only configured on machines that have eww directories
-- Machine-specific configurations (not in common)
 
 ### macOS Compatibility
 The playbook automatically skips Linux-specific features on macOS:

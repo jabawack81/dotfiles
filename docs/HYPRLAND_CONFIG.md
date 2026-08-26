@@ -875,43 +875,6 @@ windowrule = match:class ^$, match:title ^$, match:xwayland true,
 - Not fullscreen (`false`)
 - Not pinned (`false`)
 
-### Rule 3: EWW Dashboard Widgets
-
-```conf
-windowrule {
-  name = eww_dashboard
-  match:class = ^(eww)$
-  float = on
-  no_focus = on
-  no_initial_focus = on
-  border_size = 0
-  no_shadow = on
-  pin = on
-  no_anim = on
-}
-```
-
-**What it does:** Configure EWW (widget system) windows as desktop widgets
-
-**Effects:**
-- `float = on` - Window floats above tiles
-- `no_focus = on` - Can't focus the widget
-- `no_initial_focus = on` - Never gets initial focus
-- `border_size = 0` - No border
-- `no_shadow = on` - No shadow
-- `pin = on` - Visible on all workspaces
-- `no_anim = on` - No opening animation
-
-**Result:** EWW widgets act like OS-level widgets (taskbar, widgets, etc.)
-
----
-
-## Monitor Configuration
-
-**File:** `shinkiro/hypr/hyprland.lua` — MONITORS
-
-Configure multiple displays and their layout.
-
 ### Monitor Setup
 
 ```conf
@@ -999,10 +962,10 @@ monitor = DP-1, 3840x2160@30, 0x0, 1.5
 Programs that launch automatically when Hyprland starts.
 
 ```conf
-exec-once = ~/.config/waybar/waybar-launcher.sh & dunst & ~/.config/eww/eww-launcher.sh
+exec-once = ~/.config/scripts/bar-launcher.sh
 ```
 
-**What it does:** Start three services on boot
+**What it does:** Start the status bar on boot
 
 **Components:**
 
@@ -1020,12 +983,6 @@ exec-once = ~/.config/waybar/waybar-launcher.sh & dunst & ~/.config/eww/eww-laun
    - Notification daemon
    - Displays desktop notifications
 
-3. **EWW Launcher**
-   ```bash
-   ~/.config/eww/eww-launcher.sh
-   ```
-   - Launches EWW widget system
-   - Shows widgets, weather, app launcher
 
 **Ampersand (&):**
 - Runs commands in background
