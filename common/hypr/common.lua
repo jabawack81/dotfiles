@@ -6,8 +6,8 @@
 -- Loaded by each machine's hyprland.lua via:
 --     local common = require("~/.config/hypr_common/common")
 --
--- The returned table exposes the program names and the keybind handles that
--- machine configs may want to override (see `hyprland.lua` on shinkiro).
+-- The returned table exposes the program names, the main modifier and the D()
+-- description helper, for machine configs to reuse.
 
 local M = {}
 
@@ -207,12 +207,10 @@ hl.bind(mainMod .. " + bracketright",         hl.dsp.window.resize({ x = 40,  y 
 hl.bind(mainMod .. " + SHIFT + bracketleft",  hl.dsp.window.resize({ x = 0,   y = -40, relative = true }), { repeating = true, description = "Shrink window vertically" })
 hl.bind(mainMod .. " + SHIFT + bracketright", hl.dsp.window.resize({ x = 0,   y = 40,  relative = true }), { repeating = true, description = "Grow window vertically" })
 
--- Super+N (new empty workspace) is bound per machine, not here.
---
--- It used to be bound centrally and then unbound + replaced by shinkiro. That
--- registered fine (hyprctl binds showed exactly one Super+N with the right
--- description) but the key did nothing when pressed, and it was the only bind
--- in this config built that way. Each host now binds it directly.
+-- Super+N (new empty workspace) is bound per machine, not here: shinkiro needs
+-- a parity-aware script for its odd/even dual-monitor split, kyrios just wants
+-- plain emptym. Binding it centrally and unbinding it per host also worked,
+-- but binding it directly in each host is simpler.
 
 -- Show keybinding cheat sheet (Super+K, aligned with Omarchy)
 hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("~/.config/hypr_common/show-keybinds.sh"), D "Show keybindings")
