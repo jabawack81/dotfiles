@@ -21,6 +21,25 @@ HOUR=$(date +%-H)
 
 # Calculate detailed severity for notifications
 # Based on base severity, add granularity
+# Flash the screen by pulsing inactive-window dimming.
+#
+# Hyprland 0.56 Lua configs reject `hyprctl keyword` outright ("keyword can't
+# work with non-legacy parsers"), and `hyprctl dispatch` now evaluates Lua, so
+# the old `dispatch exec "... hyprctl keyword ..."` form fails twice over. This
+# uses `hyprctl eval` with the Lua config API and backgrounds the loop directly
+# instead of asking the compositor to spawn a shell for us.
+flash_screen() {
+    local times=$1 delay=$2
+    (
+        for _ in $(seq "$times"); do
+            hyprctl eval 'hl.config({ decoration = { dim_inactive = true } })'  >/dev/null 2>&1
+            sleep "$delay"
+            hyprctl eval 'hl.config({ decoration = { dim_inactive = false } })' >/dev/null 2>&1
+            sleep "$delay"
+        done
+    ) &
+}
+
 get_detailed_severity() {
     if [ "$SEVERITY" -eq 1 ]; then
         # 10 PM hour - always gentle
@@ -65,7 +84,7 @@ case $DETAILED_SEVERITY in
         # Pause all playing media
         playerctl --all-players pause 2>/dev/null || true
         # Flash the screen using Hyprland
-        hyprctl dispatch exec "sh -c 'for i in {1..3}; do hyprctl keyword decoration:dim_inactive 1; sleep 0.2; hyprctl keyword decoration:dim_inactive 0; sleep 0.2; done'" 2>/dev/null
+        flash_screen 3 0.2
         paplay /usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga 2>/dev/null || true
         ;;
     4)
@@ -74,7 +93,7 @@ case $DETAILED_SEVERITY in
         # Pause all playing media
         playerctl --all-players pause 2>/dev/null || true
         # More aggressive screen flash
-        hyprctl dispatch exec "sh -c 'for i in {1..5}; do hyprctl keyword decoration:dim_inactive 1; sleep 0.1; hyprctl keyword decoration:dim_inactive 0; sleep 0.1; done'" 2>/dev/null
+        flash_screen 5 0.1
         # Play sound multiple times
         for i in {1..3}; do
             paplay /usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga 2>/dev/null || true
@@ -89,7 +108,7 @@ case $DETAILED_SEVERITY in
         # Pause all playing media
         playerctl --all-players pause 2>/dev/null || true
         # Flash and sound
-        hyprctl dispatch exec "sh -c 'for i in {1..7}; do hyprctl keyword decoration:dim_inactive 1; sleep 0.08; hyprctl keyword decoration:dim_inactive 0; sleep 0.08; done'" 2>/dev/null
+        flash_screen 7 0.08
         for i in {1..5}; do
             paplay /usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga 2>/dev/null || true
             sleep 0.5
@@ -107,7 +126,7 @@ case $DETAILED_SEVERITY in
         hyprctl notify 0 10000 "rgb(ff0000)" "fontsize:26 GO TO BED! It's $(date +%H:%M)!"
 
         # Flash screen aggressively
-        hyprctl dispatch exec "sh -c 'for i in {1..10}; do hyprctl keyword decoration:dim_inactive 1; sleep 0.05; hyprctl keyword decoration:dim_inactive 0; sleep 0.05; done'" 2>/dev/null
+        flash_screen 10 0.05
 
         # Play alarm sound on loop for 10 seconds
         timeout 10s bash -c 'while true; do paplay /usr/share/sounds/freedesktop/stereo/alarm-clock-elapsed.oga 2>/dev/null || true; done'

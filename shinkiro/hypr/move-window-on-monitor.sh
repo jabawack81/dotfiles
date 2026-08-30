@@ -28,5 +28,8 @@ else
     MON="$RIGHT_MON"
 fi
 
-hyprctl dispatch movetoworkspace "$TARGET"
-hyprctl dispatch moveworkspacetomonitor "$TARGET" "$MON"
+# Hyprland 0.56 Lua configs changed `hyprctl dispatch` to evaluate Lua rather
+# than legacy dispatcher names, so `hyprctl dispatch workspace 3` is a syntax
+# error now. These calls use the Lua API instead.
+hyprctl dispatch "hl.dsp.window.move({ workspace = $TARGET })" >/dev/null
+hyprctl dispatch "hl.dsp.workspace.move({ workspace = $TARGET, monitor = '$MON' })" >/dev/null

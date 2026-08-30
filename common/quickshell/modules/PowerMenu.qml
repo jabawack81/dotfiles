@@ -21,7 +21,7 @@ MouseArea {
         { text: "Lock",      cmd: "hyprlock",              danger: false },
         { text: "Suspend",   cmd: "systemctl suspend",     danger: false },
         { text: "Hibernate", cmd: "systemctl hibernate",   danger: false },
-        { text: "Logout",    cmd: "hyprctl dispatch exit", danger: true },
+        { text: "Logout",    cmd: "hyprctl dispatch 'hl.dsp.exit()'", danger: true },
         { text: "Reboot",    cmd: "systemctl reboot",      danger: true },
         { text: "Shutdown",  cmd: "systemctl poweroff",    danger: true },
     ]

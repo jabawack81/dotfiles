@@ -34,7 +34,7 @@ Rectangle {
     MouseArea {
         anchors.fill: parent
         onClicked: {
-            Hyprland.dispatch("workspace " + card.ws.id);
+            Hyprland.dispatch("hl.dsp.focus({ workspace = " + card.ws.id + " })");
             Globals.overviewOpen = false;
         }
     }

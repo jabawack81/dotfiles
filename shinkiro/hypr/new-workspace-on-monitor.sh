@@ -33,5 +33,8 @@ while [ "$i" -lt 100 ]; do
     i=$((i + 2))
 done
 
-hyprctl dispatch workspace "$i" >/dev/null
-hyprctl dispatch moveworkspacetomonitor "$i" "$TARGET_MON" >/dev/null
+# Hyprland 0.56 Lua configs changed `hyprctl dispatch` to evaluate Lua rather
+# than legacy dispatcher names, so `hyprctl dispatch workspace 3` is a syntax
+# error now. These calls use the Lua API instead.
+hyprctl dispatch "hl.dsp.focus({ workspace = $i })" >/dev/null
+hyprctl dispatch "hl.dsp.workspace.move({ workspace = $i, monitor = '$TARGET_MON' })" >/dev/null

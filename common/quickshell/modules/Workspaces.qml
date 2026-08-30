@@ -47,7 +47,7 @@ Row {
             height: label.implicitHeight
             hoverEnabled: true
             anchors.verticalCenter: parent.verticalCenter
-            onClicked: Hyprland.dispatch("workspace " + modelData.id)
+            onClicked: Hyprland.dispatch("hl.dsp.focus({ workspace = " + modelData.id + " })")
 
             BarText {
                 id: label

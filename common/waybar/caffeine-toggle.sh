@@ -10,9 +10,9 @@ restart_hypridle() {
     pkill -x hypridle 2>/dev/null
     sleep 0.3
     if [[ -n "$1" ]]; then
-        hyprctl dispatch exec "hypridle -c $1"
+        setsid hypridle -c "$1" >/dev/null 2>&1 &
     else
-        hyprctl dispatch exec hypridle
+        setsid hypridle >/dev/null 2>&1 &
     fi
 }
 

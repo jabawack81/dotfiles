@@ -33,7 +33,7 @@ Scope {
 
     function activateSelection() {
         if (Globals.overviewSelectedId > 0)
-            Hyprland.dispatch("workspace " + Globals.overviewSelectedId);
+            Hyprland.dispatch("hl.dsp.focus({ workspace = " + Globals.overviewSelectedId + " })");
         Globals.overviewOpen = false;
     }
 
@@ -100,7 +100,7 @@ Scope {
                                 scope.moveSelection(-1); break;
                             default:
                                 if (event.key >= Qt.Key_1 && event.key <= Qt.Key_9) {
-                                    Hyprland.dispatch("workspace " + (event.key - Qt.Key_0));
+                                    Hyprland.dispatch("hl.dsp.focus({ workspace = " + (event.key - Qt.Key_0) + " })");
                                     Globals.overviewOpen = false;
                                 } else {
                                     return;

@@ -23,7 +23,7 @@ Scope {
         { name: "Hibernate",   icon: "system-suspend-hibernate", comment: "Sleep to disk", cmd: "systemctl hibernate", kw: "sleep" },
         { name: "Restart",     icon: "system-reboot",       comment: "Reboot the machine", cmd: "systemctl reboot", kw: "reboot restart" },
         { name: "Shutdown",    icon: "system-shutdown",     comment: "Power off",          cmd: "systemctl poweroff", kw: "power off poweroff" },
-        { name: "Log out",     icon: "system-log-out",      comment: "Exit Hyprland",      cmd: "hyprctl dispatch exit", kw: "logout exit" },
+        { name: "Log out",     icon: "system-log-out",      comment: "Exit Hyprland",      cmd: "hyprctl dispatch 'hl.dsp.exit()'", kw: "logout exit" },
     ]
 
     Process { id: runProc }
