@@ -32,7 +32,10 @@ end
 hl.on("hyprland.start", function()
     hl.exec_cmd("systemctl --user start hyprpolkitagent")
     hl.exec_cmd("~/.config/scripts/bar-launcher.sh")
-    hl.exec_cmd("hypridle")
+    -- Start hypridle in "remote" mode: short idle timers but no suspend, so
+    -- the machine stays reachable over the network. The bar can still cycle
+    -- states from here; the state file lives in tmpfs and does not persist.
+    hl.exec_cmd("~/.config/waybar_common/caffeine-toggle.sh remote")
     hl.exec_cmd("xhost +si:localuser:root")
     hl.exec_cmd("hyprpaper")
     hl.exec_cmd("~/.local/bin/cycle-wallpaper.sh")
