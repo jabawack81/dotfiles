@@ -20,7 +20,10 @@
 return {
   {
     "neovim/nvim-lspconfig",
-    priority = 1000, -- Load early to set up the shim before LazyVim needs it
+    -- NOTE: do NOT set `priority` here. LazyVim gives snacks.nvim priority 1000,
+    -- and a tie makes nvim-lspconfig load first, so LazyVim's LSP keymaps blow up
+    -- on a nil `Snacks` global. `init` always runs before `config` anyway, so the
+    -- shim is in place by the time LazyVim needs it.
     init = function()
       -- Only create the shim if the mappings module doesn't exist
       local ok = pcall(require, "mason-lspconfig.mappings")
