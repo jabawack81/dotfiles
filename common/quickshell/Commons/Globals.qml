@@ -27,4 +27,16 @@ QtObject {
     function clearNotifications() {
         notificationHistory = [];
     }
+
+    // Do Not Disturb. Notifications are still received and logged to history
+    // above; they just don't toast. Critical (urgency 2) still gets through.
+    property bool doNotDisturb: false
+
+    // Notifications suppressed by DND since the center was last opened — the
+    // badge on the bell, so what was missed is visible at a glance.
+    property int missedCount: 0
+
+    function toggleDoNotDisturb() {
+        doNotDisturb = !doNotDisturb;
+    }
 }

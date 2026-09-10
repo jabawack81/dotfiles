@@ -1,9 +1,12 @@
 // Notification daemon + cyberpunk toast popups (replaces dunst).
 // Registers as the org.freedesktop.Notifications server, stacks toasts
 // top-right, urgency-colored border, auto-dismiss (critical stays until clicked).
+// Honours Globals.doNotDisturb: everything is still logged to the history the
+// Bell shows, but only critical notifications toast while DND is on.
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import Quickshell.Services.Notifications
 import qs.Commons
 import qs.Ui
@@ -25,9 +28,25 @@ Scope {
 
         onNotification: function(notif) {
             notif.tracked = true;
-            scope.popups = [...scope.popups, notif];
             Globals.pushNotification(notif);
+
+            // Do Not Disturb: logged above, but no toast. Critical still
+            // breaks through — that is what critical is for.
+            if (Globals.doNotDisturb && notif.urgency !== 2) {
+                Globals.missedCount += 1;
+                return;
+            }
+            scope.popups = [...scope.popups, notif];
         }
+    }
+
+    // Toggle DND from the keyboard. Lives here rather than in Bell because
+    // Bell is instantiated once per screen and this must register exactly
+    // once. Bound to Super+Shift+N in the Hyprland config.
+    GlobalShortcut {
+        appid: "quickshell"
+        name: "dnd"
+        onPressed: Globals.toggleDoNotDisturb()
     }
 
     function remove(notif) {

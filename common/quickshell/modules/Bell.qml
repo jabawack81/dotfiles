@@ -1,18 +1,69 @@
 // Notification bell — shows a count and opens the notification history in a
 // PopupCard anchored under the icon (consistent with tray/power/clipboard).
+// Left-click opens the history; right-click toggles Do Not Disturb.
 import QtQuick
 import qs.Commons
 import qs.Ui
 
 BarPill {
     id: root
-    // Filled bell when there's history, hollow when empty
-    content: count > 0 ? "󰂚 " + count : "󰂜"
-    baseColor: center.visible ? Color.highlight
-             : (count > 0 ? Color.accent : Color.textDim)
-    onClicked: center.toggle()
 
-    property int count: Globals.notificationHistory.length
+    property int  count:  Globals.notificationHistory.length
+    property bool dnd:    Globals.doNotDisturb
+    property int  missed: Globals.missedCount
+
+    // Struck-through bell while DND is on. Anything DND swallowed stays as an
+    // amber "missed" badge — even after DND is switched off — until the center
+    // is opened, so nothing slips past unseen. Otherwise filled when there's
+    // history, hollow when empty.
+    content: dnd        ? (missed > 0 ? "󰂛 " + missed : "󰂛")
+           : missed > 0 ? "󰂚 " + missed
+           : count > 0  ? "󰂚 " + count
+           :              "󰂜"
+    baseColor: center.visible ? Color.highlight
+             : (dnd || missed > 0) ? Color.warning
+             : count > 0 ? Color.accent
+             :             Color.textDim
+
+    acceptedButtons: Qt.LeftButton | Qt.RightButton
+    onClicked: function(mouse) {
+        if (mouse.button === Qt.RightButton) {
+            Globals.toggleDoNotDisturb();
+            return;
+        }
+        // Opening the center is the "I've seen them" signal.
+        Globals.missedCount = 0;
+        center.toggle();
+    }
+
+    ToolTip {
+        anchorItem: root
+        show: root.containsMouse && !center.visible
+        contentWidth: 230
+        contentHeight: tipCol.implicitHeight + Style.spacing.md * 2
+
+        Column {
+            id: tipCol
+            anchors.left: parent.left
+            anchors.right: parent.right
+            spacing: 4
+            BarText {
+                small: true
+                text: root.dnd ? "▶ DO NOT DISTURB" : "  notifications on"
+                color: root.dnd ? Color.warning : Color.textDim
+                font.bold: root.dnd
+            }
+            BarText {
+                small: true
+                visible: root.missed > 0
+                text: "  " + root.missed + " missed since you last looked"
+                color: Color.foreground
+            }
+            Item { width: 1; height: 2 }
+            BarText { small: true; text: "left  · history";        color: Color.textDim }
+            BarText { small: true; text: "right · toggle DND  (Super+Shift+N)"; color: Color.textDim }
+        }
+    }
 
     PopupCard {
         id: center

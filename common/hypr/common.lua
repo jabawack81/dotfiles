@@ -220,8 +220,9 @@ hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("~/.config/hypr_common/show-keybinds.
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("~/.config/scripts/bar-switch.sh toggle"), D "Toggle status bar")
 
 -- Quickshell workspace overview / omni menu (no-op when quickshell isn't running)
-hl.bind(mainMod .. " + TAB",   hl.dsp.global("quickshell:overview"), D "Workspace overview")
-hl.bind(mainMod .. " + Space", hl.dsp.global("quickshell:omni"),     D "App launcher / command palette")
+hl.bind(mainMod .. " + TAB",       hl.dsp.global("quickshell:overview"), D "Workspace overview")
+hl.bind(mainMod .. " + Space",     hl.dsp.global("quickshell:omni"),     D "App launcher / command palette")
+hl.bind(mainMod .. " + SHIFT + N", hl.dsp.global("quickshell:dnd"),      D "Toggle Do Not Disturb")
 
 -- Move/resize windows with mainMod + LMB/RMB and dragging
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   D "Move window (drag)")
