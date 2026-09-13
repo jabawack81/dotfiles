@@ -114,20 +114,26 @@
   become: "{{ running_as_root }}"
   become_user: "{{ target_user if running_as_root else omit }}"
 
+# Ansible evaluates `loop` before `when`, so the loop must not shell out or
+# assume the submodule is checked out: on a clone without private-config the
+# directory is empty. `find` on a missing path just returns no files.
 - name: Install private oh-my-zsh plugins (work machines)
   block:
-    - name: Check if private oh-my-zsh plugins exist
-      stat:
-        path: "{{ dotfiles_dir }}/private-config/oh-my-zsh-plugins"
-      register: private_plugins_dir
+    - name: Find private oh-my-zsh plugins
+      find:
+        paths: "{{ dotfiles_dir }}/private-config/oh-my-zsh-plugins"
+        file_type: directory
+        recurse: no
+      register: private_plugin_dirs
 
     - name: Link private plugins
       file:
-        src: "{{ dotfiles_dir }}/private-config/oh-my-zsh-plugins/{{ item }}"
-        dest: "{{ oh_my_zsh_dir }}/custom/plugins/{{ item }}"
+        src: "{{ item.path }}"
+        dest: "{{ oh_my_zsh_dir }}/custom/plugins/{{ item.path | basename }}"
         state: link
-      loop: "{{ lookup('pipe', 'ls ' + dotfiles_dir + '/private-config/oh-my-zsh-plugins/').split('\n') }}"
-      when: private_plugins_dir.stat.exists
+      loop: "{{ private_plugin_dirs.files | default([]) }}"
+      loop_control:
+        label: "{{ item.path | basename }}"
   when:
     - not is_personal_machine
     - not is_server_machine
