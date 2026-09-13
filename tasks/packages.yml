@@ -31,7 +31,86 @@
       brew install --cask firefox obsidian discord slack telegram
 
       Note: nvtop, grim, waybar, hyprland, etc. are Linux-only
-  when: not is_personal_machine
+  when:
+    - not is_personal_machine
+    - not is_server_machine
+
+# ── Servers (Debian) ───────────────────────────────────────────
+- name: Install server packages (apt)
+  apt:
+    name: "{{ server_packages }}"
+    state: present
+    update_cache: yes
+    cache_valid_time: 3600
+  become: "{{ not running_as_root }}"
+  when: is_server_machine
+
+# apt's neovim lags far behind what LazyVim requires, so install the official
+# release tarball into /opt/nvim-<version> and point /opt/nvim at it.
+#
+# The tarball is staged inside the root-owned install directory, never /tmp:
+# /tmp is world-writable, so a local user could plant an archive there and
+# have it unpacked as root. get_url checks the pinned sha256 and re-downloads
+# on mismatch, and --no-same-owner/--no-same-permissions means nothing in the
+# archive can arrive as a root-owned setuid file.
+- name: Install Neovim from the official release tarball
+  when: is_server_machine
+  become: "{{ not running_as_root }}"
+  vars:
+    neovim_install_dir: "/opt/nvim-{{ neovim_release }}"
+    neovim_tarball: "{{ neovim_install_dir }}/nvim-linux-{{ neovim_arch }}.tar.gz"
+  block:
+    - name: Check for the pinned Neovim release in /opt
+      stat:
+        path: "{{ neovim_install_dir }}/nvim-linux-{{ neovim_arch }}/bin/nvim"
+      register: nvim_release_bin
+
+    - name: Create the Neovim install directory
+      file:
+        path: "{{ neovim_install_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Download the Neovim release tarball
+      get_url:
+        url: "https://github.com/neovim/neovim/releases/download/{{ neovim_release }}/nvim-linux-{{ neovim_arch }}.tar.gz"
+        dest: "{{ neovim_tarball }}"
+        checksum: "sha256:{{ neovim_sha256[neovim_arch] }}"
+        owner: root
+        group: root
+        mode: '0600'
+      when: not nvim_release_bin.stat.exists
+
+    - name: Unpack Neovim
+      unarchive:
+        src: "{{ neovim_tarball }}"
+        dest: "{{ neovim_install_dir }}"
+        remote_src: yes
+        extra_opts:
+          - --no-same-owner
+          - --no-same-permissions
+      when: not nvim_release_bin.stat.exists
+
+    - name: Remove the downloaded tarball
+      file:
+        path: "{{ neovim_tarball }}"
+        state: absent
+
+    - name: Point /opt/nvim at the pinned release
+      file:
+        src: "{{ neovim_install_dir }}/nvim-linux-{{ neovim_arch }}"
+        dest: /opt/nvim
+        state: link
+        force: yes
+
+    - name: Put nvim on PATH
+      file:
+        src: /opt/nvim/bin/nvim
+        dest: /usr/local/bin/nvim
+        state: link
+        force: yes
 
 - name: Check if yay is installed
   command: which yay

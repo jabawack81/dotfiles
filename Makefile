@@ -79,11 +79,19 @@ validate:
 	@ansible-playbook --syntax-check $(PLAYBOOK)
 	@echo -e "$(GREEN)✓ Playbook syntax is valid!$(RESET)"
 
+# Arch uses pacman; Debian servers use apt. Anything else is on its own.
+ifneq ($(wildcard /etc/debian_version),)
+PKG_INSTALL := sudo apt-get install -y
+else
+PKG_INSTALL := sudo pacman -S --noconfirm
+endif
+
 install-deps:
 	@echo -e "$(BOLD)$(BLUE)Checking and installing build dependencies...$(RESET)"
-	@command -v git >/dev/null || (echo "Installing git..." && sudo pacman -S --noconfirm git)
-	@command -v ansible >/dev/null || (echo "Installing ansible..." && sudo pacman -S --noconfirm ansible)
-	@command -v make >/dev/null || (echo "Installing make..." && sudo pacman -S --noconfirm make)
+	@if [ -f /etc/debian_version ]; then sudo apt-get update -qq; fi
+	@command -v git >/dev/null || (echo "Installing git..." && $(PKG_INSTALL) git)
+	@command -v ansible >/dev/null || (echo "Installing ansible..." && $(PKG_INSTALL) ansible)
+	@command -v make >/dev/null || (echo "Installing make..." && $(PKG_INSTALL) make)
 	@echo -e "$(GREEN)✓ Dependencies installed!$(RESET)"
 
 # ============================================================================

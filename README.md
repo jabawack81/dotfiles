@@ -17,7 +17,7 @@ make setup
 This will:
 - Install Ansible if needed
 - Create all necessary symlinks
-- Install required packages (on Arch Linux)
+- Install required packages (pacman on Arch Linux, apt on Debian servers)
 - Configure shell environment
 - Set up all applications
 
@@ -53,7 +53,20 @@ For full list of available commands: `make help`
 - **kyrios**: Personal Arch Linux laptop (battery monitoring, single display)
 - **shinkiro**: Personal Arch Linux desktop (dual 4K displays, GPU monitoring, EWW widgets)
 - **lupus**: Arch Linux ThinkPad T470p (hybrid Intel/NVIDIA GPU)
+- **virtue**: Debian server. Headless profile, detected by OS family rather than hostname, so any other Debian box gets the same treatment. Installs zsh + oh-my-zsh and Neovim with the LazyVim config, nothing else (no desktop, no version managers, no Claude Code).
 - **Work machines**: Limited configs for non-personal machines
+
+### Setting up a Debian server
+
+```bash
+sudo apt-get update && sudo apt-get install -y git make
+git clone https://github.com/jabawack81/dotfiles.git ~/dotfiles
+cd ~/dotfiles
+make install-deps   # installs ansible via apt
+make setup          # asks for your sudo password once
+```
+
+Neovim comes from the official release tarball (apt's is too old for LazyVim), pinned to an exact version with sha256 checksums in `setup-dotfiles.yml`, and lands in `/opt/nvim-<version>` with `/opt/nvim` pointing at it. To upgrade, bump `neovim_release` and both hashes, then re-run `make setup`. The `private-config` submodule is not needed on a server.
 
 ## Manual Steps After Setup
 

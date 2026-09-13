@@ -9,6 +9,18 @@
     owner: "{{ target_user }}"
     group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
 
+# Debian's fd-find installs the binary as `fdfind`; LazyVim's pickers look
+# for `fd`, so expose it under the expected name.
+- name: Link fdfind as fd for the target user
+  file:
+    src: /usr/bin/fdfind
+    dest: "{{ home_dir }}/.local/bin/fd"
+    state: link
+    force: yes
+  become: "{{ running_as_root }}"
+  become_user: "{{ target_user if running_as_root else omit }}"
+  when: is_server_machine
+
 - name: Link tmux-claude script to PATH
   file:
     src: "{{ dotfiles_dir }}/common/scripts/tmux-claude.sh"
@@ -17,6 +29,7 @@
     force: yes
   become: "{{ running_as_root }}"
   become_user: "{{ target_user if running_as_root else omit }}"
+  when: not is_server_machine
 
 - name: Link fan-control script to PATH (shinkiro only)
   file:
@@ -197,9 +210,23 @@
   loop: "{{ common_configs.files }}"
   when:
     - not is_personal_machine
+    - not is_server_machine
     - item.path | basename in work_configs
 
-- name: Link nvim .neoconf.json file (work machine)
+- name: Create symlinks for common configs (server - editor only)
+  file:
+    src: "{{ item.path }}"
+    dest: "{{ config_dir }}/{{ item.path | basename }}"
+    state: link
+    force: yes
+    owner: "{{ target_user }}"
+    group: "{{ target_user }}"
+  loop: "{{ common_configs.files }}"
+  when:
+    - is_server_machine
+    - item.path | basename in server_configs
+
+- name: Link nvim .neoconf.json file (work machine and server)
   file:
     src: "{{ dotfiles_dir }}/common/nvim/dot_neoconf.json"
     dest: "{{ config_dir }}/nvim/.neoconf.json"
@@ -262,3 +289,4 @@
     force: yes
     owner: "{{ target_user }}"
     group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
+  when: not is_server_machine

@@ -4,98 +4,116 @@ This document describes the `setup-dotfiles.yml` ansible playbook used to config
 
 ## Overview
 
-The playbook automatically detects the machine type based on hostname:
+The playbook automatically detects the machine type based on hostname and OS family:
 
-- **Personal machines** (kyrios, shinkiro): Arch Linux with full configuration including GUI tools
+- **Personal machines** (kyrios, shinkiro, lupus): Arch Linux with full configuration including GUI tools
+- **Servers** (any Debian host, currently virtue): headless, shell + editor only
 - **Work machines** (any other hostname): macOS with limited configuration (terminal tools only)
 
 ## Machine Detection
 
-The playbook uses hostname to determine both machine type and OS:
+The playbook uses hostname to pick a personal profile, and OS family to spot a server:
 - `kyrios` - Personal laptop (always Arch Linux)
 - `shinkiro` - Personal desktop (always Arch Linux)
+- `lupus` - Personal ThinkPad (Arch Linux via Omarchy)
+- `virtue`, or any other Debian host (`ansible_facts['os_family'] == 'Debian'`) - Server, sets `is_server_machine`
 - Any other hostname - Work machine (currently macOS, limited configs)
 
-Since the hostname determines the OS, the playbook only needs to check `is_personal_machine` rather than checking both hostname and OS. Personal machines are the primary target, with work machine support as an additional feature.
+Personal machines are the primary target; the server and work profiles are additional, narrower features.
+
+### Server profile (Debian)
+
+Servers get the smallest useful setup and nothing that assumes a desktop or a dev workstation:
+
+| Step           | What happens                                                                                                              |
+|----------------|---------------------------------------------------------------------------------------------------------------------------|
+| Packages (apt) | `server_packages`: zsh, git, curl, build-essential, unzip, ripgrep, fd-find                                               |
+| Neovim         | Official release tarball, pinned by `neovim_release` + `neovim_sha256`, in `/opt/nvim-<version>`; `/opt/nvim` links to it |
+| fd             | `~/.local/bin/fd -> /usr/bin/fdfind` because Debian renames the binary                                                    |
+| Shell          | oh-my-zsh, autosuggestions + syntax-highlighting, custom files, zsh as login shell                                        |
+| Configs        | Only `server_configs` (currently `nvim`) is symlinked into `~/.config`                                                    |
+| Skipped        | `desktop.yml`, `devtools.yml`, `claude.yml`, pnpm, tmux, `bedtime-prompt.zsh`                                             |
+
+`bedtime-prompt.zsh` is skipped because it runs a script from `~/.config/bedtime` on every prompt, which servers never get. To upgrade Neovim, bump `neovim_release` and the `neovim_sha256` entries together and re-run the playbook; older releases stay under `/opt/nvim-<version>` until removed by hand. The tarball is staged in the root-owned install directory, never `/tmp`, so a local user cannot plant an archive for root to unpack.
 
 ## Installation Matrix
 
 ### Package Installation
 
-| Package | Personal Linux (kyrios/shinkiro) | Work Linux | macOS |
-|---------|----------------------------------|------------|--------|
-| zsh | ✅ Auto (pacman) | ✅ Auto | ✅ Pre-installed |
-| git | ✅ Auto (pacman) | ❌ Manual | ❌ Manual |
-| waybar | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
-| hyprland | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
-| hyprlauncher | ✅ Auto (yay/AUR) | ❌ N/A | ❌ N/A |
-| hypridle | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
-| hyprsunset | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
-| hyprpaper | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
-| grimblast | ✅ Auto (yay/AUR) | ❌ N/A | ❌ N/A |
-| dunst | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
-| btop | ✅ Auto (pacman) | ❌ Manual | ❌ Manual (brew) |
-| ghostty | ✅ Auto (pacman) | ❌ Manual | ❌ Manual (brew) |
-| wlogout | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
-| thunar | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
-| powerline-fonts | ✅ Auto (pacman) | ❌ Manual | ❌ Manual |
-| firefox | ✅ Auto (pacman) | ❌ Manual | ❌ Manual (brew cask) |
-| obsidian | ✅ Auto (pacman) | ❌ Manual | ❌ Manual (brew cask) |
-| discord | ✅ Auto (yay/AUR) | ❌ Manual | ❌ Manual (brew cask) |
-| slack-desktop | ✅ Auto (yay/AUR) | ❌ Manual | ❌ Manual (brew cask) |
-| 1password-cli | ✅ Auto (yay/AUR) | ❌ Manual | ❌ Manual (brew) |
-| yay (AUR helper) | ✅ Auto-built | ❌ N/A | ❌ N/A |
-| steam | ✅ Auto (pacman) | ❌ Manual | ❌ N/A |
-| tmux | ✅ Auto (pacman) | ❌ Manual | ❌ Manual (brew) |
-| rsync | ✅ Auto (pacman) | ❌ Manual | ✅ Pre-installed |
-| github-cli | ✅ Auto (pacman) | ❌ Manual | ❌ Manual (brew: gh) |
-| neovim | ✅ Auto (pacman) | ❌ Manual | ❌ Manual (brew) |
-| lazygit | ✅ Auto (pacman) | ❌ Manual | ❌ Manual (brew) |
-| jq | ✅ Auto (pacman) | ❌ Manual | ❌ Manual (brew) |
-| ripgrep | ✅ Auto (pacman) | ❌ Manual | ❌ Manual (brew) |
-| fzf | ✅ Auto (pacman) | ❌ Manual | ❌ Manual (brew) |
-| bat | ✅ Auto (pacman) | ❌ Manual | ❌ Manual (brew) |
-| htop | ✅ Auto (pacman) | ❌ Manual | ❌ Manual (brew) |
-| telegram-desktop | ✅ Auto (pacman) | ❌ Manual | ❌ Manual (brew cask: telegram) |
-| grim | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
-| playerctl | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
-| pamixer | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
-| pipewire* | ✅ Auto (pacman) | ❌ N/A | ❌ N/A |
+| Package          | Personal Linux (kyrios/shinkiro) | Debian server            | macOS                          |
+|------------------|----------------------------------|--------------------------|--------------------------------|
+| zsh              | ✅ Auto (pacman)                  | ✅ Auto (apt)             | ✅ Pre-installed                |
+| git              | ✅ Auto (pacman)                  | ✅ Auto (apt)             | ❌ Manual                       |
+| waybar           | ✅ Auto (pacman)                  | ❌ N/A                    | ❌ N/A                          |
+| hyprland         | ✅ Auto (pacman)                  | ❌ N/A                    | ❌ N/A                          |
+| hyprlauncher     | ✅ Auto (yay/AUR)                 | ❌ N/A                    | ❌ N/A                          |
+| hypridle         | ✅ Auto (pacman)                  | ❌ N/A                    | ❌ N/A                          |
+| hyprsunset       | ✅ Auto (pacman)                  | ❌ N/A                    | ❌ N/A                          |
+| hyprpaper        | ✅ Auto (pacman)                  | ❌ N/A                    | ❌ N/A                          |
+| grimblast        | ✅ Auto (yay/AUR)                 | ❌ N/A                    | ❌ N/A                          |
+| dunst            | ✅ Auto (pacman)                  | ❌ N/A                    | ❌ N/A                          |
+| btop             | ✅ Auto (pacman)                  | ❌ Manual                 | ❌ Manual (brew)                |
+| ghostty          | ✅ Auto (pacman)                  | ❌ Manual                 | ❌ Manual (brew)                |
+| wlogout          | ✅ Auto (pacman)                  | ❌ N/A                    | ❌ N/A                          |
+| thunar           | ✅ Auto (pacman)                  | ❌ N/A                    | ❌ N/A                          |
+| powerline-fonts  | ✅ Auto (pacman)                  | ❌ Manual                 | ❌ Manual                       |
+| firefox          | ✅ Auto (pacman)                  | ❌ Manual                 | ❌ Manual (brew cask)           |
+| obsidian         | ✅ Auto (pacman)                  | ❌ Manual                 | ❌ Manual (brew cask)           |
+| discord          | ✅ Auto (yay/AUR)                 | ❌ Manual                 | ❌ Manual (brew cask)           |
+| slack-desktop    | ✅ Auto (yay/AUR)                 | ❌ Manual                 | ❌ Manual (brew cask)           |
+| 1password-cli    | ✅ Auto (yay/AUR)                 | ❌ Manual                 | ❌ Manual (brew)                |
+| yay (AUR helper) | ✅ Auto-built                     | ❌ N/A                    | ❌ N/A                          |
+| steam            | ✅ Auto (pacman)                  | ❌ Manual                 | ❌ N/A                          |
+| tmux             | ✅ Auto (pacman)                  | ❌ Manual                 | ❌ Manual (brew)                |
+| rsync            | ✅ Auto (pacman)                  | ❌ Manual                 | ✅ Pre-installed                |
+| github-cli       | ✅ Auto (pacman)                  | ❌ Manual                 | ❌ Manual (brew: gh)            |
+| neovim           | ✅ Auto (pacman)                  | ✅ Auto (release tarball) | ❌ Manual (brew)                |
+| lazygit          | ✅ Auto (pacman)                  | ❌ Manual                 | ❌ Manual (brew)                |
+| jq               | ✅ Auto (pacman)                  | ❌ Manual                 | ❌ Manual (brew)                |
+| ripgrep          | ✅ Auto (pacman)                  | ✅ Auto (apt)             | ❌ Manual (brew)                |
+| fd               | ✅ Auto (pacman)                  | ✅ Auto (apt, as fd-find) | ❌ Manual (brew)                |
+| fzf              | ✅ Auto (pacman)                  | ❌ Manual                 | ❌ Manual (brew)                |
+| bat              | ✅ Auto (pacman)                  | ❌ Manual                 | ❌ Manual (brew)                |
+| htop             | ✅ Auto (pacman)                  | ❌ Manual                 | ❌ Manual (brew)                |
+| telegram-desktop | ✅ Auto (pacman)                  | ❌ Manual                 | ❌ Manual (brew cask: telegram) |
+| grim             | ✅ Auto (pacman)                  | ❌ N/A                    | ❌ N/A                          |
+| playerctl        | ✅ Auto (pacman)                  | ❌ N/A                    | ❌ N/A                          |
+| pamixer          | ✅ Auto (pacman)                  | ❌ N/A                    | ❌ N/A                          |
+| pipewire*        | ✅ Auto (pacman)                  | ❌ N/A                    | ❌ N/A                          |
 | **Machine-Specific** |
-| radeontop | ✅ Auto (shinkiro only) | ❌ N/A | ❌ N/A |
-| corectrl | ✅ Auto (shinkiro only) | ❌ N/A | ❌ N/A |
+| radeontop        | ✅ Auto (shinkiro only)           | ❌ N/A                    | ❌ N/A                          |
+| corectrl         | ✅ Auto (shinkiro only)           | ❌ N/A                    | ❌ N/A                          |
 | **Development Tools** |
-| rbenv | ✅ Auto (pacman) | ✅ Auto (git clone) | ✅ Auto (git clone) |
-| ruby-build | ✅ Auto (yay/AUR) | ✅ Auto (git clone) | ✅ Auto (git clone) |
-| nodenv | ✅ Auto (git clone) | ✅ Auto (git clone) | ✅ Auto (git clone) |
-| node-build | ✅ Auto (git clone) | ✅ Auto (git clone) | ✅ Auto (git clone) |
+| rbenv            | ✅ Auto (pacman)                  | ❌ Skipped                | ✅ Auto (git clone)             |
+| ruby-build       | ✅ Auto (yay/AUR)                 | ❌ Skipped                | ✅ Auto (git clone)             |
+| nodenv           | ✅ Auto (git clone)               | ❌ Skipped                | ✅ Auto (git clone)             |
+| node-build       | ✅ Auto (git clone)               | ❌ Skipped                | ✅ Auto (git clone)             |
 
 ### Configuration Files Linked
 
-| Configuration | Personal Linux | Work Linux | macOS | Notes |
-|--------------|----------------|------------|--------|-------|
+| Configuration                        | Personal Linux | Debian server | macOS | Notes                                      |
+|--------------------------------------|----------------|---------------|-------|--------------------------------------------|
 | **Shell & Terminal** |
-| oh-my-zsh | ✅ | ✅ | ✅ | Installed fresh if missing |
-| .zshrc settings | ✅ | ✅ | ✅ | Theme: agnoster, plugins configured |
-| .oh-my-zsh/custom/utils.zsh | ✅ | ✅ | ✅ | Custom utilities |
-| .oh-my-zsh/custom/ruby_aliases.zsh | ✅ | ✅ | ✅ | Ruby development aliases |
-| .oh-my-zsh/custom/bedtime-prompt.zsh | ✅ | ✅ | ✅ | Bedtime reminder in prompt |
-| .tmux.conf | ✅ | ✅ | ✅ | Terminal multiplexer config |
+| oh-my-zsh                            | ✅              | ✅             | ✅     | Installed fresh if missing                 |
+| .zshrc settings                      | ✅              | ✅             | ✅     | Theme: agnoster, plugins configured        |
+| .oh-my-zsh/custom/*.zsh              | ✅              | ✅             | ✅     | Custom utilities and aliases               |
+| .oh-my-zsh/custom/bedtime-prompt.zsh | ✅              | ❌             | ✅     | Needs ~/.config/bedtime, absent on servers |
+| .tmux.conf                           | ✅              | ❌             | ✅     | Terminal multiplexer config                |
 | **Desktop Environment** |
-| hypr/ | ✅ | ❌ | ❌ | Hyprland compositor config |
-| waybar/ | ✅ | ❌ | ❌ | Status bar configuration |
-| hyprtoolkit.conf | ✅ | ❌ | ❌ | Hypr ecosystem theming (in hypr/) |
-| dunst/ | ✅ | ❌ | ❌ | Notification daemon |
-| wlogout/ | ✅ | ❌ | ❌ | Logout menu |
+| hypr/                                | ✅              | ❌             | ❌     | Hyprland compositor config                 |
+| waybar/                              | ✅              | ❌             | ❌     | Status bar configuration                   |
+| hyprtoolkit.conf                     | ✅              | ❌             | ❌     | Hypr ecosystem theming (in hypr/)          |
+| dunst/                               | ✅              | ❌             | ❌     | Notification daemon                        |
+| wlogout/                             | ✅              | ❌             | ❌     | Logout menu                                |
 | **Applications** |
-| ghostty/ | ✅ | ✅ | ✅ | Terminal emulator |
-| nvim/ | ✅ | ✅ | ✅ | Neovim configuration |
-| btop/ | ✅ | ✅ | ✅ | System monitor |
-| thunar/ | ✅ | ❌ | ❌ | File manager + GTK theme |
-| gtk-3.0/gtk.css | ✅ | ❌ | ❌ | GTK3 dark theme |
+| ghostty/                             | ✅              | ❌             | ✅     | Terminal emulator                          |
+| nvim/                                | ✅              | ✅             | ✅     | Neovim configuration                       |
+| btop/                                | ✅              | ❌             | ✅     | System monitor                             |
+| thunar/                              | ✅              | ❌             | ❌     | File manager + GTK theme                   |
+| gtk-3.0/gtk.css                      | ✅              | ❌             | ❌     | GTK3 dark theme                            |
 | **System Services** |
-| bedtime/ scripts | ✅ | ❌ | ❌ | Bedtime check scripts |
-| systemd bedtime timer | ✅ | ❌ | ❌ | Automated bedtime reminders |
+| bedtime/ scripts                     | ✅              | ❌             | ❌     | Bedtime check scripts                      |
+| systemd bedtime timer                | ✅              | ❌             | ❌     | Automated bedtime reminders                |
 
 ### Legend
 - ✅ = Installed/Linked automatically
@@ -328,7 +346,7 @@ command to run by hand instead of pretending to have done the work.
 
 1. Place common configs in `common/` directory
 2. Add machine-specific overrides in `kyrios/` or `shinkiro/`
-3. Update `work_configs` list if the config should be available on work machines
+3. Update `work_configs` list if the config should be available on work machines, or `server_configs` for Debian servers
 4. Run the playbook to create symlinks
 
 ## Security Notes

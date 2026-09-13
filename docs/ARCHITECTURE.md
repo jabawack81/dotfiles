@@ -6,11 +6,12 @@ Architectural Documentation for AI-Assisted Development
 
 When starting a new session, ALWAYS:
 1. Run `hostname` to detect which machine we're on
-2. Check if it's kyrios (laptop), shinkiro (desktop), lupus (laptop/omarchy), or a work machine
+2. Check if it's kyrios (laptop), shinkiro (desktop), lupus (laptop/omarchy), virtue (Debian server), or a work machine
 3. Adapt responses based on the current environment:
    - **kyrios**: Intel laptop, no AMD GPU tools, limited screen space
    - **shinkiro**: AMD desktop, dual 4K monitors, full GPU capabilities
    - **lupus**: ThinkPad T470p, Intel+NVIDIA hybrid GPU, Omarchy, NVIDIA 580xx driver
+   - **virtue** (and any Debian host): Headless server, shell + Neovim only, no desktop or dev toolchain
    - **work machines**: Limited configs, likely macOS, restricted permissions
 
 ## Executive Summary
@@ -21,10 +22,11 @@ This repository exemplifies a sophisticated approach to dotfiles management, imp
 
 ### Multi-Environment Strategy
 
-The repository implements a hierarchical configuration model supporting three distinct environments:
+The repository implements a hierarchical configuration model supporting four distinct environments:
 
 - **kyrios**: Laptop workstation (Intel architecture)
 - **shinkiro**: Desktop development environment (AMD architecture)
+- **virtue**: Headless Debian server, detected by OS family; shell and editor only
 - **work**: Restricted configuration subset for non-personal systems
 
 Current machine detection should be performed at session start using `hostname` command.
@@ -139,6 +141,12 @@ Built-in diagnostic capabilities:
   - cursor { no_hardware_cursors = true } for NVIDIA Wayland compatibility
   - GTK settings.ini and fontconfig for proper font rendering with NVIDIA GL
   - GPU setup is handled automatically by the playbook's lupus-specific tasks
+
+### Debian Servers (virtue)
+- **OS**: Debian (any host where `ansible_facts['os_family'] == 'Debian'`)
+- **Installed**: zsh + oh-my-zsh, Neovim from the official release tarball (`/opt/nvim`), LazyVim build deps (build-essential, ripgrep, fd-find, unzip)
+- **Linked**: `nvim` only
+- **Skipped**: desktop, version managers, pnpm, tmux, Claude Code
 
 ### Work Machines
 - **OS**: Typically macOS

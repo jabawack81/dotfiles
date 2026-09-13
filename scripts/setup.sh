@@ -98,8 +98,8 @@ else
         echo "Note: Running on macOS - no sudo required"
         ansible-playbook setup-dotfiles.yml
     else
-        # Linux (Arch) might need sudo for package installation
-        echo "Note: For automatic AUR package installation, run: sudo -E ./setup.sh"
+        # Linux (Arch/Debian) needs sudo for package installation
+        [ -f /etc/arch-release ] && echo "Note: For automatic AUR package installation, run: sudo -E ./setup.sh"
         ansible-playbook setup-dotfiles.yml --ask-become-pass
     fi
 fi
@@ -111,8 +111,9 @@ check_symlinks "Post-Setup"
 echo -e "\n=== Potential Missing Configs ==="
 echo "Checking for configs in dotfiles that might not be linked..."
 
-# Define work machine configs (from playbook)
+# Define work machine and server configs (from playbook)
 WORK_CONFIGS="btop ghostty nvim lazygit broot"
+SERVER_CONFIGS="nvim"
 
 # Check common directory
 if [ -d "$DOTFILES_DIR/common" ]; then
@@ -122,6 +123,11 @@ if [ -d "$DOTFILES_DIR/common" ]; then
             # On macOS (work machines), only check for work configs
             if [[ "$OSTYPE" == "darwin"* ]]; then
                 if [[ " $WORK_CONFIGS " =~ " $dirname " ]] && [ ! -L "$HOME/.config/$dirname" ] && [ ! -e "$HOME/.config/$dirname" ]; then
+                    echo "  ⚠ common/$dirname is not linked"
+                fi
+            # On Debian (servers), only the editor config is linked
+            elif [ -f /etc/debian_version ]; then
+                if [[ " $SERVER_CONFIGS " =~ " $dirname " ]] && [ ! -L "$HOME/.config/$dirname" ] && [ ! -e "$HOME/.config/$dirname" ]; then
                     echo "  ⚠ common/$dirname is not linked"
                 fi
             else

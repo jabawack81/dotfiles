@@ -259,15 +259,20 @@ Your `setup-dotfiles.yml` is organized as:
 
 ```
 Setup dotfiles based on hostname
-├── Detect system (hostname)
+├── Detect system (hostname + OS family)
 ├── Load private configuration
 ├── Create backup directory
-├── For Personal Machines (kyrios/shinkiro):
+├── For Personal Machines (kyrios/shinkiro/lupus):
 │   ├── Install required packages
 │   ├── Create symlinks for configs
 │   ├── Configure GUI tools (waybar, hyprland, etc.)
 │   ├── Setup version managers (rbenv, nodenv, etc.)
 │   └── Miscellaneous setup
+├── For Debian Servers:
+│   ├── Install shell + LazyVim build deps via apt
+│   ├── Install Neovim from the release tarball
+│   ├── Setup zsh + oh-my-zsh, link nvim config
+│   └── Skip desktop, devtools, Claude Code
 └── For Work Machines:
     ├── Install minimal packages
     ├── Setup terminal tools only

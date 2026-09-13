@@ -13,12 +13,17 @@
     hostname: "{{ ansible_facts['hostname'] }}"
     is_personal_machine: "{{ hostname in ['kyrios', 'shinkiro', 'lupus'] }}"
     is_omarchy_machine: "{{ hostname == 'lupus' }}"
+    # Headless Debian servers (currently: virtue): shell + editor only, no
+    # desktop, no dev toolchain. Detected by OS family rather than hostname so
+    # any Debian box gets the server profile without touching this file.
+    is_server_machine: "{{ ansible_facts['os_family'] == 'Debian' }}"
     running_as_root: "{{ ansible_facts['user_id'] == 'root' }}"
 
     # Load private configuration if available
     private_config_file: "{{ dotfiles_dir }}/private-config/config.yml"
 
-    # kyrios and shinkiro are personal Arch Linux machines
+    # kyrios, shinkiro and lupus are personal Arch Linux machines,
+    # any Debian host (currently virtue) is a headless server,
     # any other hostname is a work machine (currently macOS)
 
     # Configs allowed on work machines
@@ -34,6 +39,33 @@
       - nodenv
       - fastfetch
       - opencode
+
+    # Configs linked on servers (headless Debian) — editor only
+    server_configs:
+      - nvim
+
+    # Neovim on Debian: apt ships a version too old for LazyVim, so servers
+    # get the official release tarball instead (see tasks/packages.yml).
+    # Pinned to an exact release with its sha256 per arch. To upgrade, bump
+    # the version and both hashes together, then re-run; the old release
+    # stays under /opt/nvim-<old> until removed by hand.
+    neovim_release: v0.12.5
+    neovim_arch: "{{ 'arm64' if ansible_facts['architecture'] == 'aarch64' else 'x86_64' }}"
+    neovim_sha256:
+      x86_64: bce0f56eda1f1b1db6eee8f4133d7a38813ea07933837dd1777411ca384c6875
+      arm64: 1aa5ca085249580ae0f91eb14f27ec0919773ff2d99a163d03f3d6c21ac29725
+
+    # apt packages for servers — the shell, and what LazyVim needs to build
+    # treesitter parsers and drive its pickers
+    server_packages:
+      - zsh
+      - git
+      - curl
+      - ca-certificates
+      - build-essential   # C compiler for treesitter parsers
+      - unzip             # mason archives
+      - ripgrep
+      - fd-find           # Debian names the binary fdfind; symlinked as fd in tasks/dotfiles.yml
 
     required_packages:
       # Core utilities
@@ -191,11 +223,12 @@
 
     - name: Display setup mode
       debug:
-        msg: "Setting up {{ hostname }} as {{ 'PERSONAL MACHINE (Arch Linux - full configs)' if is_personal_machine else 'WORK MACHINE (macOS - limited configs)' }}"
+        msg: "Setting up {{ hostname }} as {{ 'PERSONAL MACHINE (Arch Linux - full configs)' if is_personal_machine else ('SERVER (Debian - shell + neovim only)' if is_server_machine else 'WORK MACHINE (macOS - limited configs)') }}"
 
     - name: Clean up broken symlinks in .config
       shell: |
         CONFIG_DIR="{{ config_dir }}"
+        [ -d "$CONFIG_DIR" ] || exit 0
         find "$CONFIG_DIR" -type l ! -exec test -e {} \; -print -delete
       register: cleaned_links
       changed_when: cleaned_links.stdout != ""
@@ -222,9 +255,11 @@
 
     - name: Setup development tools
       include_tasks: tasks/devtools.yml
+      when: not is_server_machine
 
     - name: Setup Claude Code
       include_tasks: tasks/claude.yml
+      when: not is_server_machine
 
     # ── Cleanup ────────────────────────────────────────────────
     - name: Show backup summary
