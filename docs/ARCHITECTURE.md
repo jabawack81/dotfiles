@@ -11,7 +11,7 @@ When starting a new session, ALWAYS:
    - **kyrios**: Intel laptop, no AMD GPU tools, limited screen space
    - **shinkiro**: AMD desktop, dual 4K monitors, full GPU capabilities
    - **lupus**: ThinkPad T470p, Intel+NVIDIA hybrid GPU, Omarchy, NVIDIA 580xx driver
-   - **virtue** (and any Debian host): Headless server, shell + Neovim only, no desktop or dev toolchain
+   - **virtue** (and any Debian host): Headless server, shell + Neovim + dev toolchain, no desktop
    - **work machines**: Limited configs, likely macOS, restricted permissions
 
 ## Executive Summary
@@ -144,9 +144,9 @@ Built-in diagnostic capabilities:
 
 ### Debian Servers (virtue)
 - **OS**: Debian (any host where `ansible_facts['os_family'] == 'Debian'`)
-- **Installed**: zsh + oh-my-zsh, Neovim from the official release tarball (`/opt/nvim`), LazyVim build deps (build-essential, ripgrep, fd-find, unzip)
-- **Linked**: `nvim` only
-- **Skipped**: desktop, version managers, pnpm, tmux, Claude Code
+- **Installed**: zsh + oh-my-zsh, Neovim from the official release tarball (`/opt/nvim`), lazygit, tmux, LazyVim build deps, and the standard dev toolchain (rbenv, nodenv, pnpm, SDKMAN, g)
+- **Linked**: `nvim` config and `.tmux.conf`
+- **Skipped**: desktop, Claude Code
 
 ### Work Machines
 - **OS**: Typically macOS

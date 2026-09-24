@@ -55,17 +55,35 @@
       x86_64: bce0f56eda1f1b1db6eee8f4133d7a38813ea07933837dd1777411ca384c6875
       arm64: 1aa5ca085249580ae0f91eb14f27ec0919773ff2d99a163d03f3d6c21ac29725
 
-    # apt packages for servers — the shell, and what LazyVim needs to build
-    # treesitter parsers and drive its pickers
+    # apt packages for servers — the shell, what the LazyVim config needs
+    # (treesitter build deps, pickers, lazygit), and the libraries ruby-build
+    # needs to compile Ruby. Ruby and Node themselves come from rbenv/nodenv
+    # via tasks/devtools.yml, the same as on the other machines.
     server_packages:
       - zsh
       - git
       - curl
       - ca-certificates
-      - build-essential   # C compiler for treesitter parsers
-      - unzip             # mason archives
+      - build-essential   # C compiler for treesitter parsers and ruby-build
+      - unzip             # mason archives, sdkman
+      - zip               # sdkman
       - ripgrep
       - fd-find           # Debian names the binary fdfind; symlinked as fd in tasks/dotfiles.yml
+      - lazygit           # LazyVim git UI
+      - tmux
+      # ruby-build dependencies (https://github.com/rbenv/ruby-build/wiki)
+      - autoconf
+      - patch
+      - libssl-dev
+      - libyaml-dev
+      - libreadline-dev
+      - zlib1g-dev
+      - libgmp-dev
+      - libncurses-dev
+      - libffi-dev
+      - libgdbm-dev
+      - libdb-dev
+      - uuid-dev
 
     required_packages:
       # Core utilities
@@ -223,7 +241,7 @@
 
     - name: Display setup mode
       debug:
-        msg: "Setting up {{ hostname }} as {{ 'PERSONAL MACHINE (Arch Linux - full configs)' if is_personal_machine else ('SERVER (Debian - shell + neovim only)' if is_server_machine else 'WORK MACHINE (macOS - limited configs)') }}"
+        msg: "Setting up {{ hostname }} as {{ 'PERSONAL MACHINE (Arch Linux - full configs)' if is_personal_machine else ('SERVER (Debian - shell, neovim, dev toolchain)' if is_server_machine else 'WORK MACHINE (macOS - limited configs)') }}"
 
     - name: Clean up broken symlinks in .config
       shell: |
@@ -255,7 +273,6 @@
 
     - name: Setup development tools
       include_tasks: tasks/devtools.yml
-      when: not is_server_machine
 
     - name: Setup Claude Code
       include_tasks: tasks/claude.yml

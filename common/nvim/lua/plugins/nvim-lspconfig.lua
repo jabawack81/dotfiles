@@ -153,9 +153,16 @@ return {
             end
             return opts
           end)(),
-          -- Use rbenv's ruby-lsp binary
-          -- This ensures it uses the correct Ruby version for your project
-          cmd = { vim.fn.expand("~/.rbenv/shims/ruby-lsp") },
+          -- Use rbenv's ruby-lsp binary so it runs under the project's Ruby.
+          -- On machines without rbenv (servers) fall back to the Mason-installed
+          -- binary, which is on PATH inside Neovim.
+          cmd = (function()
+            local shim = vim.fn.expand("~/.rbenv/shims/ruby-lsp")
+            if vim.fn.executable(shim) == 1 then
+              return { shim }
+            end
+            return { "ruby-lsp" }
+          end)(),
           -- Root at the git repo, not at nested Gemfiles (e.g. engine subdirectories)
           root_dir = lspconfig.util.root_pattern(".git", "Gemfile"),
         },

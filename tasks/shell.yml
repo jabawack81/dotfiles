@@ -222,7 +222,6 @@
         curl -fsSL https://get.pnpm.io/install.sh | sh -
       args:
         creates: "{{ ansible_facts['env'].HOME }}/.local/share/pnpm"
-      when: not is_server_machine
 
     - name: Add pnpm to .zshrc
       blockinfile:
@@ -235,7 +234,6 @@
             *":$PNPM_HOME:"*) ;;
             *) export PATH="$PNPM_HOME:$PATH" ;;
           esac
-      when: not is_server_machine
 
     - name: Remove duplicate oh-my-zsh update mode lines
       shell: |

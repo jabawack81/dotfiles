@@ -272,7 +272,8 @@ Setup dotfiles based on hostname
 │   ├── Install shell + LazyVim build deps via apt
 │   ├── Install Neovim from the release tarball
 │   ├── Setup zsh + oh-my-zsh, link nvim config
-│   └── Skip desktop, devtools, Claude Code
+│   ├── Setup version managers (rbenv, nodenv, etc.)
+│   └── Skip desktop, Claude Code
 └── For Work Machines:
     ├── Install minimal packages
     ├── Setup terminal tools only

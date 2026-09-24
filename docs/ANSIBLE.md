@@ -7,7 +7,7 @@ This document describes the `setup-dotfiles.yml` ansible playbook used to config
 The playbook automatically detects the machine type based on hostname and OS family:
 
 - **Personal machines** (kyrios, shinkiro, lupus): Arch Linux with full configuration including GUI tools
-- **Servers** (any Debian host, currently virtue): headless, shell + editor only
+- **Servers** (any Debian host, currently virtue): headless, shell + editor + dev toolchain, no desktop
 - **Work machines** (any other hostname): macOS with limited configuration (terminal tools only)
 
 ## Machine Detection
@@ -23,16 +23,17 @@ Personal machines are the primary target; the server and work profiles are addit
 
 ### Server profile (Debian)
 
-Servers get the smallest useful setup and nothing that assumes a desktop or a dev workstation:
+Servers get the shell, the editor and the language toolchain, and nothing that assumes a desktop:
 
 | Step           | What happens                                                                                                              |
 |----------------|---------------------------------------------------------------------------------------------------------------------------|
-| Packages (apt) | `server_packages`: zsh, git, curl, build-essential, unzip, ripgrep, fd-find                                               |
+| Packages (apt) | `server_packages`: zsh, git, curl, zip/unzip, build-essential, ripgrep, fd-find, lazygit, tmux, plus ruby-build libraries |
 | Neovim         | Official release tarball, pinned by `neovim_release` + `neovim_sha256`, in `/opt/nvim-<version>`; `/opt/nvim` links to it |
 | fd             | `~/.local/bin/fd -> /usr/bin/fdfind` because Debian renames the binary                                                    |
 | Shell          | oh-my-zsh, autosuggestions + syntax-highlighting, custom files, zsh as login shell                                        |
 | Configs        | Only `server_configs` (currently `nvim`) is symlinked into `~/.config`                                                    |
-| Skipped        | `desktop.yml`, `devtools.yml`, `claude.yml`, pnpm, tmux, `bedtime-prompt.zsh`                                             |
+| Dev tools      | `devtools.yml` as on every machine: rbenv + latest Ruby, nodenv + Node, pnpm, SDKMAN, g                                   |
+| Skipped        | `desktop.yml`, `claude.yml`, `bedtime-prompt.zsh`                                                                         |
 
 `bedtime-prompt.zsh` is skipped because it runs a script from `~/.config/bedtime` on every prompt, which servers never get. To upgrade Neovim, bump `neovim_release` and the `neovim_sha256` entries together and re-run the playbook; older releases stay under `/opt/nvim-<version>` until removed by hand. The tarball is staged in the root-owned install directory, never `/tmp`, so a local user cannot plant an archive for root to unpack.
 
@@ -84,10 +85,10 @@ Servers get the smallest useful setup and nothing that assumes a desktop or a de
 | radeontop        | ✅ Auto (shinkiro only)           | ❌ N/A                    | ❌ N/A                          |
 | corectrl         | ✅ Auto (shinkiro only)           | ❌ N/A                    | ❌ N/A                          |
 | **Development Tools** |
-| rbenv            | ✅ Auto (pacman)                  | ❌ Skipped                | ✅ Auto (git clone)             |
-| ruby-build       | ✅ Auto (yay/AUR)                 | ❌ Skipped                | ✅ Auto (git clone)             |
-| nodenv           | ✅ Auto (git clone)               | ❌ Skipped                | ✅ Auto (git clone)             |
-| node-build       | ✅ Auto (git clone)               | ❌ Skipped                | ✅ Auto (git clone)             |
+| rbenv            | ✅ Auto (pacman)                  | ✅ Auto (git clone)       | ✅ Auto (git clone)             |
+| ruby-build       | ✅ Auto (yay/AUR)                 | ✅ Auto (git clone)       | ✅ Auto (git clone)             |
+| nodenv           | ✅ Auto (git clone)               | ✅ Auto (git clone)       | ✅ Auto (git clone)             |
+| node-build       | ✅ Auto (git clone)               | ✅ Auto (git clone)       | ✅ Auto (git clone)             |
 
 ### Configuration Files Linked
 
@@ -98,7 +99,7 @@ Servers get the smallest useful setup and nothing that assumes a desktop or a de
 | .zshrc settings                      | ✅              | ✅             | ✅     | Theme: agnoster, plugins configured        |
 | .oh-my-zsh/custom/*.zsh              | ✅              | ✅             | ✅     | Custom utilities and aliases               |
 | .oh-my-zsh/custom/bedtime-prompt.zsh | ✅              | ❌             | ✅     | Needs ~/.config/bedtime, absent on servers |
-| .tmux.conf                           | ✅              | ❌             | ✅     | Terminal multiplexer config                |
+| .tmux.conf                           | ✅              | ✅             | ✅     | Terminal multiplexer config                |
 | **Desktop Environment** |
 | hypr/                                | ✅              | ❌             | ❌     | Hyprland compositor config                 |
 | waybar/                              | ✅              | ❌             | ❌     | Status bar configuration                   |
