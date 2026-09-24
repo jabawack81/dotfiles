@@ -307,8 +307,16 @@
         depth: 1
       when: tmux_installed.rc == 0
 
+    # A tmux server that was already running before .tmux.conf was linked has
+    # never read it, and TPM's installer asks the running server for its plugin
+    # path, so reload the config there first. A fresh server reads it on start.
     - name: Install tmux plugins from .tmux.conf
-      command: "{{ target_home }}/.tmux/plugins/tpm/bin/install_plugins"
+      shell: |
+        set -e
+        if tmux ls >/dev/null 2>&1; then
+          tmux source-file "{{ target_home }}/.tmux.conf"
+        fi
+        "{{ target_home }}/.tmux/plugins/tpm/bin/install_plugins"
       register: tpm_install
       changed_when: "'Installing' in tpm_install.stdout"
       when: tmux_installed.rc == 0
