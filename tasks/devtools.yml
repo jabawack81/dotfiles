@@ -44,13 +44,13 @@
     - name: Check if gh is installed
       command: which gh
       register: gh_installed
-      ignore_errors: yes
+      failed_when: false
       changed_when: false
 
     - name: Check if op (1Password CLI) is installed
       command: which op
       register: op_installed
-      ignore_errors: yes
+      failed_when: false
       changed_when: false
 
     - name: Ensure gh config directory exists
@@ -410,13 +410,17 @@
       register: ruby_installed
       changed_when: false
 
+    # No `rbenv init` here: it emits bash-only `source` lines that break under
+    # Debian's /bin/sh (dash); `rbenv install`/`global` only need PATH. Same
+    # for nodenv below.
     - name: Install latest stable Ruby
       shell: |
+        set -e
         export PATH="{{ ansible_facts['env'].HOME }}/.rbenv/bin:$PATH"
-        eval "$({{ ansible_facts['env'].HOME }}/.rbenv/bin/rbenv init -)"
         LATEST_RUBY=$(rbenv install -l 2>/dev/null | grep -E "^[0-9]+\.[0-9]+\.[0-9]+$" | tail -1)
-        rbenv install -s $LATEST_RUBY
-        rbenv global $LATEST_RUBY
+        [ -n "$LATEST_RUBY" ] || { echo "no Ruby version found in rbenv install -l" >&2; exit 1; }
+        rbenv install -s "$LATEST_RUBY"
+        rbenv global "$LATEST_RUBY"
       when: ruby_installed.stdout == "none"
 
     - name: Check if Node is installed
@@ -429,13 +433,18 @@
       register: node_installed
       changed_when: false
 
+    # LTS lines are the even majors; pick the newest one node-build lists.
+    # A hardcoded major went stale once (20.x dropped from the list) and the
+    # task then installed nothing while still reporting success, hence set -e
+    # and the explicit empty check.
     - name: Install latest stable Node (LTS)
       shell: |
+        set -e
         export PATH="{{ ansible_facts['env'].HOME }}/.nodenv/bin:$PATH"
-        eval "$({{ ansible_facts['env'].HOME }}/.nodenv/bin/nodenv init -)"
-        LATEST_NODE=$(nodenv install -l 2>/dev/null | grep -E "^[0-9]+\.[0-9]+\.[0-9]+$" | grep -E "^20\." | tail -1)
-        nodenv install -s $LATEST_NODE
-        nodenv global $LATEST_NODE
+        LATEST_NODE=$(nodenv install -l 2>/dev/null | grep -E "^[0-9]+\.[0-9]+\.[0-9]+$" | awk -F. "\$1 % 2 == 0" | tail -1)
+        [ -n "$LATEST_NODE" ] || { echo "no even-major Node version found in nodenv install -l" >&2; exit 1; }
+        nodenv install -s "$LATEST_NODE"
+        nodenv global "$LATEST_NODE"
       when: node_installed.stdout == "none"
 
     - name: Fix rbenv ownership when running as root

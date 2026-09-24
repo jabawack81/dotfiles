@@ -228,7 +228,7 @@ The playbook also installs and configures:
 
 #### pnpm
 - Fast, disk-space efficient package manager for Node.js
-- Automatically added to PATH
+- Installed with Node through `nodenv-default-packages`; the playbook only sets `PNPM_HOME` for global installs
 - Use like npm: `pnpm install`, `pnpm run dev`
 
 #### SDKMAN!

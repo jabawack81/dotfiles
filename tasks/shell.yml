@@ -217,12 +217,10 @@
         regexp: '# pnpm\nexport PNPM_HOME[^#]+# pnpm end\n'
         replace: ''
 
-    - name: Install pnpm (fast npm alternative)
-      shell: |
-        curl -fsSL https://get.pnpm.io/install.sh | sh -
-      args:
-        creates: "{{ ansible_facts['env'].HOME }}/.local/share/pnpm"
-
+    # pnpm itself comes with Node via nodenv-default-packages (see
+    # common/nodenv/default-packages). The standalone curl installer used here
+    # before fails on a fresh machine (pnpm 12 aborts its shell setup step),
+    # so only the PNPM_HOME environment for `pnpm add -g` is kept.
     - name: Add pnpm to .zshrc
       blockinfile:
         path: "{{ ansible_facts['env'].HOME }}/.zshrc"
