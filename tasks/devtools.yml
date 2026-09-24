@@ -1,5 +1,5 @@
 ---
-# Development tools — Git, git-delta, GitHub CLI, rbenv, nodenv, SDKMAN, Go
+# Development tools — Git, GitHub CLI, rbenv, nodenv, SDKMAN, Go
 
 - name: Setup broot file browser
   block:
@@ -221,39 +221,31 @@
           3. Test signing with: git commit -S -m "test" --allow-empty
       when: (is_personal_machine and op_ssh_sign is defined and op_ssh_sign.stat.exists) or (not is_personal_machine and op_ssh_sign_mac is defined and op_ssh_sign_mac.stat.exists)
 
-- name: Configure git-delta for enhanced diffs
+# Plain git diffs: no external pager. git-delta used to be configured here;
+# these tasks unset it on machines that still carry the old settings.
+- name: Configure git diff output
   block:
-    - name: Set delta as git pager
+    - name: Remove git-delta pager and filter settings
       git_config:
-        name: core.pager
-        value: "delta"
+        name: "{{ item }}"
         scope: global
-
-    - name: Configure delta settings
-      git_config:
-        name: "{{ item.name }}"
-        value: "{{ item.value }}"
-        scope: global
+        state: absent
       loop:
-        - { name: "delta.navigate", value: "true" }
-        - { name: "delta.light", value: "false" }
-        - { name: "delta.side-by-side", value: "false" }
-        - { name: "delta.syntax-theme", value: "Nord" }
-        - { name: "delta.line-numbers", value: "false" }
-        - { name: "delta.file-style", value: "bold blue" }
-        - { name: "delta.file-decoration-style", value: "none" }
-        - { name: "delta.hunk-header-style", value: "bold cyan" }
-        - { name: "delta.hunk-header-decoration-style", value: "cyan box" }
-        - { name: "delta.minus-style", value: "syntax \"#3b4252\"" }
-        - { name: "delta.minus-emph-style", value: "syntax \"#bf616a\"" }
-        - { name: "delta.plus-style", value: "syntax \"#3b4252\"" }
-        - { name: "delta.plus-emph-style", value: "syntax \"#a3be8c\"" }
-
-    - name: Configure interactive diff filter
-      git_config:
-        name: interactive.diffFilter
-        value: "delta --color-only"
-        scope: global
+        - core.pager
+        - interactive.diffFilter
+        - delta.navigate
+        - delta.light
+        - delta.side-by-side
+        - delta.syntax-theme
+        - delta.line-numbers
+        - delta.file-style
+        - delta.file-decoration-style
+        - delta.hunk-header-style
+        - delta.hunk-header-decoration-style
+        - delta.minus-style
+        - delta.minus-emph-style
+        - delta.plus-style
+        - delta.plus-emph-style
 
     - name: Set merge conflict style
       git_config:

@@ -42,10 +42,6 @@ keybinding:
     return: '<esc>'
     confirm: '<enter>'
 git:
-  diffRenderers:
-    - colorArg: always
-      command: delta --dark --paging=never --syntax-theme=Nord
-  # Use delta for diffs if available
   log:
     showWholeGraph: true
 os:

@@ -34,7 +34,6 @@
       - broot
       - lazygit
       - git
-      - git-delta
       - rbenv
       - nodenv
       - fastfetch
@@ -92,7 +91,6 @@
       - github-cli
       - neovim
       - lazygit
-      - git-delta
       - jq
       - ripgrep
       - fd
