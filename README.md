@@ -53,7 +53,7 @@ For full list of available commands: `make help`
 - **kyrios**: Personal Arch Linux laptop (battery monitoring, single display)
 - **shinkiro**: Personal Arch Linux desktop (dual 4K displays, GPU monitoring, EWW widgets)
 - **lupus**: Arch Linux ThinkPad T470p (hybrid Intel/NVIDIA GPU)
-- **virtue**: Debian server. Headless profile, detected by OS family rather than hostname, so any other Debian box gets the same treatment. Installs zsh + oh-my-zsh and Neovim with the LazyVim config, nothing else (no desktop, no version managers, no Claude Code).
+- **virtue**: Debian server. Headless profile, detected by OS family rather than hostname, so any other Debian box gets the same treatment. Installs zsh + oh-my-zsh, Neovim with the LazyVim config, lazygit, tmux, and the same dev toolchain as the other machines (rbenv + latest Ruby, nodenv + Node, pnpm, SDKMAN, g). No desktop, no Claude Code.
 - **Work machines**: Limited configs for non-personal machines
 
 ### Setting up a Debian server
@@ -79,10 +79,7 @@ Open neovim and press `<space>l` then `S` to sync all plugins.
 - Toggle with `:LazyAutoCommitToggle` to disable the feature
 
 ### Tmux
-```bash
-git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-```
-Then open tmux and press `prefix` + `I` to install plugins.
+Nothing to do: the playbook clones TPM and installs the plugins listed in `.tmux.conf`. Inside tmux, `prefix` + `U` updates them.
 
 ## Repository Structure
 
