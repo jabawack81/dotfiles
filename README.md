@@ -79,7 +79,10 @@ Open neovim and press `<space>l` then `S` to sync all plugins.
 - Toggle with `:LazyAutoCommitToggle` to disable the feature
 
 ### Tmux
-Nothing to do: the playbook clones TPM and installs the plugins listed in `.tmux.conf`. Inside tmux, `prefix` + `U` updates them.
+Nothing to do — `make setup` checks out tpm and installs the plugins listed in
+`dot_tmux.conf`. In a tmux server that was already running when they were
+installed, `prefix` + `I` (or `tmux source-file ~/.tmux.conf`) loads them;
+`prefix` + `U` updates them.
 
 ## Repository Structure
 

@@ -547,3 +547,49 @@
         curl -sSL https://git.io/g-install | sh -s -- -y
       when: not g_installed.stat.exists
 
+# tmux: the config's last line is `run '~/.tmux/plugins/tpm/tpm'`, so without
+# the plugin manager checked out tmux starts with none of the plugins (and no
+# nord theme). Used to be a manual step in the README.
+- name: Setup tmux plugins (tpm)
+  when: not is_server_machine
+  block:
+    - name: Check if tpm is installed
+      stat:
+        path: "{{ ansible_facts['env'].HOME }}/.tmux/plugins/tpm"
+      register: tpm_installed
+
+    - name: Clone tpm (tmux plugin manager)
+      git:
+        repo: https://github.com/tmux-plugins/tpm.git
+        dest: "{{ ansible_facts['env'].HOME }}/.tmux/plugins/tpm"
+        update: no
+      when: not tpm_installed.stat.exists
+      become: "{{ running_as_root }}"
+      become_user: "{{ target_user if running_as_root else omit }}"
+
+    - name: List the plugins the config asks for
+      shell: |
+        set -euo pipefail
+        grep -oP "^set -g @plugin ['\"]\K[^'\"]+" "{{ dotfiles_dir }}/dot_tmux.conf" \
+          | sed 's:.*/::'
+      args:
+        executable: /bin/bash
+      register: tmux_wanted_plugins
+      changed_when: false
+      check_mode: no
+
+    - name: Check which plugins are already checked out
+      stat:
+        path: "{{ ansible_facts['env'].HOME }}/.tmux/plugins/{{ item }}"
+      register: tmux_plugin_stats
+      loop: "{{ tmux_wanted_plugins.stdout_lines }}"
+
+    # install_plugins needs TMUX_PLUGIN_MANAGER_PATH, which is only set once a
+    # server has sourced the config. Running it inside a detached session gets
+    # that for free whether or not a server is already up; the session ends
+    # when the install finishes.
+    - name: Install missing tmux plugins
+      command: tmux new-session -d -s ansible-tpm-install "{{ ansible_facts['env'].HOME }}/.tmux/plugins/tpm/bin/install_plugins"
+      when: tmux_plugin_stats.results | rejectattr('stat.exists') | list | length > 0
+      become: "{{ running_as_root }}"
+      become_user: "{{ target_user if running_as_root else omit }}"
