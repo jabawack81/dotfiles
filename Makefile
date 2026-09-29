@@ -15,6 +15,24 @@ RESET   := \033[0m
 DOTFILES_DIR := $(shell pwd)
 PLAYBOOK := setup-dotfiles.yml
 DOCS_DIR := docs
+LOG_DIR := logs
+
+# Run the playbook with output on the terminal AND in a timestamped log.
+# Colour is forced so the terminal looks normal through the pipe; the copy
+# written to the log has the escape codes stripped. pipefail keeps ansible's
+# exit status so a failed run still fails make.
+#   $(1) = log name prefix, $(2) = extra ansible-playbook args
+define run_playbook
+	@mkdir -p $(LOG_DIR)
+	@log="$(LOG_DIR)/$(1)-$$(date +%Y%m%d-%H%M%S).log"; \
+	echo -e "$(BOLD)Log: $$log$(RESET)"; \
+	set -o pipefail; \
+	ANSIBLE_FORCE_COLOR=1 ansible-playbook -K $(2) $(PLAYBOOK) 2>&1 \
+	  | tee >(sed -u 's/\x1b\[[0-9;]*[A-Za-z]//g' > "$$log"); \
+	status=$$?; \
+	echo -e "$(BOLD)Log saved to $$log$(RESET)"; \
+	exit $$status
+endef
 
 # Default target - show interactive menu
 .DEFAULT_GOAL := menu
@@ -30,8 +48,8 @@ menu:
 	@echo -e "$(BOLD)$(BLUE)╚════════════════════════════════════════════════════════════╝$(RESET)"
 	@echo ""
 	@echo -e "$(BOLD)Setup & Installation:$(RESET)"
-	@echo -e "  $(GREEN)make setup$(RESET)           Run ansible-playbook to setup/install dotfiles"
-	@echo -e "  $(GREEN)make dry-run$(RESET)         Test changes with --check mode before applying"
+	@echo -e "  $(GREEN)make setup$(RESET)           Run ansible-playbook to setup/install dotfiles (logs to logs/)"
+	@echo -e "  $(GREEN)make dry-run$(RESET)         Test changes with --check mode before applying (logs to logs/)"
 	@echo -e "  $(GREEN)make validate$(RESET)        Validate ansible playbook syntax"
 	@echo -e "  $(GREEN)make install-deps$(RESET)    Install build dependencies (for scripts)"
 	@echo ""
@@ -47,7 +65,7 @@ menu:
 	@echo -e "  $(GREEN)make update-nvim$(RESET)     Update neovim plugins"
 	@echo -e "  $(GREEN)make clean-nvim$(RESET)      Clean neovim (interactive options)"
 	@echo -e "  $(GREEN)make backup$(RESET)          Create backup of current config"
-	@echo -e "  $(GREEN)make clean$(RESET)           Remove old backups and cache"
+	@echo -e "  $(GREEN)make clean$(RESET)           Remove backups and logs older than 30 days, and cache"
 	@echo -e "  $(GREEN)make sync$(RESET)            Pull latest changes from remote"
 	@echo ""
 	@echo -e "$(BOLD)Git & Publishing:$(RESET)"
@@ -66,12 +84,12 @@ help: menu
 
 setup:
 	@echo -e "$(BOLD)$(BLUE)Running ansible-playbook...$(RESET)"
-	@ansible-playbook -K $(PLAYBOOK)
+	$(call run_playbook,setup,)
 	@echo -e "$(GREEN)✓ Setup complete!$(RESET)"
 
 dry-run:
 	@echo -e "$(BOLD)$(BLUE)Running ansible-playbook in check mode...$(RESET)"
-	@ansible-playbook --check -K $(PLAYBOOK)
+	$(call run_playbook,dry-run,--check)
 	@echo -e "$(GREEN)✓ Dry run complete! No changes were applied.$(RESET)"
 
 validate:
@@ -207,8 +225,9 @@ backup:
 	echo -e "$(GREEN)✓ Backup created at: $$backup_dir$(RESET)"
 
 clean:
-	@echo -e "$(BOLD)$(BLUE)Cleaning up old backups and cache...$(RESET)"
+	@echo -e "$(BOLD)$(BLUE)Cleaning up old backups, logs and cache...$(RESET)"
 	@find backups -maxdepth 1 -type d -mtime +30 -exec rm -rf {} \; 2>/dev/null || true
+	@find $(LOG_DIR) -maxdepth 1 -name "*.log" -mtime +30 -delete 2>/dev/null || true
 	@find . -name "*.swp" -delete 2>/dev/null || true
 	@find . -name "*.swo" -delete 2>/dev/null || true
 	@find . -name ".DS_Store" -delete 2>/dev/null || true

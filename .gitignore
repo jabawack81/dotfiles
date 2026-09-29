@@ -4,6 +4,8 @@
 settings.local.json
 # Backup files
 backups/
+# Playbook run logs (make setup / make dry-run)
+logs/
 # Environment variables (contains sensitive data)
 .env
 # Private config example (template only)

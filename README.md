@@ -25,8 +25,8 @@ This will:
 
 **Management Tasks** (via Makefile):
 - `make` or `make menu` - Display interactive menu
-- `make setup` - Run full ansible setup
-- `make dry-run` - Test changes without applying
+- `make setup` - Run full ansible setup (output also saved to `logs/setup-<timestamp>.log`)
+- `make dry-run` - Test changes without applying (logged to `logs/dry-run-<timestamp>.log`)
 - `make status` - Show git status and system info
 - `make docs` - Display documentation index
 - `make validate` - Validate playbook syntax
