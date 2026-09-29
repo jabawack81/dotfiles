@@ -146,6 +146,10 @@
     path: "{{ ansible_facts['env'].HOME }}/.zshrc"
     state: touch
     mode: '0644'
+    # touch bumps the timestamps and so reports "changed" every run;
+    # preserving them makes it a no-op when the file already exists.
+    access_time: preserve
+    modification_time: preserve
   when: ansible_facts['env'].HOME is defined
 
 - name: Set oh-my-zsh theme to agnoster

@@ -3,10 +3,16 @@
 
 - name: Setup broot file browser
   block:
-    - name: Remove old broot config if exists
+    - name: Check existing broot config
+      stat:
+        path: "{{ config_dir }}/broot"
+      register: broot_stat
+
+    - name: Remove old broot config if it is a real directory
       file:
         path: "{{ config_dir }}/broot"
         state: absent
+      when: broot_stat.stat.exists and not broot_stat.stat.islnk
 
     - name: Symlink broot directory
       file:
@@ -25,10 +31,16 @@
 
 - name: Setup lazygit configuration
   block:
-    - name: Remove old lazygit config if exists
+    - name: Check existing lazygit config
+      stat:
+        path: "{{ config_dir }}/lazygit"
+      register: lazygit_stat
+
+    - name: Remove old lazygit config if it is a real directory
       file:
         path: "{{ config_dir }}/lazygit"
         state: absent
+      when: lazygit_stat.stat.exists and not lazygit_stat.stat.islnk
 
     - name: Symlink lazygit directory
       file:
@@ -62,12 +74,21 @@
         - gh_installed.rc == 0
         - op_installed.rc == 0
 
+    - name: Read gh git protocol
+      command: gh config get git_protocol --host github.com
+      register: gh_protocol
+      changed_when: false
+      failed_when: false
+      when:
+        - gh_installed.rc == 0
+        - op_installed.rc == 0
+
     - name: Configure gh to use SSH protocol
       command: gh config set git_protocol ssh --host github.com
       when:
         - gh_installed.rc == 0
         - op_installed.rc == 0
-      changed_when: true
+        - gh_protocol.stdout | default('') | trim != 'ssh'
 
     - name: Create gh hosts.yml for 1Password integration
       copy:
@@ -314,11 +335,14 @@
       become: "{{ running_as_root }}"
       become_user: "{{ target_user if running_as_root else omit }}"
 
+    # Migration from the days before the managed block: drop a hand-written
+    # init line, but only one that is NOT the copy inside our own block
+    # (otherwise this and "Add nodenv to .zshrc" undo each other every run).
     - name: Clean up manual nodenv entry from .zshrc
-      lineinfile:
+      replace:
         path: "{{ ansible_facts['env'].HOME }}/.zshrc"
-        regexp: '^eval "\$\(nodenv init - zsh\)"$'
-        state: absent
+        regexp: '(?<!export PATH="\$HOME/.nodenv/bin:\$PATH"\n)^eval "\$\(nodenv init - zsh\)"\n'
+        replace: ''
 
     - name: Check if nodenv is installed
       stat:
@@ -407,12 +431,14 @@
     # for nodenv below.
     - name: Install latest stable Ruby
       shell: |
-        set -e
+        set -euo pipefail
         export PATH="{{ ansible_facts['env'].HOME }}/.rbenv/bin:$PATH"
         LATEST_RUBY=$(rbenv install -l 2>/dev/null | grep -E "^[0-9]+\.[0-9]+\.[0-9]+$" | tail -1)
-        [ -n "$LATEST_RUBY" ] || { echo "no Ruby version found in rbenv install -l" >&2; exit 1; }
+        [ -n "$LATEST_RUBY" ] || { echo "no Ruby version found in ruby-build" >&2; exit 1; }
         rbenv install -s "$LATEST_RUBY"
         rbenv global "$LATEST_RUBY"
+      args:
+        executable: /bin/bash
       when: ruby_installed.stdout == "none"
 
     - name: Check if Node is installed
@@ -470,10 +496,12 @@
 
 - name: Install SDKMAN and Go version manager
   block:
+    # Same migration idea as the nodenv one: strip a hand-written SDKMAN
+    # stanza, but never the one sitting inside our managed block.
     - name: Clean up manual SDKMAN entries from .zshrc
       replace:
         path: "{{ ansible_facts['env'].HOME }}/.zshrc"
-        regexp: '#THIS MUST BE AT THE END[^#]+\[\[ -s[^]]+\]\] && source[^\n]+\n(?!# END ANSIBLE)'
+        regexp: '(?<!# BEGIN ANSIBLE MANAGED BLOCK - sdkman\n)#THIS MUST BE AT THE END[^#]+\[\[ -s[^]]+\]\] && source[^\n]+\n'
         replace: ''
 
     - name: Check if SDKMAN is installed
@@ -518,3 +546,4 @@
       shell: |
         curl -sSL https://git.io/g-install | sh -s -- -y
       when: not g_installed.stat.exists
+
