@@ -1,5 +1,5 @@
 ---
-# Desktop environment — Hyprland, waybar, GTK, bedtime, lupus/omarchy
+# Desktop environment — Hyprland, waybar, GTK, bedtime, per-machine extras
 
 - name: Setup Hyprland with clean symlink structure
   block:
@@ -14,20 +14,20 @@
     - name: Backup old hypr setup if needed
       command: mv "{{ config_dir }}/hypr" "{{ backup_dir }}/hypr-old-backup"
       when:
-        - not is_omarchy_machine
         - hypr_checks.results[0].stat.exists
         - not hypr_checks.results[0].stat.islnk
 
-    - name: Remove old hypr symlinks/directories
+    # A real directory was moved to the backup above; a symlink pointing
+    # elsewhere is overwritten by `force: yes` below. Only a leftover real
+    # hypr_common directory needs clearing here.
+    - name: Remove a real hypr_common directory
       file:
-        path: "{{ item }}"
+        path: "{{ config_dir }}/hypr_common"
         state: absent
-      loop:
-        - "{{ config_dir }}/hypr"
-        - "{{ config_dir }}/hypr_common"
       when:
         - is_personal_machine
-        - not is_omarchy_machine
+        - hypr_checks.results[1].stat.exists
+        - not hypr_checks.results[1].stat.islnk
 
     - name: Create hypr symlink to machine-specific directory
       file:
@@ -37,9 +37,7 @@
         force: yes
         owner: "{{ target_user }}"
         group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
-      when:
-        - is_personal_machine
-        - hostname in ['kyrios', 'shinkiro']
+      when: is_personal_machine
 
     - name: Create hypr_common symlink to common directory
       file:
@@ -49,9 +47,7 @@
         force: yes
         owner: "{{ target_user }}"
         group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
-      when:
-        - is_personal_machine
-        - not is_omarchy_machine
+      when: is_personal_machine
 
 - name: Setup greetd + regreet as display manager (shinkiro only)
   block:
@@ -193,9 +189,7 @@
     path: "{{ config_dir }}/gtk-3.0"
     state: directory
     mode: '0755'
-  when:
-    - is_personal_machine
-    - not is_omarchy_machine
+  when: is_personal_machine
 
 - name: Link GTK3 CSS for system-wide theming
   file:
@@ -203,18 +197,14 @@
     dest: "{{ config_dir }}/gtk-3.0/gtk.css"
     state: link
     force: yes
-  when:
-    - is_personal_machine
-    - not is_omarchy_machine
+  when: is_personal_machine
 
 - name: Ensure Thunar directory exists (capital T)
   file:
     path: "{{ config_dir }}/Thunar"
     state: directory
     mode: '0755'
-  when:
-    - is_personal_machine
-    - not is_omarchy_machine
+  when: is_personal_machine
 
 - name: Link GTK files to Thunar directory
   file:
@@ -225,9 +215,7 @@
   loop:
     - gtk.css
     - gtkrc-2.0
-  when:
-    - is_personal_machine
-    - not is_omarchy_machine
+  when: is_personal_machine
 
 - name: Setup Waybar with clean symlink structure
   block:
@@ -242,20 +230,17 @@
     - name: Backup old waybar setup if needed
       command: mv "{{ config_dir }}/waybar" "{{ backup_dir }}/waybar-old-backup"
       when:
-        - not is_omarchy_machine
         - waybar_checks.results[0].stat.exists
         - not waybar_checks.results[0].stat.islnk
 
-    - name: Remove old waybar symlinks/directories
+    - name: Remove a real waybar_common directory
       file:
-        path: "{{ item }}"
+        path: "{{ config_dir }}/waybar_common"
         state: absent
-      loop:
-        - "{{ config_dir }}/waybar"
-        - "{{ config_dir }}/waybar_common"
       when:
         - is_personal_machine
-        - not is_omarchy_machine
+        - waybar_checks.results[1].stat.exists
+        - not waybar_checks.results[1].stat.islnk
 
     - name: Create waybar symlink to machine-specific directory
       file:
@@ -265,9 +250,7 @@
         force: yes
         owner: "{{ target_user }}"
         group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
-      when:
-        - is_personal_machine
-        - hostname in ['kyrios', 'shinkiro']
+      when: is_personal_machine
 
     - name: Create waybar_common symlink to common directory
       file:
@@ -277,94 +260,20 @@
         force: yes
         owner: "{{ target_user }}"
         group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
-      when:
-        - is_personal_machine
-        - not is_omarchy_machine
-
-- name: Configure monitor for lupus (1080p laptop screen)
-  copy:
-    src: "{{ dotfiles_dir }}/lupus/hypr/monitors.conf"
-    dest: "{{ config_dir }}/hypr/monitors.conf"
-    mode: '0644'
-    owner: "{{ target_user }}"
-    group: "{{ target_user }}"
-  when: hostname == 'lupus'
-
-- name: Wire lupus hypr overrides into hyprland.conf (sourced from dotfiles checkout)
-  lineinfile:
-    path: "{{ config_dir }}/hypr/hyprland.conf"
-    line: "source = ~/dotfiles/lupus/hypr/{{ item }}"
-    state: present
-  loop:
-    - windows.conf
-    - bindings.conf
-  when: hostname == 'lupus'
-
-- name: Apply lupus waybar customizations (Omarchy overlay)
-  block:
-    - name: Ensure gpu-status script is executable
-      file:
-        path: "{{ dotfiles_dir }}/lupus/waybar/gpu-status.sh"
-        mode: '0755'
-
-    - name: Ensure apply-customizations script is executable
-      file:
-        path: "{{ dotfiles_dir }}/lupus/waybar/apply-customizations.sh"
-        mode: '0755'
-
-    - name: Run waybar apply-customizations script
-      shell: "{{ dotfiles_dir }}/lupus/waybar/apply-customizations.sh"
-      register: waybar_apply_result
-
-    - name: Show waybar customization result
-      debug:
-        msg: "{{ waybar_apply_result.stdout }}"
-
-    - name: Ensure omarchy hooks directories exist
-      file:
-        path: "{{ config_dir }}/omarchy/hooks/{{ item }}"
-        state: directory
-        mode: '0755'
-        owner: "{{ target_user }}"
-        group: "{{ target_user }}"
-      loop:
-        - ""
-        - post-boot.d
-
-    - name: Install omarchy recovery hooks (re-apply lupus customizations)
-      copy:
-        content: |
-          #!/bin/bash
-          # Re-apply lupus customizations after Omarchy {{ item.when }}.
-          # Omarchy migrations/updates can reset configs, so we restore our patches.
-
-          DOTFILES_DIR="{{ dotfiles_dir }}"
-
-          # Re-apply monitor config from the single tracked source
-          echo "Re-applying lupus monitor config..."
-          cp "$DOTFILES_DIR/lupus/hypr/monitors.conf" "$HOME/.config/hypr/monitors.conf"
-
-          # Re-apply waybar customizations
-          echo "Re-applying lupus waybar customizations..."
-          "$DOTFILES_DIR/lupus/waybar/apply-customizations.sh"
-        dest: "{{ config_dir }}/omarchy/hooks/{{ item.dest }}"
-        mode: '0755'
-        owner: "{{ target_user }}"
-        group: "{{ target_user }}"
-      loop:
-        # post-update: runs during `omarchy update` (after migrations).
-        # post-boot.d/: runs on every login as a safety net if an update was
-        # interrupted or the post-update hook failed.
-        - { dest: 'post-update', when: 'updates' }
-        - { dest: 'post-boot.d/lupus-waybar', when: 'boot' }
-  when: hostname == 'lupus'
+      when: is_personal_machine
 
 - name: Setup bedtime reminder system
   block:
-    - name: Remove old bedtime directory if exists
+    - name: Check existing bedtime directory
+      stat:
+        path: "{{ config_dir }}/bedtime"
+      register: bedtime_stat
+
+    - name: Remove old bedtime directory if it is a real directory
       file:
         path: "{{ config_dir }}/bedtime"
         state: absent
+      when: bedtime_stat.stat.exists and not bedtime_stat.stat.islnk
 
     - name: Symlink bedtime directory
       file:
@@ -422,98 +331,7 @@
           To enable bedtime timer, run as your user (not root):
           systemctl --user enable --now bedtime-reminder.timer
           {% endif %}
-  when:
-    - is_personal_machine
-    - not is_omarchy_machine
-
-- name: Setup fingerprint authentication on lupus
-  block:
-    - name: Disable conflicting fprintd service
-      systemd:
-        name: fprintd.service
-        enabled: no
-        state: stopped
-      ignore_errors: yes
-
-    - name: Enable open-fprintd service
-      systemd:
-        name: open-fprintd.service
-        enabled: yes
-        state: restarted
-
-    - name: Ensure pam_fprintd is configured for sudo
-      lineinfile:
-        path: /etc/pam.d/sudo
-        line: "auth        sufficient  pam_fprintd.so"
-        insertbefore: "^auth.*pam_unix"
-        state: present
-
-    - name: Ensure pam_fprintd is configured for su
-      lineinfile:
-        path: /etc/pam.d/su
-        line: "auth        sufficient  pam_fprintd.so"
-        insertbefore: "^auth.*pam_unix"
-        state: present
-
-    - name: Ensure pam_fprintd is configured for hyprlock
-      lineinfile:
-        path: /etc/pam.d/hyprlock
-        line: "auth        sufficient  pam_fprintd.so"
-        insertbefore: "^auth.*pam_unix"
-        state: present
-
-    - name: Ensure pam_fprintd is configured for sddm
-      lineinfile:
-        path: /etc/pam.d/sddm
-        line: "auth        sufficient  pam_fprintd.so"
-        insertbefore: "^auth.*pam_unix"
-        state: present
-
-    - name: Ensure pam_fprintd is configured for polkit (1Password, etc.)
-      copy:
-        dest: /etc/pam.d/polkit-1
-        content: |
-          #%PAM-1.0
-
-          auth        sufficient  pam_fprintd.so
-          auth        include     system-auth
-          account     include     system-auth
-          password    include     system-auth
-          session     include     system-auth
-        mode: '0644'
-  become: "{{ not running_as_root }}"
-  when: hostname == 'lupus'
-
-- name: Enable ThinkPad fan control on lupus
-  copy:
-    dest: /etc/modprobe.d/thinkpad_acpi.conf
-    content: |
-      # Enable fan control for ThinkPad T470p
-      options thinkpad_acpi fan_control=1
-    mode: '0644'
-  become: "{{ not running_as_root }}"
-  when: hostname == 'lupus'
-
-- name: Install NVIDIA suspend fix for lupus (remove GPU from PCI on sleep)
-  copy:
-    src: "{{ dotfiles_dir }}/lupus/hypr/nvidia-suspend-fix.sh"
-    dest: /usr/lib/systemd/system-sleep/nvidia-gpu-toggle
-    mode: '0755'
-    owner: root
-    group: root
-  become: "{{ not running_as_root }}"
-  when: hostname == 'lupus'
-
-- name: Allow passwordless open-fprintd stop/start on lupus (for lid switch)
-  copy:
-    dest: /etc/sudoers.d/open-fprintd
-    content: |
-      {{ target_user }} ALL=(root) NOPASSWD: /usr/bin/systemctl stop open-fprintd.service
-      {{ target_user }} ALL=(root) NOPASSWD: /usr/bin/systemctl start open-fprintd.service
-    mode: '0440'
-    validate: 'visudo -cf %s'
-  become: "{{ not running_as_root }}"
-  when: hostname == 'lupus'
+  when: is_personal_machine
 
 - name: Configure fingerprint authentication on kyrios
   block:
@@ -563,6 +381,15 @@
   copy:
     src: "{{ dotfiles_dir }}/common/scripts/quickshell-qt6-check.sh"
     dest: /usr/local/bin/quickshell-qt6-check
+    mode: '0755'
+    owner: root
+    group: root
+  become: "{{ not running_as_root }}"
+
+- name: Ensure the pacman hooks directory exists (absent on fresh installs)
+  file:
+    path: /etc/pacman.d/hooks
+    state: directory
     mode: '0755'
     owner: root
     group: root

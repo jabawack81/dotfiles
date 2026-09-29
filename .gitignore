@@ -16,6 +16,8 @@ kyrios/hypr/.cache/
 kyrios/hypr/Fonts/
 shinkiro/hypr/.cache/
 shinkiro/hypr/Fonts/
+barbatos/hypr/.cache/
+barbatos/hypr/Fonts/
 
 # Ansible check output (may contain private config values)
 ansible-check.txt

@@ -1,0 +1,81 @@
+// Barbatos (ThinkPad T470p) specific modules
+{
+	"modules-right": [
+		"custom/left-arrow-dark",
+		"custom/media",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"custom/network-status",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"pulseaudio",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"memory",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"cpu",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"custom/temperature-cpu",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"custom/gpu",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"custom/fan",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"battery",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"disk",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"custom/caffeine",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"custom/power",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"custom/bedtime",
+		"custom/left-arrow-light",
+		"custom/left-arrow-dark",
+		"tray"
+	],
+
+	// Laptop-specific module definitions
+	"battery": {
+		"states": {
+			"warning": 30,
+			"critical": 15
+		},
+		"format": "{icon}  {capacity}%",
+		"format-charging": "󰂄  {capacity}%",
+		"format-plugged": "󰚥  {capacity}%",
+		"format-full": "󰁹  {capacity}%",
+		"format-icons": ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
+		"tooltip-format": "{timeTo}\n{power}W"
+	},
+
+	// NVIDIA 940MX: EnvyControl mode + temperature when the dGPU is awake.
+	// Click opens envy-tui in a floating ghostty (window rule in hyprland.lua).
+	"custom/gpu": {
+		"format": "{}",
+		"exec": "~/.config/waybar/gpu-status.sh",
+		"return-type": "json",
+		"interval": 10,
+		"on-click": "ghostty --class=envy-tui -e envy-tui",
+		"tooltip": true
+	},
+
+	// ThinkPad fan RPM from thinkpad_acpi (needs fan_control=1, see tasks/barbatos.yml)
+	"custom/fan": {
+		"format": "{}",
+		"exec": "~/.config/waybar/fan-status.sh",
+		"return-type": "json",
+		"interval": 5,
+		"on-click": "ghostty --class=thinkfan-tui -e thinkfan-tui",
+		"tooltip": true
+	}
+}

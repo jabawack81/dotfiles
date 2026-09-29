@@ -6,7 +6,7 @@ This document describes the `setup-dotfiles.yml` ansible playbook used to config
 
 The playbook automatically detects the machine type based on hostname and OS family:
 
-- **Personal machines** (kyrios, shinkiro, lupus): Arch Linux with full configuration including GUI tools
+- **Personal machines** (kyrios, shinkiro, barbatos): Arch Linux with full configuration including GUI tools
 - **Servers** (any Debian host, currently virtue): headless, shell + editor + dev toolchain, no desktop
 - **Work machines** (any other hostname): macOS with limited configuration (terminal tools only)
 
@@ -15,7 +15,7 @@ The playbook automatically detects the machine type based on hostname and OS fam
 The playbook uses hostname to pick a personal profile, and OS family to spot a server:
 - `kyrios` - Personal laptop (always Arch Linux)
 - `shinkiro` - Personal desktop (always Arch Linux)
-- `lupus` - Personal ThinkPad (Arch Linux via Omarchy)
+- `barbatos` - Personal ThinkPad T470p (Arch Linux; Intel + NVIDIA 940MX hybrid). Hardware setup lives in `tasks/barbatos.yml`
 - `virtue`, or any other Debian host (`ansible_facts['os_family'] == 'Debian'`) - Server, sets `is_server_machine`
 - Any other hostname - Work machine (currently macOS, limited configs)
 

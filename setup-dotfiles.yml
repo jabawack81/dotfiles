@@ -11,8 +11,7 @@
     config_dir: "{{ target_home }}/.config"
     oh_my_zsh_dir: "{{ target_home }}/.oh-my-zsh"
     hostname: "{{ ansible_facts['hostname'] }}"
-    is_personal_machine: "{{ hostname in ['kyrios', 'shinkiro', 'lupus'] }}"
-    is_omarchy_machine: "{{ hostname == 'lupus' }}"
+    is_personal_machine: "{{ hostname in ['kyrios', 'shinkiro', 'barbatos'] }}"
     # Headless Debian servers (currently: virtue): shell + editor only, no
     # desktop, no dev toolchain. Detected by OS family rather than hostname so
     # any Debian box gets the server profile without touching this file.
@@ -22,7 +21,7 @@
     # Load private configuration if available
     private_config_file: "{{ dotfiles_dir }}/private-config/config.yml"
 
-    # kyrios, shinkiro and lupus are personal Arch Linux machines,
+    # kyrios, shinkiro and barbatos are personal Arch Linux machines,
     # any Debian host (currently virtue) is a headless server,
     # any other hostname is a work machine (currently macOS)
 
@@ -144,6 +143,8 @@
       # Applications
       - ghostty
       - thunar
+      - gvfs            # thunar: mount removable drives / USB mass storage via udisks2
+      - thunar-volman   # thunar: auto-mount on plug-in
       - firefox
       - obsidian
       - telegram-desktop
@@ -185,21 +186,72 @@
       - libfprint
       - network-manager-applet
 
-    lupus_packages:  # ThinkPad T470p with NVIDIA 940MX (proprietary 580xx driver)
-      - linux-firmware-nvidia
-      - nvtop
-      - nvidia-prime
+    barbatos_packages:  # ThinkPad T470p: Intel HD 630 + NVIDIA 940MX (Maxwell)
+      # Intel iGPU drives the desktop
+      - intel-ucode
+      - intel-media-driver
+      - vulkan-intel
+      # NVIDIA: the driver itself is nvidia-580xx-dkms from the AUR (below);
+      # nvidia-open does NOT support Maxwell. These are its pacman-side deps.
+      - linux-headers
       - dkms
-      - hyprpwcenter            # native Hyprland PipeWire audio control center
-      - hyprland-qt-support     # QT theming integration for Hyprland
-      # nvidia-580xx-dkms and nvidia-580xx-utils installed via AUR (yay -S aur/nvidia-580xx-dkms)
-      # nvidia-open does NOT support Maxwell (940MX) - must use 580xx branch
+      - linux-firmware-nvidia
+      # nvidia-prime is in barbatos_aur_packages, AFTER nvidia-580xx-utils:
+      # installed from here it would pull the stock nvidia-utils back in to
+      # satisfy its dependency.
+      - mesa-utils              # glxinfo, for verifying prime-run
+      # Power / thermal
+      - thermald
+      - power-profiles-daemon
+      - earlyoom
+      # Network stack from the runbook: iwd + networkd, tailscale, ufw, mDNS
+      - iwd
+      - tailscale
+      - ufw
+      - avahi
+      - nss-mdns
+      # Docker (tasks/barbatos.yml enables the service and adds the docker group)
+      - docker
+      - docker-buildx
+      - docker-compose
+      # Misc hardware
+      - fwupd
+      - cups
+      - system-config-printer
+      # Embedded dev: Raspberry Pi Pico (PicoRuby/R2P2) and ESP32. The udev
+      # rules come from PlatformIO (tasks/barbatos.yml), serial access from
+      # the uucp group. BOOTSEL mode shows up as a USB drive (RPI-RP2) and
+      # mounts through thunar; `picocom -b 115200 /dev/ttyACM0` for the shell.
+      - picocom
+      - screen
+      - usbutils
 
-    lupus_aur_packages:  # ThinkPad T470p AUR packages
+    # Fingerprint for sudo/su on barbatos. Off by default: pam_fprintd waits
+    # for a touch before falling back to the password, which stalls anything
+    # that drives sudo non-interactively — including this playbook's become.
+    # Flip to true (or pass -e barbatos_fingerprint_sudo=true) once you want
+    # it; hyprlock, sddm and polkit always get the fingerprint prompt.
+    barbatos_fingerprint_sudo: false
+
+    # EnvyControl mode for the 940MX. "hybrid" keeps the dGPU available via
+    # prime-run but it can never power down (Maxwell has no RTD3 support —
+    # /proc/driver/nvidia/gpus/*/power says "Not supported"), so it draws
+    # power at idle. "integrated" removes it from the PCI bus at boot: best
+    # battery life, no prime-run. Either way a reboot applies the switch.
+    barbatos_gpu_mode: hybrid
+
+    barbatos_aur_packages:  # ThinkPad T470p AUR packages
+      - nvidia-580xx-dkms     # legacy branch for Maxwell (GM108M)
+      - nvidia-580xx-utils
+      - nvidia-prime          # prime-run (repo package; here so it binds to 580xx-utils)
+      - envycontrol           # hybrid / integrated / nvidia switching (barbatos_gpu_mode)
+      - envy-tui              # TUI front-end for envycontrol (waybar GPU module)
       - open-fprintd          # fingerprint daemon (works with python-validity)
       - fprintd-clients-git   # fprintd client tools (enroll, verify, list)
-      - python-validity       # Validity/Synaptics fingerprint sensor driver
-      - thinkfan-tui          # TUI for ThinkPad fan control
+      - python-validity       # Validity 138a:0097 fingerprint sensor driver
+      - thinkfan-tui          # TUI for ThinkPad fan control (waybar fan module)
+      - ufw-docker            # ufw rules that survive docker's iptables games
+      - picotool              # flash / inspect RP2040 UF2s without the drag-and-drop dance
 
   tasks:
     # ── Bootstrap ──────────────────────────────────────────────
@@ -268,6 +320,10 @@
     - name: Setup desktop environment
       include_tasks: tasks/desktop.yml
       when: is_personal_machine
+
+    - name: Setup barbatos hardware (NVIDIA, fingerprint, ThinkPad, network)
+      include_tasks: tasks/barbatos.yml
+      when: hostname == 'barbatos'
 
     - name: Setup development tools
       include_tasks: tasks/devtools.yml

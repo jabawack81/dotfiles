@@ -1,0 +1,306 @@
+---
+# barbatos — ThinkPad T470p hardware setup (everything under /etc)
+#
+# Intel HD 630 + NVIDIA 940MX (Maxwell), Validity fingerprint reader,
+# iwd + systemd-networkd. Mirrors the reinstall runbook kept in the personal
+# vault (500 - Hardware/). Packages come from barbatos_packages /
+# barbatos_aur_packages in setup-dotfiles.yml; this file wires them up.
+#
+# Included from setup-dotfiles.yml with `when: hostname == 'barbatos'`.
+
+# ── NVIDIA 940MX: legacy 580xx driver, EnvyControl mode ──────────────
+#
+# Suspend is handled by a system-sleep hook that yanks the dGPU off the PCI
+# bus before sleep and rescans after. The nvidia-suspend/resume/hibernate
+# services and PreserveVideoMemoryAllocations=1 were the earlier approach and
+# froze the machine on wake; keep them off.
+- name: NVIDIA 940MX driver configuration
+  become: "{{ not running_as_root }}"
+  block:
+    - name: Don't preserve VRAM across sleep (the PCI toggle hook handles it)
+      copy:
+        dest: /etc/modprobe.d/nvidia-power.conf
+        content: |
+          # barbatos: managed by ~/dotfiles (tasks/barbatos.yml)
+          options nvidia NVreg_PreserveVideoMemoryAllocations=0
+        mode: '0644'
+
+    - name: Install NVIDIA suspend fix (remove GPU from PCI on sleep)
+      copy:
+        src: "{{ dotfiles_dir }}/barbatos/hypr/nvidia-suspend-fix.sh"
+        dest: /usr/lib/systemd/system-sleep/nvidia-gpu-toggle
+        mode: '0755'
+        owner: root
+        group: root
+
+    - name: Disable the nvidia sleep services (conflict with the PCI toggle hook)
+      systemd:
+        name: "{{ item }}"
+        enabled: no
+      loop:
+        - nvidia-suspend.service
+        - nvidia-resume.service
+        - nvidia-hibernate.service
+      ignore_errors: yes   # units only exist once nvidia-580xx-utils is installed
+
+    - name: Query the current EnvyControl mode
+      command: envycontrol --query
+      register: envy_query
+      changed_when: false
+      failed_when: false   # rc != 0 until the AUR build has run
+      check_mode: no
+
+    # No --rtd3: the 940MX can't do runtime D3, the flag only writes a udev
+    # rule that never fires. "hybrid" is also envycontrol's unconfigured
+    # default, so on a fresh box this only runs when the mode is changed.
+    - name: Switch EnvyControl to the configured GPU mode
+      command: envycontrol -s {{ barbatos_gpu_mode }}
+      when:
+        - envy_query.rc == 0
+        - envy_query.stdout | trim != barbatos_gpu_mode
+      register: envy_switch
+
+    - name: Note that a reboot is needed for the GPU switch
+      debug:
+        msg: "EnvyControl switched to {{ barbatos_gpu_mode }} — reboot to apply."
+      when: envy_switch is changed
+
+# ── Fingerprint reader (Validity 138a:0097) ──────────────────────────
+#
+# python-validity drives the sensor, open-fprintd exposes the fprintd D-Bus
+# API on top of it. pam_fprintd goes in as the FIRST auth line so a finger
+# is tried before the password prompt — for the interactive prompts always,
+# for sudo/su only when barbatos_fingerprint_sudo is set (see the var).
+- name: Fingerprint authentication
+  become: "{{ not running_as_root }}"
+  block:
+    - name: Enable python3-validity (sensor driver daemon)
+      systemd:
+        name: python3-validity.service
+        enabled: yes
+        state: started
+      ignore_errors: yes   # not there until the AUR build has run
+
+    - name: Start open-fprintd (static unit, socket/D-Bus activated)
+      systemd:
+        name: open-fprintd.service
+        state: started
+      ignore_errors: yes
+
+    - name: Try a fingerprint first for hyprlock and sddm
+      lineinfile:
+        path: "/etc/pam.d/{{ item }}"
+        line: "auth        sufficient  pam_fprintd.so"
+        insertbefore: '^auth'
+        firstmatch: yes
+        state: present
+      loop:
+        - hyprlock
+        - sddm
+
+    - name: Fingerprint for sudo (only when barbatos_fingerprint_sudo)
+      lineinfile:
+        path: /etc/pam.d/sudo
+        line: "auth        sufficient  pam_fprintd.so"
+        insertbefore: '^auth'
+        firstmatch: yes
+        state: "{{ 'present' if barbatos_fingerprint_sudo else 'absent' }}"
+
+    # su keeps pam_rootok first so root never gets asked for a finger
+    - name: Fingerprint for su (only when barbatos_fingerprint_sudo)
+      lineinfile:
+        path: /etc/pam.d/su
+        line: "auth        sufficient  pam_fprintd.so"
+        insertafter: '^auth\s+sufficient\s+pam_rootok\.so'
+        state: "{{ 'present' if barbatos_fingerprint_sudo else 'absent' }}"
+
+    - name: Try a fingerprint for polkit prompts (1Password unlock etc.)
+      copy:
+        dest: /etc/pam.d/polkit-1
+        content: |
+          #%PAM-1.0
+
+          auth        sufficient  pam_fprintd.so
+          auth        include     system-auth
+          account     include     system-auth
+          password    include     system-auth
+          session     include     system-auth
+        mode: '0644'
+
+    # lid.sh stops/starts the daemon on lid close/open without a prompt
+    - name: Allow passwordless open-fprintd stop/start (lid switch)
+      copy:
+        dest: /etc/sudoers.d/open-fprintd
+        content: |
+          {{ target_user }} ALL=(root) NOPASSWD: /usr/bin/systemctl stop open-fprintd.service
+          {{ target_user }} ALL=(root) NOPASSWD: /usr/bin/systemctl start open-fprintd.service
+        mode: '0440'
+        validate: 'visudo -cf %s'
+
+# ── ThinkPad / kernel knobs ──────────────────────────────────────────
+- name: ThinkPad and kernel configuration
+  become: "{{ not running_as_root }}"
+  block:
+    # Lid close is handled by Hyprland (lid.sh: panel off, keep running) and
+    # sleeping is hypridle's job (caffeine-toggle.sh states). logind's default
+    # of suspending on lid close would override both — in particular it would
+    # put a docked laptop in "remote" mode to sleep the moment the lid shuts.
+    - name: Ensure the logind drop-in directory exists
+      file:
+        path: /etc/systemd/logind.conf.d
+        state: directory
+        mode: '0755'
+
+    - name: Leave the lid switch to Hyprland, not logind
+      copy:
+        dest: /etc/systemd/logind.conf.d/10-lid.conf
+        content: |
+          # barbatos: managed by ~/dotfiles (tasks/barbatos.yml)
+          [Login]
+          HandleLidSwitch=ignore
+          HandleLidSwitchExternalPower=ignore
+          HandleLidSwitchDocked=ignore
+        mode: '0644'
+      register: logind_lid
+
+    - name: Reload logind to pick up the lid setting
+      command: systemctl kill -s HUP systemd-logind
+      when: logind_lid is changed
+
+    - name: Module options (fan control, USB autosuspend, Apple keyboard fn keys)
+      copy:
+        dest: "/etc/modprobe.d/{{ item.file }}"
+        content: |
+          # barbatos: managed by ~/dotfiles (tasks/barbatos.yml)
+          {{ item.line }}
+        mode: '0644'
+      loop:
+        # lets thinkfan-tui / the waybar fan module read and drive the fan
+        - { file: thinkpad_acpi.conf,          line: 'options thinkpad_acpi fan_control=1' }
+        # dock and USB devices kept dropping off with autosuspend on
+        - { file: disable-usb-autosuspend.conf, line: 'options usbcore autosuspend=-1' }
+        # Apple keyboard: F-keys are F-keys, fn for media
+        - { file: hid_apple.conf,              line: 'options hid_apple fnmode=2' }
+      loop_control:
+        label: "{{ item.file }}"
+
+    - name: sysctl knobs (file watchers for nvim/docker, TCP MTU probing)
+      copy:
+        dest: "/etc/sysctl.d/{{ item.file }}"
+        content: |
+          # barbatos: managed by ~/dotfiles (tasks/barbatos.yml)
+          {{ item.line }}
+        mode: '0644'
+      loop:
+        - { file: 90-file-watchers.conf, line: 'fs.inotify.max_user_watches = 524288' }
+        - { file: 99-sysctl.conf,        line: 'net.ipv4.tcp_mtu_probing = 1' }
+      loop_control:
+        label: "{{ item.file }}"
+
+    - name: udev rule for Sony NetMD MiniDisc recorders (user access over USB)
+      copy:
+        dest: /etc/udev/rules.d/50-netmd.rules
+        content: |
+          # barbatos: managed by ~/dotfiles (tasks/barbatos.yml)
+          # Sony NetMD devices — see the MiniDisc notes in the personal vault
+          SUBSYSTEM=="usb", ATTR{idVendor}=="054c", ATTR{idProduct}=="0075", MODE="0666"
+          SUBSYSTEM=="usb", ATTR{idVendor}=="054c", ATTR{idProduct}=="0080", MODE="0666"
+          SUBSYSTEM=="usb", ATTR{idVendor}=="054c", ATTR{idProduct}=="0081", MODE="0666"
+          SUBSYSTEM=="usb", ATTR{idVendor}=="054c", ATTR{idProduct}=="0084", MODE="0666"
+          SUBSYSTEM=="usb", ATTR{idVendor}=="054c", ATTR{idProduct}=="0085", MODE="0666"
+          SUBSYSTEM=="usb", ATTR{idVendor}=="054c", ATTR{idProduct}=="00c6", MODE="0666"
+          SUBSYSTEM=="usb", ATTR{idVendor}=="054c", ATTR{idProduct}=="00c7", MODE="0666"
+          SUBSYSTEM=="usb", ATTR{idVendor}=="054c", ATTR{idProduct}=="00c8", MODE="0666"
+          SUBSYSTEM=="usb", ATTR{idVendor}=="054c", ATTR{idProduct}=="00c9", MODE="0666"
+          SUBSYSTEM=="usb", ATTR{idVendor}=="054c", ATTR{idProduct}=="00ca", MODE="0666"
+          SUBSYSTEM=="usb", ATTR{idVendor}=="054c", ATTR{idProduct}=="0286", MODE="0666"
+        mode: '0644'
+
+    # Stock rules from the PlatformIO project (ESP32 flashing). Fetched from
+    # upstream as their docs instruct; skipped quietly when offline.
+    - name: udev rules for PlatformIO boards
+      get_url:
+        url: https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/system/99-platformio-udev.rules
+        dest: /etc/udev/rules.d/99-platformio-udev.rules
+        mode: '0644'
+      ignore_errors: yes
+
+# ── Network: iwd + systemd-networkd, per-boot MAC randomisation ──────
+#
+# archinstall's "copy ISO network configuration" already gives iwd +
+# networkd + resolved with the right route metrics; all that's missing is
+# iwd's address randomisation. Takes effect on the next iwd restart / boot —
+# not restarted here because the playbook still needs the network afterwards.
+- name: Network configuration
+  become: "{{ not running_as_root }}"
+  block:
+    - name: Randomise the Wi-Fi MAC address on every boot
+      copy:
+        dest: /etc/iwd/main.conf
+        content: |
+          # barbatos: managed by ~/dotfiles (tasks/barbatos.yml)
+          [General]
+          AddressRandomization=once
+        mode: '0644'
+
+    - name: Point resolv.conf at systemd-resolved's stub
+      file:
+        src: /run/systemd/resolve/stub-resolv.conf
+        dest: /etc/resolv.conf
+        state: link
+        force: yes
+
+    - name: Resolve .local hosts via mDNS (avahi + nss-mdns)
+      lineinfile:
+        path: /etc/nsswitch.conf
+        regexp: '^hosts:'
+        line: 'hosts: mymachines mdns_minimal [NOTFOUND=return] resolve [!UNAVAIL=return] files myhostname dns'
+
+    - name: Firewall on, deny incoming by default
+      community.general.ufw:
+        state: enabled
+        policy: deny
+        direction: incoming
+
+    # Everything arriving on the tailnet is already authenticated by
+    # tailscale; without this, ssh over tailscale is dropped and the box
+    # can't be reached remotely after a reboot.
+    - name: Allow incoming traffic on the tailscale interface
+      community.general.ufw:
+        rule: allow
+        direction: in
+        interface: tailscale0
+
+# ── Services and groups ──────────────────────────────────────────────
+- name: Enable system services
+  systemd:
+    name: "{{ item }}"
+    enabled: yes
+  become: "{{ not running_as_root }}"
+  loop:
+    - iwd.service
+    - systemd-networkd.service
+    - systemd-resolved.service
+    - sddm.service
+    - bluetooth.service
+    - cups.service
+    - avahi-daemon.service
+    - ufw.service
+    - tailscaled.service
+    - thermald.service
+    - power-profiles-daemon.service
+    - earlyoom.service
+    - docker.service
+    - fstrim.timer
+  ignore_errors: yes   # a failed AUR/pacman install above shouldn't take the rest down
+
+- name: Add user to hardware and docker groups
+  user:
+    name: "{{ target_user }}"
+    groups:
+      - wheel
+      - docker
+      - uucp    # serial consoles (ESP32 etc.)
+      - input
+    append: yes
+  become: "{{ not running_as_root }}"

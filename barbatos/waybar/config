@@ -1,0 +1,5 @@
+// Main waybar config - just includes the base config from waybar_common
+// The base config will include machine-specific settings
+{
+	"include": ["~/.config/waybar_common/config-base.jsonc"]
+}

@@ -1409,7 +1409,7 @@ Files in this repo:
 | shared   | `common/hypr/common.lua` — returns a table so host configs can override binds              |
 | shinkiro | `shinkiro/hypr/hyprland.lua`                                                               |
 | kyrios   | `kyrios/hypr/hyprland.lua`                                                                 |
-| lupus    | still hyprlang: `lupus/hypr/{monitors,bindings,windows}.conf`, sourced by Omarchy's config |
+| barbatos | `barbatos/hypr/hyprland.lua` (lid switch binds, dock monitors, NVIDIA cursor setting)      |
 
 Syntax mapping for everything used here:
 

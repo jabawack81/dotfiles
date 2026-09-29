@@ -1,5 +1,10 @@
 # Hyprland Keybindings: Shinkiro vs Lupus
 
+> **Historical (Sep 2026).** The T470p was reinstalled on vanilla Arch as `barbatos`
+> and now loads the same `common/hypr/common.lua` as every other machine, so there is
+> no Omarchy side to compare against any more. Kept because the "Plan" column is the
+> rationale for the bindings that ended up in `common.lua`.
+
 Side-by-side comparison of Hyprland keybindings between the two machines, so you can decide what to align.
 
 | Machine  | Config source                                                      |

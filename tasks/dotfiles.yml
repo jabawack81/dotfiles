@@ -79,7 +79,7 @@
     msg: "Found configs: {{ common_configs.files | map(attribute='path') | map('basename') | list }}"
   when: is_personal_machine
 
-# The four non-omarchy tasks below (stat -> backup -> remove -> symlink) must
+# The four tasks below (stat -> backup -> remove -> symlink) must
 # share one exclusion list. They drifted once: 'git' was excluded from the
 # symlink step but not the removal step, so ~/.config/git was deleted on every
 # run and never recreated. Anything added to one list goes in all four.
@@ -91,31 +91,20 @@
 # core.excludesfile in devtools.yml, so it needs no ~/.config entry at all.
 - name: Handle common configs with backup
   block:
-    - name: Check existing configs (non-omarchy)
+    - name: Check existing configs
       stat:
         path: "{{ config_dir }}/{{ item.path | basename }}"
       register: config_stat
       loop: "{{ common_configs.files }}"
       when:
         - is_personal_machine
-        - not is_omarchy_machine
         - item.path | basename not in ['thunar', 'waybar', 'bin', 'hypr', 'git', 'claude', 'wayland-sessions']
 
-    - name: Check existing configs (omarchy)
-      stat:
-        path: "{{ config_dir }}/{{ item.path | basename }}"
-      register: config_stat_omarchy
-      loop: "{{ common_configs.files }}"
-      when:
-        - is_omarchy_machine
-        - item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'bin', 'git', 'bedtime', 'claude', 'wayland-sessions']
-
-    - name: Backup existing configs that aren't symlinks (non-omarchy)
+    - name: Backup existing configs that aren't symlinks
       command: mv "{{ config_dir }}/{{ item.item.path | basename }}" "{{ backup_dir }}/{{ item.item.path | basename }}-backup"
       loop: "{{ config_stat.results }}"
       when:
         - is_personal_machine
-        - not is_omarchy_machine
         - item.stat is defined
         - item.stat.exists
         - not item.stat.islnk
@@ -123,26 +112,13 @@
       loop_control:
         label: "{{ item.item.path | basename }}"
 
-    - name: Backup existing configs that aren't symlinks (omarchy)
-      command: mv "{{ config_dir }}/{{ item.item.path | basename }}" "{{ backup_dir }}/{{ item.item.path | basename }}-backup"
-      loop: "{{ config_stat_omarchy.results }}"
-      when:
-        - is_omarchy_machine
-        - item.stat is defined
-        - item.stat.exists
-        - not item.stat.islnk
-        - item.item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'bin', 'git', 'bedtime', 'claude', 'wayland-sessions']
-      loop_control:
-        label: "{{ item.item.path | basename }}"
-
-    - name: Remove existing config directories after backup (non-omarchy)
+    - name: Remove existing config directories after backup
       file:
         path: "{{ config_dir }}/{{ item.item.path | basename }}"
         state: absent
       loop: "{{ config_stat.results }}"
       when:
         - is_personal_machine
-        - not is_omarchy_machine
         - item.stat is defined
         - item.stat.exists
         - not item.stat.islnk
@@ -150,21 +126,9 @@
       loop_control:
         label: "{{ item.item.path | basename }}"
 
-    - name: Remove existing config directories after backup (omarchy)
-      file:
-        path: "{{ config_dir }}/{{ item.item.path | basename }}"
-        state: absent
-      loop: "{{ config_stat_omarchy.results }}"
-      when:
-        - is_omarchy_machine
-        - item.stat is defined
-        - item.stat.exists
-        - not item.stat.islnk
-        - item.item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'bin', 'git', 'bedtime', 'claude', 'wayland-sessions']
-      loop_control:
-        label: "{{ item.item.path | basename }}"
-
-    - name: Create symlinks for common configs (non-omarchy machines)
+    # A config that also exists under <hostname>/ is linked from there
+    # later in this file; linking the common one first just flip-flops.
+    - name: Create symlinks for common configs (personal machines)
       file:
         src: "{{ item.path }}"
         dest: "{{ config_dir }}/{{ item.path | basename }}"
@@ -175,21 +139,8 @@
       loop: "{{ common_configs.files }}"
       when:
         - is_personal_machine
-        - not is_omarchy_machine
         - item.path | basename not in ['thunar', 'waybar', 'bin', 'hypr', 'git', 'claude', 'wayland-sessions']
-
-    - name: Create symlinks for common configs (omarchy machine)
-      file:
-        src: "{{ item.path }}"
-        dest: "{{ config_dir }}/{{ item.path | basename }}"
-        state: link
-        force: yes
-        owner: "{{ target_user }}"
-        group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
-      loop: "{{ common_configs.files }}"
-      when:
-        - is_omarchy_machine
-        - item.path | basename not in ['hypr', 'waybar', 'dunst', 'wlogout', 'thunar', 'bin', 'git', 'bedtime', 'claude', 'wayland-sessions']  # omarchy manages these
+        - not (dotfiles_dir ~ '/' ~ hostname ~ '/' ~ (item.path | basename)) is directory
 
     - name: Link nvim .neoconf.json file
       file:

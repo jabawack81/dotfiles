@@ -262,7 +262,7 @@ Setup dotfiles based on hostname
 ├── Detect system (hostname + OS family)
 ├── Load private configuration
 ├── Create backup directory
-├── For Personal Machines (kyrios/shinkiro/lupus):
+├── For Personal Machines (kyrios/shinkiro/barbatos):
 │   ├── Install required packages
 │   ├── Create symlinks for configs
 │   ├── Configure GUI tools (waybar, hyprland, etc.)

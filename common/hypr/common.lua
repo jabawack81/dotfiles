@@ -148,7 +148,7 @@ M.mainMod = mainMod
 local function D(text) return { description = text } end
 M.D = D
 
--- Keys aligned with Omarchy (lupus) idioms for cross-machine muscle memory.
+-- Keys aligned with Omarchy idioms (from the T470p's Omarchy days) for muscle memory.
 hl.bind(mainMod .. " + W",         hl.dsp.window.close(),                      D "Close window")           -- was Super+C
 hl.bind(mainMod .. " + D",         hl.dsp.exec_cmd("discord"),                 D "Discord")
 hl.bind(mainMod .. " + SHIFT + F", hl.dsp.exec_cmd(M.fileManager),             D "File manager")           -- was Super+E

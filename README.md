@@ -52,7 +52,7 @@ For full list of available commands: `make help`
 
 - **kyrios**: Personal Arch Linux laptop (battery monitoring, single display)
 - **shinkiro**: Personal Arch Linux desktop (dual 4K displays, GPU monitoring, EWW widgets)
-- **lupus**: Arch Linux ThinkPad T470p (hybrid Intel/NVIDIA GPU)
+- **barbatos**: Arch Linux ThinkPad T470p (hybrid Intel/NVIDIA 940MX, fingerprint reader). Formerly `lupus` on Omarchy; see `barbatos/README.md`
 - **virtue**: Debian server. Headless profile, detected by OS family rather than hostname, so any other Debian box gets the same treatment. Installs zsh + oh-my-zsh, Neovim with the LazyVim config, lazygit, tmux, and the same dev toolchain as the other machines (rbenv + latest Ruby, nodenv + Node, pnpm, SDKMAN, g). No desktop, no Claude Code.
 - **Work machines**: Limited configs for non-personal machines
 
@@ -87,14 +87,14 @@ Nothing to do: the playbook clones TPM and installs the plugins listed in `.tmux
 - `common/`: Shared configurations across personal machines (nvim, tmux, ghostty, btop, etc.)
 - `kyrios/`: Laptop-specific configurations (Hyprland, EWW, Waybar)
 - `shinkiro/`: Desktop-specific configurations (dual display, GPU monitoring)
-- `lupus/`: ThinkPad-specific configurations
+- `barbatos/`: ThinkPad T470p configurations (NVIDIA sleep hook, lid switch, GPU/fan waybar modules)
 
 **Documentation**:
 - `docs/`: Comprehensive documentation
   - `ARCHITECTURE.md`: Project architecture overview
   - `ANSIBLE.md`: Ansible playbook documentation
   - `HYPRLAND_CONFIG.md`: Hyprland window manager config
-  - `HYPRLAND_KEYBINDINGS_COMPARISON.md`: Shinkiro vs Lupus keybinding diff
+  - `HYPRLAND_KEYBINDINGS_COMPARISON.md`: Shinkiro vs Omarchy keybinding diff (historical — explains the current common.lua bindings)
   - `SETUP.md`: Private config and initial setup
   - `TESTING.md`: Ansible testing and validation guide
   - `NEOVIM_TROUBLESHOOTING.md`: LSP and Mason debugging guide

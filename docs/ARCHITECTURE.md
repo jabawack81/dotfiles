@@ -6,11 +6,11 @@ Architectural Documentation for AI-Assisted Development
 
 When starting a new session, ALWAYS:
 1. Run `hostname` to detect which machine we're on
-2. Check if it's kyrios (laptop), shinkiro (desktop), lupus (laptop/omarchy), virtue (Debian server), or a work machine
+2. Check if it's kyrios (laptop), shinkiro (desktop), barbatos (ThinkPad T470p), virtue (Debian server), or a work machine
 3. Adapt responses based on the current environment:
    - **kyrios**: Intel laptop, no AMD GPU tools, limited screen space
    - **shinkiro**: AMD desktop, dual 4K monitors, full GPU capabilities
-   - **lupus**: ThinkPad T470p, Intel+NVIDIA hybrid GPU, Omarchy, NVIDIA 580xx driver
+   - **barbatos**: ThinkPad T470p, Intel+NVIDIA 940MX hybrid, legacy NVIDIA 580xx driver, fingerprint reader
    - **virtue** (and any Debian host): Headless server, shell + Neovim + dev toolchain, no desktop
    - **work machines**: Limited configs, likely macOS, restricted permissions
 
@@ -26,6 +26,7 @@ The repository implements a hierarchical configuration model supporting four dis
 
 - **kyrios**: Laptop workstation (Intel architecture)
 - **shinkiro**: Desktop development environment (AMD architecture)
+- **barbatos**: ThinkPad T470p (Intel + NVIDIA hybrid)
 - **virtue**: Headless Debian server, detected by OS family; shell and editor only
 - **work**: Restricted configuration subset for non-personal systems
 
@@ -38,6 +39,8 @@ Repository Structure:
 ├── common/          # Shared baseline configurations
 ├── kyrios/         # Laptop-specific overrides
 ├── shinkiro/       # Desktop-specific overrides
+├── barbatos/       # ThinkPad T470p overrides
+├── tasks/          # Playbook task files (barbatos.yml = /etc-level hardware setup)
 ├── setup.sh        # Intelligent orchestration wrapper
 └── setup-dotfiles.yml  # Ansible playbook with advanced logic
 ```
@@ -129,18 +132,19 @@ Built-in diagnostic capabilities:
   - No battery module in waybar
   - Dual monitor workspace rules
 
-### lupus (Laptop - Omarchy)
-- **Hardware**: ThinkPad T470p, Intel HD 630 iGPU + NVIDIA GeForce 940MX dGPU (Maxwell)
-- **Display**: Single 1920x1080
-- **OS**: Omarchy (Arch Linux variant) - desktop packages managed by Omarchy
-- **Special configs**:
-  - NVIDIA proprietary driver (nvidia-580xx-dkms from AUR, Maxwell not supported by nvidia-open)
-  - Hybrid GPU mode via EnvyControl with RTD3 power management
-  - NVIDIA suspend/resume/hibernate services for VRAM preservation across sleep
-  - Hyprland NVIDIA env vars (NVD_BACKEND, LIBVA_DRIVER_NAME, __GLX_VENDOR_LIBRARY_NAME)
-  - cursor { no_hardware_cursors = true } for NVIDIA Wayland compatibility
-  - GTK settings.ini and fontconfig for proper font rendering with NVIDIA GL
-  - GPU setup is handled automatically by the playbook's lupus-specific tasks
+### barbatos (ThinkPad T470p)
+- **Hardware**: ThinkPad T470p, Intel HD 630 iGPU + NVIDIA GeForce 940MX dGPU (Maxwell), Validity fingerprint reader
+- **Display**: Single 1920x1080 panel; dock monitors on DP-4/DP-5 forced to 1080p60 (the 940MX can't drive 4K smoothly)
+- **OS**: Vanilla Arch Linux + Hyprland (was `lupus` on Omarchy until Sep 2026)
+- **Network**: iwd + systemd-networkd + systemd-resolved with per-boot MAC randomisation (not NetworkManager)
+- **Special configs** (`tasks/barbatos.yml` for /etc, `barbatos/` for user configs):
+  - NVIDIA legacy driver (nvidia-580xx-dkms from AUR — Maxwell is not supported by nvidia-open, which the playbook removes)
+  - EnvyControl mode set by `barbatos_gpu_mode` (default `hybrid`: desktop on Intel, `prime-run` for the dGPU; `integrated` powers it off — the 940MX has no RTD3, so in hybrid it never sleeps)
+  - Suspend handled by a system-sleep hook that removes the GPU from the PCI bus (the nvidia-suspend/resume services are disabled on purpose)
+  - `cursor.no_hardware_cursors = true`; the global NVIDIA GL/VA env vars are intentionally not set
+  - Lid switch turns the panel off and stops the fingerprint daemon (`barbatos/hypr/lid.sh`)
+  - Fingerprint via python-validity + open-fprintd, pam_fprintd first for sudo/su/hyprlock/sddm/polkit
+  - ThinkPad fan control (`thinkpad_acpi fan_control=1`) feeding the waybar fan module
 
 ### Debian Servers (virtue)
 - **OS**: Debian (any host where `ansible_facts['os_family'] == 'Debian'`)

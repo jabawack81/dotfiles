@@ -1,22 +1,79 @@
 ---
 # Package installation — pacman, AUR, and machine-specific packages
 
-- name: Ensure required packages are installed (Personal machines - non-omarchy)
+# steam (in required_packages) lives in [multilib], which archinstall leaves
+# commented out. Colour and parallel downloads are just nicer to look at.
+- name: Configure pacman.conf (multilib, colour, parallel downloads)
+  become: "{{ not running_as_root }}"
+  when: is_personal_machine
+  block:
+    - name: Enable the multilib repository
+      replace:
+        path: /etc/pacman.conf
+        regexp: '^#\[multilib\]\n#Include = /etc/pacman.d/mirrorlist'
+        replace: "[multilib]\nInclude = /etc/pacman.d/mirrorlist"
+      register: multilib_enabled
+
+    - name: Set pacman options
+      lineinfile:
+        path: /etc/pacman.conf
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        insertafter: '^\[options\]'
+      loop:
+        - { regexp: '^#?Color$',                 line: 'Color' }
+        - { regexp: '^#?ILoveCandy$',            line: 'ILoveCandy' }
+        - { regexp: '^#?ParallelDownloads = ',   line: 'ParallelDownloads = 5' }
+
+    - name: Refresh package databases after enabling multilib
+      pacman:
+        update_cache: yes
+      when: multilib_enabled.changed
+
+# barbatos: archinstall's Hyprland profile picks nvidia-open, which does not
+# support the Maxwell 940MX (the module never loads) and conflicts with the
+# nvidia-580xx-* AUR packages. It has to go before required_packages, because
+# steam needs a vulkan-driver / lib32-vulkan-driver provider and pacman will
+# happily keep nvidia-utils around to satisfy that. Intel first, then remove.
+- name: Swap the Vulkan providers from NVIDIA to Intel (barbatos)
+  become: "{{ not running_as_root }}"
+  when: hostname == 'barbatos'
+  block:
+    - name: Install the Intel Vulkan drivers
+      pacman:
+        name:
+          - vulkan-intel
+          - lib32-vulkan-intel
+        state: present
+
+    # -Qq resolves "provides", so once nvidia-580xx-utils is in this prints
+    # its name rather than failing — compare the name, not the exit code.
+    - name: Check for the stock nvidia-utils
+      command: pacman -Qq nvidia-utils
+      register: stock_nvidia_utils
+      changed_when: false
+      failed_when: false
+      check_mode: no
+
+    # nvidia-prime goes too while it's bound to the stock nvidia-utils; it
+    # comes back from the AUR step once nvidia-580xx-utils is in place.
+    - name: Remove nvidia-open in favour of the legacy 580xx branch
+      pacman:
+        name:
+          - nvidia-prime
+          - nvidia-open
+          - nvidia-utils
+          - lib32-nvidia-utils
+        state: absent
+      when: stock_nvidia_utils.stdout | trim == 'nvidia-utils'
+
+- name: Ensure required packages are installed (Personal machines)
   pacman:
     name: "{{ item }}"
     state: present
   become: "{{ not running_as_root }}"
   loop: "{{ required_packages }}"
-  when:
-    - is_personal_machine
-    - not is_omarchy_machine
-
-- name: Skip package installation on omarchy machines
-  debug:
-    msg: |
-      Skipping required_packages installation on omarchy machine.
-      Omarchy manages desktop packages. Only lupus-specific packages will be installed.
-  when: is_omarchy_machine
+  when: is_personal_machine
 
 - name: Skip package installation on work machines (macOS)
   debug:
@@ -117,9 +174,7 @@
   register: yay_check
   ignore_errors: yes
   changed_when: false
-  when:
-    - is_personal_machine
-    - not is_omarchy_machine
+  when: is_personal_machine
 
 - name: Install yay dependencies
   pacman:
@@ -130,7 +185,6 @@
   become: "{{ not running_as_root }}"
   when:
     - is_personal_machine
-    - not is_omarchy_machine
     - yay_check.rc != 0
 
 - name: Clone yay repository
@@ -140,7 +194,6 @@
     force: yes
   when:
     - is_personal_machine
-    - not is_omarchy_machine
     - yay_check.rc != 0
 
 - name: Build and install yay
@@ -151,7 +204,6 @@
     creates: /usr/bin/yay
   when:
     - is_personal_machine
-    - not is_omarchy_machine
     - yay_check.rc != 0
 
 - name: Install PipeWire audio compatibility layers
@@ -161,40 +213,30 @@
       - pipewire-jack
     state: present
   become: "{{ not running_as_root }}"
-  when:
-    - is_personal_machine
-    - not is_omarchy_machine
-
-- name: Configure sudo for target user (when running as root)
-  lineinfile:
-    path: /etc/sudoers.d/ansible-aur
-    line: "{{ target_user }} ALL=(ALL) NOPASSWD: ALL"
-    create: yes
-    mode: '0440'
-    validate: 'visudo -cf %s'
-  when:
-    - running_as_root
-    - is_personal_machine
-    - not is_omarchy_machine
+  when: is_personal_machine
 
 # yay refuses to run as root, so it escalates on its own via sudo. Running as a
 # normal user under Ansible there is no tty for sudo to prompt on, and every
 # failed attempt counts toward pam_faillock (deny=3) — which locked the account
-# partway through the run and failed every become task after it. The old task
-# also ended in `|| true`, so it reported "changed" for all ten packages while
-# installing nothing.
+# partway through the run and failed every become task after it.
 #
-# So: work out what is actually missing, hand sudo a working askpass, and let a
-# genuine build failure be visible.
+# The password Ansible collects with -K is not exposed as a variable either
+# (an askpass helper built from ansible_become_password never fired — it just
+# printed "install by hand" on every run). So: work out what is actually
+# missing, drop in a sudoers rule that lets yay run *pacman only* without a
+# password for the duration of the block, and let a genuine build failure be
+# visible.
+#
+# Machine-specific AUR packages (<hostname>_aur_packages) ride along here.
 - name: Install AUR packages with yay
-  when:
-    - is_personal_machine
-    - not is_omarchy_machine
+  when: is_personal_machine
+  vars:
+    aur_wanted: "{{ aur_packages + lookup('vars', hostname ~ '_aur_packages', default=[]) }}"
   block:
     - name: Check which AUR packages are already installed
       command: pacman -Qq {{ item | quote }}
       register: aur_query
-      loop: "{{ aur_packages }}"
+      loop: "{{ aur_wanted }}"
       changed_when: false
       failed_when: false
       check_mode: no
@@ -203,46 +245,19 @@
       set_fact:
         aur_missing: "{{ aur_query.results | selectattr('rc', 'ne', 0) | map(attribute='item') | list }}"
 
-    # When running as root a temporary NOPASSWD sudoers drop-in is already in
-    # place (see above), so no askpass is needed. Otherwise we need the become
-    # password Ansible collected with -K.
-    - name: Decide how yay should authenticate
-      set_fact:
-        yay_askpass: "{{ (ansible_facts['env']['XDG_RUNTIME_DIR'] | default('/tmp')) ~ '/ansible-yay-askpass' }}"
-        yay_can_escalate: "{{ running_as_root or (ansible_become_password | default('')) | length > 0 }}"
-
-    - name: Report AUR packages that need installing by hand
-      debug:
-        msg: >-
-          {{ aur_missing | length }} AUR package(s) missing and no become password
-          is available, so they were not installed: {{ aur_missing | join(', ') }}.
-          Install them with: yay -S {{ aur_missing | join(' ') }}
-      when:
-        - aur_missing | length > 0
-        - not yay_can_escalate
-
     - name: Install missing AUR packages
-      when:
-        - aur_missing | length > 0
-        - yay_can_escalate
+      when: aur_missing | length > 0
       block:
-        - name: Create askpass helper for yay
+        - name: Temporarily let yay run pacman without a password
           copy:
-            dest: "{{ yay_askpass }}"
-            mode: '0700'
-            content: |
-              #!/bin/sh
-              printf '%s\n' {{ (ansible_become_password | default('')) | quote }}
-          no_log: true
-          when: not running_as_root
+            dest: /etc/sudoers.d/ansible-yay
+            content: "{{ target_user }} ALL=(root) NOPASSWD: /usr/bin/pacman\n"
+            mode: '0440'
+            validate: 'visudo -cf %s'
+          become: "{{ not running_as_root }}"
 
         - name: Install AUR packages with yay
-          command: >-
-            yay -S --noconfirm --norebuild --noredownload
-            {{ '--sudoflags -A' if not running_as_root else '' }}
-            -- {{ item | quote }}
-          environment:
-            SUDO_ASKPASS: "{{ yay_askpass }}"
+          command: yay -S --noconfirm --norebuild --noredownload -- {{ item | quote }}
           loop: "{{ aur_missing }}"
           become: "{{ running_as_root }}"
           become_user: "{{ target_user if running_as_root else omit }}"
@@ -251,20 +266,11 @@
           # unlike `|| true` this still shows up in the recap as ignored.
           ignore_errors: yes
       always:
-        - name: Remove the yay askpass helper
+        - name: Remove the temporary yay sudoers rule
           file:
-            path: "{{ yay_askpass }}"
+            path: /etc/sudoers.d/ansible-yay
             state: absent
-          when: not running_as_root
-
-- name: Remove temporary sudo configuration
-  file:
-    path: /etc/sudoers.d/ansible-aur
-    state: absent
-  when:
-    - running_as_root
-    - is_personal_machine
-    - not is_omarchy_machine
+          become: "{{ not running_as_root }}"
 
 - name: Install shinkiro-specific packages (AMD GPU tools)
   pacman:
@@ -311,17 +317,11 @@
   when: hostname == 'kyrios'
   ignore_errors: yes
 
-- name: Install lupus-specific packages (NVIDIA GPU)
+- name: Install barbatos-specific packages (Intel/NVIDIA hybrid, ThinkPad)
   pacman:
     name: "{{ item }}"
     state: present
   become: "{{ not running_as_root }}"
-  loop: "{{ lupus_packages }}"
-  when: hostname == 'lupus'
-  ignore_errors: yes
-
-- name: Install lupus-specific AUR packages (fingerprint sensor)
-  shell: yay -S --noconfirm --needed --rebuild {{ item }}
-  loop: "{{ lupus_aur_packages }}"
-  when: hostname == 'lupus'
+  loop: "{{ barbatos_packages }}"
+  when: hostname == 'barbatos'
   ignore_errors: yes
