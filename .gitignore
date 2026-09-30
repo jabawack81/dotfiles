@@ -7,6 +7,9 @@ backups/
 # Playbook run logs (make setup / make dry-run)
 logs/
 
+# Build output for the vendored caelestia shell plugin
+common/caelestia-shell/build/
+
 # Colour schemes caelestia-shell generates from the current wallpaper and
 # writes into the config dirs we symlink from here
 */hypr/scheme/

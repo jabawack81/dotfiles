@@ -1,0 +1,12 @@
+Vendored copy of caelestia-dots/shell.
+
+    upstream  https://github.com/caelestia-dots/shell
+    version   v2.5.0
+    commit    d999d4878ee4cec134168e60d913714566a8cfa6
+    imported  2026-09-30
+
+Licensed GPL-3.0 by its authors; see LICENSE in this directory. Local
+changes live in files named *Custom* or listed in CHANGES-LOCAL.md so that
+`make caelestia-update` can show them against a fresh upstream checkout.
+
+Update with: make caelestia-update  (see the Makefile)
