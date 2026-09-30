@@ -76,6 +76,7 @@ gh auth login
 gh auth refresh -h github.com -s admin:ssh_signing_key
 gh ssh-key add ~/.ssh/id_ed25519_github.pub --title "$(hostname)"
 gh ssh-key add ~/.ssh/id_ed25519_github.pub --title "$(hostname)" --type signing
+git remote set-url origin git@github.com:jabawack81/dotfiles.git   # the clone above is HTTPS; pushes need SSH
 make setup
 ```
 
