@@ -316,9 +316,12 @@ faillock --user "$USER"          # entries marked V are still counting
 sudo faillock --user "$USER" --reset
 ```
 
-Check with `sudo -v` before a `-K` run: it fails in a second and tells you
-whether the problem is the password or a lockout, instead of burying it under
-a cascade of unrelated "unreachable" errors.
+`make setup` and `make dry-run` check the password with `sudo -v` before
+starting the play, so a typo fails in a second with "sudo rejected that
+password" instead of burying it under a cascade of unrelated "unreachable"
+errors. The verified password reaches Ansible through a temporary 0600 file
+and `--become-password-file`, not `-K`. If you run `ansible-playbook` by hand,
+run `sudo -v` first yourself.
 
 What used to trip this was the AUR task itself. yay cannot run as root, so it
 escalates via its own `sudo`; with no tty and no askpass, each package in the

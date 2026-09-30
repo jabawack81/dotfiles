@@ -22,12 +22,23 @@ LOG_DIR := logs
 # written to the log has the escape codes stripped. pipefail keeps ansible's
 # exit status so a failed run still fails make.
 #   $(1) = log name prefix, $(2) = extra ansible-playbook args
+# The become password is read once here and checked with `sudo -v` before
+# anything runs, so a typo fails in a second instead of minutes into the play.
+# It then reaches ansible through a 0600 temp file (removed on exit) rather
+# than -K, which would prompt a second time, or -e, which would show in ps.
 define run_playbook
 	@mkdir -p $(LOG_DIR)
 	@log="$(LOG_DIR)/$(1)-$$(date +%Y%m%d-%H%M%S).log"; \
+	read -rs -p "BECOME password: " pw; echo; \
+	if ! printf '%s\n' "$$pw" | sudo -S -k -v 2>/dev/null; then \
+	  echo -e "$(RED)✗ sudo rejected that password, nothing was run$(RESET)"; exit 1; \
+	fi; \
+	pwfile="$$(mktemp -p "$${XDG_RUNTIME_DIR:-/tmp}" become.XXXXXX)"; \
+	chmod 600 "$$pwfile"; printf '%s' "$$pw" > "$$pwfile"; unset pw; \
+	trap 'rm -f "$$pwfile"' EXIT; \
 	echo -e "$(BOLD)Log: $$log$(RESET)"; \
 	set -o pipefail; \
-	ANSIBLE_FORCE_COLOR=1 ansible-playbook -K $(2) $(PLAYBOOK) 2>&1 \
+	ANSIBLE_FORCE_COLOR=1 ansible-playbook --become-password-file "$$pwfile" $(2) $(PLAYBOOK) 2>&1 \
 	  | tee >(sed -u 's/\x1b\[[0-9;]*[A-Za-z]//g' > "$$log"); \
 	status=$$?; \
 	echo -e "$(BOLD)Log saved to $$log$(RESET)"; \
