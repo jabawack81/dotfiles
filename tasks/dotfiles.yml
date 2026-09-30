@@ -231,7 +231,9 @@
   loop: "{{ hostname_configs.files }}"
   when:
     - hostname_dir.stat.exists
-    - item.path | basename not in ['waybar', 'hypr', 'claude']  # These are handled specially
+    # greetd is a system config installed to /etc by desktop.yml; the rest
+    # are handled by their own symlink tasks there.
+    - item.path | basename not in ['waybar', 'hypr', 'claude', 'greetd']
 
 - name: Link .tmux.conf to home directory
   file:

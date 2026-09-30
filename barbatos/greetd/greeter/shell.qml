@@ -68,8 +68,17 @@ ShellRoot {
         }
 
         function onReadyToLaunch(): void {
-            if (root.session)
-                Greetd.launch(root.session.exec);
+            if (!root.session)
+                return;
+
+            // Through a shell, not straight to exec: the Exec lines in
+            // /usr/share/wayland-sessions are shell fragments, not argv —
+            // "env BAR=caelestia /usr/bin/start-hyprland" and
+            // "uwsm start -e -D Hyprland hyprland.desktop". Passing the
+            // whole string as the command has greetd look for a binary of
+            // that literal name, which fails silently and leaves a black
+            // screen where the session should be.
+            Greetd.launch(["sh", "-c", root.session.exec]);
         }
 
         function onError(error: string): void {
