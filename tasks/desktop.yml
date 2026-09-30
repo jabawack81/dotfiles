@@ -71,6 +71,33 @@
         - regreet.toml
         - regreet.css
 
+    # The quickshell greeter and a second greetd config for trying it on a
+    # spare VT. Installed but not active: config.toml still starts regreet
+    # until the launch path has been tested. See barbatos/greetd/TESTING.md.
+    - name: Check for a quickshell greeter
+      stat:
+        path: "{{ dotfiles_dir }}/{{ hostname }}/greetd/greeter/shell.qml"
+      register: qs_greeter
+
+    - name: Install the quickshell greeter
+      copy:
+        src: "{{ dotfiles_dir }}/{{ hostname }}/greetd/greeter/"
+        dest: /etc/greetd/greeter/
+        owner: root
+        group: root
+        mode: '0644'
+        directory_mode: '0755'
+      when: qs_greeter.stat.exists
+
+    - name: Install the greeter test config
+      copy:
+        src: "{{ dotfiles_dir }}/{{ hostname }}/greetd/test.toml"
+        dest: /etc/greetd/test.toml
+        owner: root
+        group: root
+        mode: '0644'
+      when: qs_greeter.stat.exists
+
     # The greeter runs as the `greeter` user and cannot read the home
     # directory, so the wallpaper is copied into /etc/greetd. Prefer the one
     # actually on screen, so the greeter and the desktop show the same image.

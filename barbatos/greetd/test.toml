@@ -1,0 +1,8 @@
+# A second greetd for testing the quickshell greeter on vt 3, leaving the
+# real one on vt 1 alone. See TESTING.md.
+[terminal]
+vt = 3
+
+[default_session]
+command = "cage -s -m last -- qs -p /etc/greetd/greeter"
+user = "greeter"
