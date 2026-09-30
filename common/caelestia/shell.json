@@ -34,15 +34,15 @@
                 "enabled": true
             },
             {
-                "id": "bedtime",
-                "enabled": true
-            },
-            {
                 "id": "tray",
                 "enabled": true
             },
             {
                 "id": "clock",
+                "enabled": true
+            },
+            {
+                "id": "bedtime",
                 "enabled": true
             },
             {

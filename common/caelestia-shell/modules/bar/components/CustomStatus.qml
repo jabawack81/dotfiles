@@ -132,9 +132,10 @@ StyledRect {
                 }
                 try {
                     const data = JSON.parse(out);
-                    // Strip the Nerd Font glyph or emoji and keep any value;
-                    // icon-only scripts legitimately leave this empty.
-                    root.label = (data.text ?? "").replace(/[^\x20-\x7E]/g, "").trim();
+                    // Drop the Nerd Font glyph or emoji the scripts prefix,
+                    // but keep the units — a bare "37" reads worse than
+                    // "37°". Icon-only scripts legitimately leave this empty.
+                    root.label = (data.text ?? "").replace(/[^\x20-\x7E°%]/g, "").trim();
                     root.tooltipText = data.tooltip ?? "";
                     root.statusClass = data.class ?? "";
                     root.hasData = true;
