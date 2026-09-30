@@ -68,6 +68,11 @@ ColumnLayout {
                 popouts.hasCurrent = false;
                 tray.expanded = true;
             }
+        } else if (id === "caffeine") {
+            // Local addition (not upstream) — see CHANGES-LOCAL.md
+            popouts.currentName = "caffeine";
+            popouts.currentCenter = Qt.binding(() => (ch.item as Item).mapToItem(root, 0, (ch.item as Item).implicitHeight / 2).y);
+            popouts.hasCurrent = true;
         } else if (id === "activeWindow" && Config.bar.popouts.activeWindow && Config.bar.activeWindow.showOnHover) {
             popouts.currentName = id.toLowerCase();
             popouts.currentCenter = (ch.item as Item).mapToItem(root, 0, (ch.item as Item).implicitHeight / 2).y ?? 0;
@@ -222,7 +227,8 @@ ColumnLayout {
                             hibernate: "mode_standby"
                         })
                         cmd: ["sh", "-c", "$HOME/.config/waybar_common/caffeine-status.sh 2>/dev/null"]
-                        clickCmd: ["sh", "-c", "$HOME/.config/waybar_common/caffeine-toggle.sh"]
+                        // No clickCmd: hovering opens the state picker popout
+                        // instead of cycling blindly through the states.
                     }
                 }
             }

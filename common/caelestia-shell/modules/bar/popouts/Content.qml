@@ -107,6 +107,12 @@ Item {
             sourceComponent: Battery {}
         }
 
+        // Local addition (not upstream) — see CHANGES-LOCAL.md
+        Popout {
+            name: "caffeine"
+            sourceComponent: CustomCaffeine {}
+        }
+
         Popout {
             name: "audio"
             sourceComponent: AudioPopout {
