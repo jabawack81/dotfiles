@@ -15,8 +15,19 @@ set -euo pipefail
 
 LID_STATE_FILE="/proc/acpi/button/lid/LID/state"
 
+# Number of enabled monitors (hyprctl monitors omits disabled ones).
+enabled_monitors() {
+  hyprctl monitors 2>/dev/null | grep -c '^Monitor' || echo 0
+}
+
 lid_closed() {
-  hyprctl eval 'hl.monitor({ output = "eDP-1", disabled = true })' >/dev/null
+  # Only blank the panel when something else can still show a desktop.
+  # Disabling the sole output leaves Hyprland with zero monitors: windows get
+  # shuffled onto a fallback head and layer surfaces (the bar) are destroyed,
+  # and waybar does not always recreate them when the output comes back.
+  if [ "$(enabled_monitors)" -gt 1 ]; then
+    hyprctl eval 'hl.monitor({ output = "eDP-1", disabled = true })' >/dev/null
+  fi
   sudo -n systemctl stop open-fprintd.service 2>/dev/null || true
 }
 

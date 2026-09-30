@@ -31,14 +31,41 @@ stop_dunst() {
     pkill -x dunst 2>/dev/null || true
 }
 
+# Same crash-respawn treatment as quickshell below. waybar exits when the last
+# output goes away (closing the lid on an undocked laptop) and does not always
+# recreate its bars when one comes back, so without this you stay bar-less
+# until the next login.
 start_waybar() {
     start_dunst
+
+    local cmd="waybar"
     # Reuse the existing waybar-launcher.sh which sets up rbenv etc.
-    if [[ -x "$HOME/.config/waybar/waybar-launcher.sh" ]]; then
-        exec "$HOME/.config/waybar/waybar-launcher.sh"
-    else
-        exec waybar
-    fi
+    [[ -x "$HOME/.config/waybar/waybar-launcher.sh" ]] && cmd="$HOME/.config/waybar/waybar-launcher.sh"
+
+    local restarts=0
+    local window_start; window_start=$(date +%s)
+
+    while true; do
+        "$cmd"
+
+        # Deliberate switch? bar-switch writes the new preference before
+        # killing us, so a preference that is no longer waybar means "stop".
+        local pref
+        pref=$(cat "$PREF_FILE" 2>/dev/null || echo waybar)
+        [[ "$pref" == "quickshell" || "$pref" == "qs" ]] && exit 0
+
+        local now; now=$(date +%s)
+        (( now - window_start > 60 )) && { restarts=0; window_start=$now; }
+        restarts=$((restarts + 1))
+
+        if (( restarts > 5 )); then
+            notify-send -u critical "Bar launcher" \
+                "waybar keeps exiting — giving up" 2>/dev/null || true
+            exit 1
+        fi
+
+        sleep 1
+    done
 }
 
 # Run quickshell under a bounded crash-respawn loop. quickshell-git can
@@ -48,6 +75,10 @@ start_waybar() {
 start_quickshell() {
     if ! command -v qs >/dev/null && ! command -v quickshell >/dev/null; then
         notify-send -u critical "Bar launcher" "quickshell not installed — falling back to waybar" 2>/dev/null || true
+        # Record the fallback: start_waybar reads the preference to tell a
+        # crash (respawn) from a deliberate switch, and would stop on the
+        # first exit if this still said quickshell.
+        echo waybar > "$PREF_FILE"
         start_waybar
     fi
     stop_dunst  # quickshell's NotificationServer takes over the D-Bus name
