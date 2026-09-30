@@ -68,6 +68,17 @@ make setup          # asks for your sudo password once
 
 Neovim comes from the official release tarball (apt's is too old for LazyVim), pinned to an exact version with sha256 checksums in `setup-dotfiles.yml`, and lands in `/opt/nvim-<version>` with `/opt/nvim` pointing at it. To upgrade, bump `neovim_release` and both hashes, then re-run `make setup`. The `private-config` submodule is not needed on a server.
 
+Commit signing on a server uses a plain SSH key instead of 1Password. Create it and register it on GitHub for both authentication and signing, then re-run `make setup` and git is configured to sign with it:
+
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_github -C jabawack81@gmail.com
+gh auth login
+gh auth refresh -h github.com -s admin:ssh_signing_key
+gh ssh-key add ~/.ssh/id_ed25519_github.pub --title "$(hostname)"
+gh ssh-key add ~/.ssh/id_ed25519_github.pub --title "$(hostname)" --type signing
+make setup
+```
+
 ## Manual Steps After Setup
 
 ### Neovim

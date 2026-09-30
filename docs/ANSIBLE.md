@@ -33,6 +33,7 @@ Servers get the shell, the editor and the language toolchain, and nothing that a
 | Shell          | oh-my-zsh, autosuggestions + syntax-highlighting, custom files, zsh as login shell                                        |
 | Configs        | Only `server_configs` (currently `nvim`) is symlinked into `~/.config`                                                    |
 | Dev tools      | `devtools.yml` as on every machine: rbenv + latest Ruby, nodenv + Node, pnpm, SDKMAN, g                                   |
+| Git signing    | SSH signing with `server_signing_key` (`~/.ssh/id_ed25519_github.pub`) when it exists; no 1Password on servers            |
 | Skipped        | `desktop.yml`, `claude.yml`, `bedtime-prompt.zsh`                                                                         |
 
 `bedtime-prompt.zsh` is skipped because it runs a script from `~/.config/bedtime` on every prompt, which servers never get. To upgrade Neovim, bump `neovim_release` and the `neovim_sha256` entries together and re-run the playbook; older releases stay under `/opt/nvim-<version>` until removed by hand. The tarball is staged in the root-owned install directory, never `/tmp`, so a local user cannot plant an archive for root to unpack.

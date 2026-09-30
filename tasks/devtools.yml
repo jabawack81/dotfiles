@@ -270,6 +270,47 @@
         scope: global
       when: ssh_signing_key is defined
 
+
+    # Servers: no 1Password agent, so sign with a local SSH key if one exists.
+    # ssh-keygen is git's default signing program for gpg.format=ssh, so
+    # gpg.ssh.program is deliberately left unset here.
+    - name: Check for a local SSH signing key (servers)
+      stat:
+        path: "{{ server_signing_key }}"
+      register: server_signing_key_stat
+      when: is_server_machine
+
+    - name: Configure Git to sign commits with the local SSH key (servers)
+      block:
+        - name: Set SSH signing config
+          git_config:
+            name: "{{ item.name }}"
+            value: "{{ item.value }}"
+            scope: global
+          loop:
+            - { name: commit.gpgsign, value: "true" }
+            - { name: gpg.format, value: ssh }
+            - { name: user.signingkey, value: "{{ server_signing_key }}" }
+            - { name: gpg.ssh.allowedSignersFile, value: "{{ target_home }}/.config/git/allowed_signers" }
+
+        # Same file the 1Password branch above writes, for the local key instead.
+        - name: Ensure the git config directory exists (servers)
+          file:
+            path: "{{ target_home }}/.config/git"
+            state: directory
+            mode: '0755'
+
+        - name: Write allowed_signers for the local key
+          copy:
+            dest: "{{ target_home }}/.config/git/allowed_signers"
+            content: "jabawack81@gmail.com {{ lookup('file', server_signing_key).split()[:2] | join(' ') }}\n"
+            mode: '0600'
+            owner: "{{ target_user }}"
+            group: "{{ target_user }}"
+      when:
+        - is_server_machine
+        - server_signing_key_stat.stat.exists
+
     - name: Show SSH key setup instructions
       debug:
         msg: |

@@ -42,6 +42,11 @@
     server_configs:
       - nvim
 
+    # Servers have no 1Password, so commits are signed with a plain SSH key
+    # kept on the box. Generate it, register it on GitHub as a signing key,
+    # and the playbook wires git up to it (see tasks/devtools.yml).
+    server_signing_key: "{{ target_home }}/.ssh/id_ed25519_github.pub"
+
     # Neovim on Debian: apt ships a version too old for LazyVim, so servers
     # get the official release tarball instead (see tasks/packages.yml).
     # Pinned to an exact release with its sha256 per arch. To upgrade, bump
