@@ -79,7 +79,9 @@ StyledRect {
         StyledText {
             Layout.alignment: Qt.AlignHCenter
             text: root.label
-            font: Tokens.font.body.builders.small.scale(0.85).build()
+            // 0.9 is what the clock uses for its date line; 0.85 made these
+            // read as a size of their own.
+            font: Tokens.font.body.builders.small.scale(0.9).build()
             color: root.colour
             visible: root.label.length > 0
         }
@@ -135,7 +137,13 @@ StyledRect {
                     // Drop the Nerd Font glyph or emoji the scripts prefix,
                     // but keep the units — a bare "37" reads worse than
                     // "37°". Icon-only scripts legitimately leave this empty.
-                    root.label = (data.text ?? "").replace(/[^\x20-\x7E°%]/g, "").trim();
+                    let value = (data.text ?? "").replace(/[^\x20-\x7E°%]/g, "").trim();
+                    // The bar is one icon wide, so keep values to three
+                    // characters: a four digit fan speed is the only thing
+                    // that overruns it. The exact figure stays in the tooltip.
+                    if (/^\d{4,}$/.test(value))
+                        value = `${(parseInt(value, 10) / 1000).toFixed(1)}k`;
+                    root.label = value;
                     root.tooltipText = data.tooltip ?? "";
                     root.statusClass = data.class ?? "";
                     root.hasData = true;
