@@ -140,6 +140,10 @@
       - ttf-jetbrains-mono-nerd
       - ttf-nerd-fonts-symbols
       - noto-fonts-emoji
+      # caelestia-shell renders its icons with Material Symbols and its mono
+      # text with CaskaydiaCove; without these the shell is full of tofu.
+      - ttf-material-symbols-variable
+      - ttf-cascadia-code-nerd
 
       # Applications
       - ghostty
@@ -155,6 +159,15 @@
       - nvtop
       - smartmontools
 
+      # Vendored caelestia shell: quickshell itself plus what its QML plugin
+      # links against. All from the official repos; only libcava is not, and
+      # it stays in aur_packages below.
+      - quickshell
+      - cmake
+      - ninja
+      - libqalculate
+      - aubio
+
       # Network & Bluetooth (quickshell tiles use nmcli/bluetoothctl)
       - networkmanager
       - bluez
@@ -169,7 +182,12 @@
       - opencode-bin
       - grimblast-git
       - hyprlauncher
-      - quickshell-git   # QML desktop shell (bar/omni); git tracks current Qt
+      # caelestia-shell and quickshell-git are deliberately absent: the shell
+      # is vendored in common/caelestia-shell and built from that tree, and
+      # quickshell now comes from extra. What is left cannot be avoided:
+      - libcava          # caelestia's plugin needs its pkg-config; extra's cava ships only the binary
+      - caelestia-cli    # the QML shells out to `caelestia wallpaper` / `scheme set`
+      - otf-rubik        # caelestia's clock/workspace font; drop it by setting fonts in shell.json
 
     # Machine-specific packages
     shinkiro_packages:  # Desktop with AMD GPU

@@ -131,7 +131,37 @@ start_quickshell() {
     done
 }
 
+# caelestia is vendored in this repo (common/caelestia-shell) and its QML
+# plugin is built from that same tree by `make caelestia-build`, so nothing
+# is installed system-wide and the two versions cannot drift apart.
+# Its notification server takes over the D-Bus name, same as our shell.
+CAELESTIA_DIR="$HOME/dotfiles/common/caelestia-shell"
+
+start_caelestia() {
+    local fallback=""
+    if ! command -v qs >/dev/null; then
+        fallback="quickshell is not installed"
+    elif [[ ! -f "$CAELESTIA_DIR/shell.qml" ]]; then
+        fallback="caelestia source missing from the dotfiles"
+    elif [[ ! -d "$CAELESTIA_DIR/build/qml" ]]; then
+        fallback="caelestia plugin not built — run: make caelestia-build"
+    fi
+
+    if [[ -n "$fallback" ]]; then
+        notify-send -u critical "Bar launcher" "$fallback — falling back to waybar" 2>/dev/null || true
+        # Record the fallback: start_waybar reads the preference to tell a
+        # crash (respawn) from a deliberate switch.
+        echo waybar > "$PREF_FILE"
+        start_waybar
+    fi
+
+    stop_dunst
+    export QML_IMPORT_PATH="$CAELESTIA_DIR/build/qml${QML_IMPORT_PATH:+:$QML_IMPORT_PATH}"
+    exec qs -p "$CAELESTIA_DIR"
+}
+
 case "$bar" in
+    caelestia)     start_caelestia ;;
     quickshell|qs) start_quickshell ;;
     waybar|*)      start_waybar ;;
 esac

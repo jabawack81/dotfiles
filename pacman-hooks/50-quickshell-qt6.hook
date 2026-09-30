@@ -1,4 +1,4 @@
-# quickshell-git links Qt's *private* API, which carries no ABI guarantee, so
+# quickshell links Qt's *private* API, which carries no ABI guarantee, so
 # every qt6 upgrade can break it with a symbol lookup error. quickshell ships
 # its own check hook, but its output scrolls past in a normal upgrade and the
 # only symptom hours later is the bar silently falling back to waybar.

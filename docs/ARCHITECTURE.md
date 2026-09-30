@@ -176,6 +176,13 @@ Personal machines include:
 - **Hyprland**: Tiling compositor with modular machine-specific configs
 - **waybar**: Status bar with machine-specific modules (battery for laptop, GPU temp for desktop)
 - **quickshell**: QML desktop shell — bar, notifications, OSD, workspace overview, omni menu
+- **caelestia-shell**: third bar option, vendored at `common/caelestia-shell` (GPL-3,
+  v2.5.0) with settings in `common/caelestia/shell.json`. Its QML plugin is compiled
+  from that same tree by `make caelestia-build`, so QML and plugin cannot drift;
+  `make caelestia-update TAG=…` re-syncs upstream. `Super+Shift+W` cycles
+  waybar → quickshell → caelestia
+- **shell-action.sh**: dispatches the panel keybinds (launcher, overview, DND) to
+  whichever shell is running, so the same keys work in every bar on every machine
 - **hyprlauncher**: Application launcher (Hypr ecosystem) with dark theme via hyprtoolkit
 - **dunst**: Notification daemon with custom icons
 - **wlogout**: Session logout menu

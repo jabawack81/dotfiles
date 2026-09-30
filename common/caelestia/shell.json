@@ -1,0 +1,8 @@
+{
+    "paths": {
+        "wallpaperDir": "~/Pictures/wallpapers"
+    },
+    "bar": {
+        "persistent": true
+    }
+}

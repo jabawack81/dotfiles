@@ -219,10 +219,13 @@ hl.bind(mainMod .. " + K", hl.dsp.exec_cmd("~/.config/hypr_common/show-keybinds.
 -- (moved off Super+Shift+B, which is now the browser)
 hl.bind(mainMod .. " + SHIFT + W", hl.dsp.exec_cmd("~/.config/scripts/bar-switch.sh toggle"), D "Toggle status bar")
 
--- Quickshell workspace overview / omni menu (no-op when quickshell isn't running)
-hl.bind(mainMod .. " + TAB",       hl.dsp.global("quickshell:overview"), D "Workspace overview")
-hl.bind(mainMod .. " + Space",     hl.dsp.global("quickshell:omni"),     D "App launcher / command palette")
-hl.bind(mainMod .. " + SHIFT + N", hl.dsp.global("quickshell:dnd"),      D "Toggle Do Not Disturb")
+-- Shell panels. Global shortcuts are registered by whichever shell is running,
+-- so these go through shell-action.sh, which dispatches to our quickshell or
+-- to caelestia depending on the active bar. Same keys on every machine and in
+-- every bar; see common/scripts/shell-action.sh for the mapping.
+hl.bind(mainMod .. " + TAB",       hl.dsp.exec_cmd("~/.config/scripts/shell-action.sh overview"), D "Workspace overview / panels")
+hl.bind(mainMod .. " + Space",     hl.dsp.exec_cmd("~/.config/scripts/shell-action.sh launcher"), D "App launcher / command palette")
+hl.bind(mainMod .. " + SHIFT + N", hl.dsp.exec_cmd("~/.config/scripts/shell-action.sh dnd"),      D "Do Not Disturb / utilities")
 
 -- Move/resize windows with mainMod + LMB/RMB and dragging
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   D "Move window (drag)")

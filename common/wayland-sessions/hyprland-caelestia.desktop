@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Hyprland (Caelestia)
+Comment=Hyprland with the caelestia quickshell desktop shell
+Exec=env BAR=caelestia /usr/bin/start-hyprland
+Type=Application
+DesktopNames=Hyprland
+Keywords=tiling;wayland;compositor;

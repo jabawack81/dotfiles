@@ -88,6 +88,10 @@ installed, `prefix` + `I` (or `tmux source-file ~/.tmux.conf`) loads them;
 
 **Configuration**:
 - `common/`: Shared configurations across personal machines (nvim, tmux, ghostty, btop, etc.)
+- `common/caelestia/`: Settings for the caelestia shell (`shell.json`)
+- `common/caelestia-shell/`: Vendored caelestia shell source (GPL-3, see its
+  `UPSTREAM` file). Build its plugin with `make caelestia-build`; re-sync with
+  `make caelestia-update TAG=vX.Y.Z`
 - `kyrios/`: Laptop-specific configurations (Hyprland, EWW, Waybar)
 - `shinkiro/`: Desktop-specific configurations (dual display, GPU monitoring)
 - `barbatos/`: ThinkPad T470p configurations (NVIDIA sleep hook, lid switch, GPU/fan waybar modules)

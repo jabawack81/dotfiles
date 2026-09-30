@@ -54,6 +54,7 @@
   loop:
     - hyprland-waybar.desktop
     - hyprland-quickshell.desktop
+    - hyprland-caelestia.desktop
   become: yes
   when:
     - is_personal_machine

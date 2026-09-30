@@ -108,7 +108,10 @@
     - is_personal_machine
     - hostname == 'shinkiro'
 
-- name: Setup wallpaper cycling (shinkiro only)
+# Every personal machine gets the wallpaper directory: caelestia's
+# paths.wallpaperDir points at it and its wallpaper switcher reads from
+# there. Only the cycling timer below is desktop-specific.
+- name: Setup the wallpaper directory
   block:
     - name: Ensure ~/Pictures/wallpapers exists
       file:
@@ -130,7 +133,11 @@
         - wall0.png
         - wall1.png
         - wall2.png
+      ignore_errors: yes   # /usr/share/hypr only exists once hyprland is installed
+  when: is_personal_machine
 
+- name: Setup wallpaper cycling (shinkiro only)
+  block:
     - name: Ensure ~/.local/bin exists
       file:
         path: "{{ target_home }}/.local/bin"
@@ -377,6 +384,35 @@
 # quickshell-git links Qt's private API, so every qt6 upgrade can break it with
 # a symbol lookup error. The only visible symptom is the status bar quietly
 # falling back to waybar, often days later — these two make it loud instead.
+# The shell is vendored, so the plugin has to be compiled on each machine.
+# It is built inside the repo and loaded via QML_IMPORT_PATH by
+# bar-launcher.sh, so nothing is installed system-wide and no root is needed.
+- name: Build the vendored caelestia QML plugin
+  when: is_personal_machine
+  block:
+    - name: Check whether the caelestia plugin is already built
+      stat:
+        path: "{{ dotfiles_dir }}/common/caelestia-shell/build/qml/Caelestia/libcaelestia-coreplugin.so"
+      register: caelestia_plugin
+
+    - name: Build the caelestia plugin
+      command: make caelestia-build
+      args:
+        chdir: "{{ dotfiles_dir }}"
+      when: not caelestia_plugin.stat.exists
+      become: no
+      register: caelestia_build
+      # A build failure should not take the rest of the run down; the
+      # launcher falls back to waybar and says why.
+      ignore_errors: yes
+
+    - name: Report a failed caelestia build
+      debug:
+        msg: >-
+          The caelestia plugin failed to build, so that bar option will fall
+          back to waybar. Run `make caelestia-build` by hand to see why.
+      when: caelestia_build is defined and caelestia_build is failed
+
 - name: Install quickshell Qt6 compatibility check script
   copy:
     src: "{{ dotfiles_dir }}/common/scripts/quickshell-qt6-check.sh"

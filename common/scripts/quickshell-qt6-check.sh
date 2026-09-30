@@ -38,11 +38,13 @@ cat >&2 <<BANNER
 
   It links Qt private API, so the ABI moved under it. Rebuild:
 
-      yay -S --rebuild quickshell-git
+      sudo pacman -S quickshell        # repo package: just reinstall
+      cd ~/dotfiles && make caelestia-build   # vendored caelestia plugin
 
-  Until then the status bar falls back to waybar. Note that rebuilding
-  a -git package also pulls the latest upstream source, so expect some
-  QML churn in ~/.config/quickshell.
+  The caelestia plugin is built from the vendored source in this repo and
+  links the same private API, so it needs rebuilding on the same upgrades.
+
+  Until then the status bar falls back to waybar.
 
 BANNER
 

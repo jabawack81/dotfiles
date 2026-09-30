@@ -67,6 +67,19 @@
         state: absent
       when: stock_nvidia_utils.stdout | trim == 'nvidia-utils'
 
+# quickshell from extra conflicts with the AUR quickshell-git, so the old
+# packages have to go before required_packages tries to install it. The shell
+# itself is vendored in common/caelestia-shell now.
+- name: Remove packages superseded by the vendored caelestia shell
+  pacman:
+    name:
+      - caelestia-shell
+      - quickshell-git
+    state: absent
+  become: "{{ not running_as_root }}"
+  when: is_personal_machine
+  ignore_errors: yes   # neither is present on a fresh machine
+
 - name: Ensure required packages are installed (Personal machines)
   pacman:
     name: "{{ item }}"

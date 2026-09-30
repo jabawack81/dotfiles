@@ -1,4 +1,4 @@
-.PHONY: help menu setup dry-run status docs clean sync validate update-nvim clean-nvim backup push-changes git-log view-docs test install-deps
+.PHONY: help menu setup dry-run status docs clean sync validate update-nvim clean-nvim backup push-changes git-log view-docs test install-deps caelestia-update caelestia-build
 
 # Ensure bash is used for shell commands (needed for echo -e)
 SHELL := /bin/bash
@@ -61,6 +61,10 @@ menu:
 	@echo -e "$(BOLD)Security:$(RESET)"
 	@echo -e "  $(GREEN)make aur-check$(RESET)       Scan for AUR supply-chain compromise indicators"
 	@echo ""
+	@echo -e "$(BOLD)Caelestia shell (vendored):$(RESET)"
+	@echo -e "  $(GREEN)make caelestia-build$(RESET) Build the QML plugin from the vendored source"
+	@echo -e "  $(GREEN)make caelestia-update$(RESET) Re-sync with upstream (TAG=v2.6.0)"
+	@echo ""
 	@echo -e "$(BOLD)Maintenance:$(RESET)"
 	@echo -e "  $(GREEN)make update-nvim$(RESET)     Update neovim plugins"
 	@echo -e "  $(GREEN)make clean-nvim$(RESET)      Clean neovim (interactive options)"
@@ -115,6 +119,41 @@ install-deps:
 # ============================================================================
 # STATUS & INFORMATION
 # ============================================================================
+
+# ============================================================================
+# VENDORED CAELESTIA SHELL
+# ============================================================================
+
+CAELESTIA_DIR := common/caelestia-shell
+CAELESTIA_URL := https://github.com/caelestia-dots/shell
+
+# Re-sync the vendored shell against an upstream tag, keeping our own files.
+# Local additions live in files matching *Custom* (plus CHANGES-LOCAL.md), so
+# they survive the rsync and show up in the summary at the end.
+#   make caelestia-update TAG=v2.6.0
+caelestia-update:
+	@test -n "$(TAG)" || { echo -e "$(RED)Set TAG, e.g. make caelestia-update TAG=v2.6.0$(RESET)"; exit 1; }
+	@echo -e "$(BOLD)$(BLUE)Fetching $(TAG) from upstream...$(RESET)"
+	@tmp=$$(mktemp -d); 	git clone -q --depth 1 --branch "$(TAG)" $(CAELESTIA_URL) "$$tmp/src" || { rm -rf "$$tmp"; exit 1; }; 	echo -e "$(BOLD)Syncing (local *Custom* files and UPSTREAM are preserved)...$(RESET)"; 	rsync -a --delete 	  --exclude '.git' --exclude 'build/' --exclude 'UPSTREAM' 	  --exclude '*Custom*' --exclude 'CHANGES-LOCAL.md' 	  "$$tmp/src/" "$(CAELESTIA_DIR)/"; 	rev=$$(git -C "$$tmp/src" rev-parse HEAD); 	printf 'Vendored copy of caelestia-dots/shell.\n\n    upstream  %s\n    version   %s\n    commit    %s\n    imported  %s\n\nLicensed GPL-3.0 by its authors; see LICENSE in this directory. Local\nchanges live in files named *Custom* or listed in CHANGES-LOCAL.md so that\n`make caelestia-update` can show them against a fresh upstream checkout.\n\nUpdate with: make caelestia-update  (see the Makefile)\n' 	  "$(CAELESTIA_URL)" "$(TAG)" "$$rev" "$$(date -I)" > $(CAELESTIA_DIR)/UPSTREAM; 	rm -rf "$$tmp"
+	@echo ""
+	@echo -e "$(BOLD)$(YELLOW)Review before committing:$(RESET)"
+	@git status --short $(CAELESTIA_DIR) | head -30
+	@echo ""
+	@echo -e "$(BOLD)Our local files (re-check they still fit upstream):$(RESET)"
+	@find $(CAELESTIA_DIR) -name '*Custom*' | sed 's/^/  /'
+	@echo -e "$(YELLOW)Then rebuild: make caelestia-build$(RESET)"
+
+# Build the QML plugin from the vendored source. Everything it needs is in
+# the official repos except libcava; nothing is installed system-wide, the
+# launcher points QML_IMPORT_PATH at the build output.
+# VERSION/GIT_REVISION are passed explicitly: upstream derives them with
+# `git describe` against its own repo, which finds nothing here. They come
+# from the UPSTREAM file written at import time.
+caelestia-build:
+	@echo -e "$(BOLD)$(BLUE)Building the caelestia plugin...$(RESET)"
+	@ver=$$(awk '/^ *version/ {print $$2}' $(CAELESTIA_DIR)/UPSTREAM); 	rev=$$(awk '/^ *commit/ {print $$2}' $(CAELESTIA_DIR)/UPSTREAM); 	cmake -S $(CAELESTIA_DIR) -B $(CAELESTIA_DIR)/build -G Ninja 	  -DCMAKE_BUILD_TYPE=Release 	  -DVERSION="$$ver" -DGIT_REVISION="$$rev" 	  -DDISTRIBUTOR="jabawack81/dotfiles (vendored)" >/dev/null
+	@cmake --build $(CAELESTIA_DIR)/build
+	@echo -e "$(GREEN)✓ Built into $(CAELESTIA_DIR)/build/qml$(RESET)"
 
 aur-check:
 	@echo -e "$(BOLD)$(BLUE)Scanning for AUR supply-chain indicators...$(RESET)"
