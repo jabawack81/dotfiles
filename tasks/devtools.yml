@@ -228,6 +228,32 @@
         - not is_personal_machine
         - op_ssh_sign_mac.stat.exists
 
+    # Without an allowed signers file git can sign but cannot verify, so
+    # `git log --show-signature` reports "No signature" on commits it just
+    # made itself. The file maps a principal to the key that may sign for it;
+    # one line for this machine's own identity is enough.
+    - name: Ensure the git config directory exists
+      file:
+        path: "{{ ansible_facts['env'].HOME }}/.config/git"
+        state: directory
+        mode: '0755'
+      when: ssh_signing_key is defined
+
+    - name: Write the allowed signers file
+      copy:
+        dest: "{{ ansible_facts['env'].HOME }}/.config/git/allowed_signers"
+        content: |
+          {{ git_user_email if not is_personal_machine else 'jabawack81@gmail.com' }} {{ ssh_signing_key }}
+        mode: '0644'
+      when: ssh_signing_key is defined
+
+    - name: Point git at the allowed signers file
+      git_config:
+        name: gpg.ssh.allowedSignersFile
+        value: "{{ ansible_facts['env'].HOME }}/.config/git/allowed_signers"
+        scope: global
+      when: ssh_signing_key is defined
+
     - name: Show SSH key setup instructions
       debug:
         msg: |

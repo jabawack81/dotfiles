@@ -184,6 +184,9 @@ You can customize git settings using one of these methods (in order of precedenc
 - Sets default branch to `main`
 - Enables SSH commit signing using 1Password
 - Configures the correct op-ssh-sign path for each platform
+- Writes `~/.config/git/allowed_signers` and points
+  `gpg.ssh.allowedSignersFile` at it, so `git log --show-signature` can
+  verify locally (without it git signs fine but reports "No signature")
 
 Requirements:
 - 1Password desktop app installed
