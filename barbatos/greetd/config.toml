@@ -1,0 +1,11 @@
+[terminal]
+vt = 1
+
+[default_session]
+# cage -s = allow Ctrl+Alt+Backspace escape
+# cage -m last = use only the last-connected output (default is "extend"
+#                which spans the compositor across all monitors — that's
+#                what gave us the split-screen greeter).
+# regreet = graphical greeter driving greetd via IPC
+command = "cage -s -m last -- regreet"
+user = "greeter"

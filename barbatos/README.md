@@ -19,6 +19,17 @@ Omarchy; the runbook for the reinstall lives in the personal vault under
 - `waybar/config-machine.jsonc` — kyrios layout plus `custom/gpu`
   (EnvyControl mode + temp) and `custom/fan` (thinkpad_acpi RPM).
 
+## Greeter
+
+greetd + regreet rather than sddm, whose unthemed default looks nothing
+like the desktop behind it. `barbatos/greetd/` holds the Nord styling; the
+playbook copies it to `/etc/greetd`, seeds the greeter wallpaper from
+`~/Pictures/wallpapers/wall0.png` so greeter and desktop show the same
+image, and switches the display manager over.
+
+To go back to sddm: `sudo systemctl disable --now greetd && sudo systemctl
+enable sddm`. A TTY on Ctrl+Alt+F2 stays available either way.
+
 ## System side
 
 Everything that touches `/etc` is in `tasks/barbatos.yml`: NVIDIA 580xx via

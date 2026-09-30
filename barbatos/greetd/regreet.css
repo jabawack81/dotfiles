@@ -1,0 +1,143 @@
+/* regreet — Nord, to match the caelestia desktop, hyprlock and the TUI
+ * tools (nvim, btop, lazygit, broot, ghostty) which are all Nord too.
+ *
+ * Palette: Polar Night #2e3440 #3b4252 #434c5e #4c566a
+ *          Snow Storm  #d8dee9 #e5e9f0 #eceff4
+ *          Frost       #8fbcbb #88c0d0 #81a1c1 #5e81ac
+ *          Aurora      #bf616a #d08770 #ebcb8b #a3be8c #b48ead
+ *
+ * #88c0d0 is caelestia's Nord primary, so the greeter and the bar accent
+ * with the same colour.
+ */
+
+window {
+    background-color: transparent;
+    color: #d8dee9;
+    font-family: "JetBrainsMono Nerd Font", monospace;
+}
+
+/* Wallpaper sits behind the card, dimmed so the form stays readable. */
+#background {
+    opacity: 0.45;
+}
+
+/* The login card. */
+#main_frame {
+    background-color: rgba(46, 52, 64, 0.82);
+    border: 1px solid rgba(136, 192, 208, 0.45);
+    border-radius: 12px;
+    padding: 28px 32px;
+    box-shadow: 0 8px 32px rgba(23, 26, 33, 0.55);
+}
+
+#clock_frame {
+    background: transparent;
+    border: none;
+    padding: 0 0 20px 0;
+}
+#clock_frame label {
+    color: #88c0d0;
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: 2px;
+}
+
+#message_label {
+    color: #81a1c1;
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    padding: 0 0 16px 0;
+}
+
+label {
+    color: #d8dee9;
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    font-size: 14px;
+}
+
+entry, entry > text {
+    background-color: rgba(59, 66, 82, 0.9);
+    color: #eceff4;
+    caret-color: #88c0d0;
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    font-size: 14px;
+    border: 1px solid rgba(76, 86, 106, 0.9);
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+entry:focus, entry:focus-within, entry:focus > text {
+    border-color: #88c0d0;
+    box-shadow: 0 0 0 2px rgba(136, 192, 208, 0.25);
+    outline: none;
+}
+entry selection {
+    background-color: rgba(136, 192, 208, 0.35);
+    color: #eceff4;
+}
+
+/* Dropdowns for the username and session pickers. */
+combobox button {
+    background-color: rgba(59, 66, 82, 0.9);
+    color: #d8dee9;
+    border: 1px solid rgba(76, 86, 106, 0.9);
+    border-radius: 8px;
+    padding: 6px 10px;
+}
+combobox button:hover {
+    border-color: #88c0d0;
+    color: #88c0d0;
+}
+
+button {
+    background-color: rgba(59, 66, 82, 0.9);
+    color: #d8dee9;
+    border: 1px solid rgba(76, 86, 106, 0.9);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    font-weight: 600;
+    transition: all 150ms ease;
+}
+button:hover {
+    border-color: #88c0d0;
+    color: #88c0d0;
+}
+
+/* Log in — Frost, the same accent the bar uses. */
+button.suggested-action, #login_button {
+    background-color: rgba(136, 192, 208, 0.18);
+    color: #88c0d0;
+    border: 1px solid #88c0d0;
+}
+button.suggested-action:hover, #login_button:hover {
+    background-color: rgba(136, 192, 208, 0.3);
+    color: #eceff4;
+    border-color: #8fbcbb;
+}
+
+/* Reboot / power off — Aurora red, used sparingly. */
+button.destructive-action, #reboot_button, #poweroff_button {
+    background-color: rgba(191, 97, 106, 0.12);
+    color: #bf616a;
+    border: 1px solid rgba(191, 97, 106, 0.6);
+}
+button.destructive-action:hover, #reboot_button:hover, #poweroff_button:hover {
+    background-color: rgba(191, 97, 106, 0.22);
+    color: #d08770;
+    border-color: #bf616a;
+}
+
+#error_info {
+    background-color: rgba(191, 97, 106, 0.15);
+    border: 1px solid #bf616a;
+    border-radius: 8px;
+    color: #bf616a;
+}
+#error_label {
+    color: #bf616a;
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    font-weight: 600;
+}

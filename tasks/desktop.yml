@@ -49,11 +49,19 @@
         group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
       when: is_personal_machine
 
-- name: Setup greetd + regreet as display manager (shinkiro only)
+- name: Check for a machine-specific greetd config
+  stat:
+    path: "{{ dotfiles_dir }}/{{ hostname }}/greetd"
+  register: greetd_config_dir
+
+# Any machine with a greetd/ directory gets greetd + regreet instead of
+# sddm, whose unthemed default looks nothing like the desktop behind it.
+# The theme is per machine so the greeter matches that machine's desktop.
+- name: Setup greetd + regreet as display manager
   block:
     - name: Install greetd configs from dotfiles
       copy:
-        src: "{{ dotfiles_dir }}/shinkiro/greetd/{{ item }}"
+        src: "{{ dotfiles_dir }}/{{ hostname }}/greetd/{{ item }}"
         dest: "/etc/greetd/{{ item }}"
         owner: root
         group: root
@@ -63,14 +71,23 @@
         - regreet.toml
         - regreet.css
 
-    - name: Seed greeter wallpaper from Hyprland defaults
+    # The greeter runs as the `greeter` user and cannot read the home
+    # directory, so the wallpaper is copied into /etc/greetd. Prefer the one
+    # actually on screen, so the greeter and the desktop show the same image.
+    - name: Find the current wallpaper
+      stat:
+        path: "{{ target_home }}/Pictures/wallpapers/wall0.png"
+      register: greeter_wallpaper
+
+    - name: Seed the greeter wallpaper
       copy:
-        src: /usr/share/hypr/wall2.png
+        src: "{{ greeter_wallpaper.stat.exists | ternary(target_home ~ '/Pictures/wallpapers/wall0.png', '/usr/share/hypr/wall2.png') }}"
         dest: /etc/greetd/wallpaper.png
         owner: root
         group: root
         mode: '0644'
         remote_src: yes
+      ignore_errors: yes   # no wallpaper yet on a bare machine
 
     - name: Ensure regreet state directory exists
       file:
@@ -106,7 +123,7 @@
   become: yes
   when:
     - is_personal_machine
-    - hostname == 'shinkiro'
+    - greetd_config_dir.stat.exists
 
 # Every personal machine gets the wallpaper directory: caelestia's
 # paths.wallpaperDir points at it and its wallpaper switcher reads from
