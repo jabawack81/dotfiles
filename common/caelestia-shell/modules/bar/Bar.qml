@@ -180,6 +180,64 @@ ColumnLayout {
                     }
                 }
             }
+
+            // Local additions (not upstream) — see CHANGES-LOCAL.md. Each is
+            // driven by the same status script the waybar bars use, and hides
+            // itself on a machine where that script is absent.
+            DelegateChoice {
+                roleValue: "gpu"
+                delegate: EntryWrapper {
+                    CustomStatus {
+                        objectName: "taskbarGpu"
+                        icon: "memory"
+                        interval: 10000
+                        cmd: ["sh", "-c", "$HOME/.config/waybar/gpu-status.sh 2>/dev/null"]
+                        clickCmd: ["ghostty", "--class=envy-tui", "-e", "envy-tui"]
+                    }
+                }
+            }
+            DelegateChoice {
+                roleValue: "fan"
+                delegate: EntryWrapper {
+                    CustomStatus {
+                        objectName: "taskbarFan"
+                        icon: "mode_fan"
+                        cmd: ["sh", "-c", "$HOME/.config/waybar/fan-status.sh 2>/dev/null"]
+                        clickCmd: ["ghostty", "--class=thinkfan-tui", "-e", "thinkfan-tui"]
+                    }
+                }
+            }
+            DelegateChoice {
+                roleValue: "caffeine"
+                delegate: EntryWrapper {
+                    CustomStatus {
+                        objectName: "taskbarCaffeine"
+                        icon: "coffee"
+                        // normal / caffeine / remote / hibernate, per
+                        // common/waybar/caffeine-status.sh
+                        iconMap: ({
+                            normal: "hourglass_empty",
+                            caffeine: "coffee",
+                            remote: "lan",
+                            hibernate: "mode_standby"
+                        })
+                        cmd: ["sh", "-c", "$HOME/.config/waybar_common/caffeine-status.sh 2>/dev/null"]
+                        clickCmd: ["sh", "-c", "$HOME/.config/waybar_common/caffeine-toggle.sh"]
+                    }
+                }
+            }
+            DelegateChoice {
+                roleValue: "bedtime"
+                delegate: EntryWrapper {
+                    CustomStatus {
+                        objectName: "taskbarBedtime"
+                        icon: "bedtime"
+                        interval: 60000
+                        cmd: ["sh", "-c", "$HOME/.config/bedtime/bedtime-status.sh 2>/dev/null"]
+                        clickCmd: ["sh", "-c", "$HOME/.config/bedtime/bedtime-check.sh"]
+                    }
+                }
+            }
         }
     }
 

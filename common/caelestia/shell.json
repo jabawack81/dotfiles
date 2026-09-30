@@ -3,6 +3,21 @@
         "wallpaperDir": "~/Pictures/wallpapers"
     },
     "bar": {
-        "persistent": true
+        "persistent": true,
+        "entries": [
+            { "id": "logo", "enabled": true },
+            { "id": "workspaces", "enabled": true },
+            { "id": "spacer", "enabled": true },
+            { "id": "activeWindow", "enabled": true },
+            { "id": "spacer", "enabled": true },
+            { "id": "gpu", "enabled": true },
+            { "id": "fan", "enabled": true },
+            { "id": "caffeine", "enabled": true },
+            { "id": "bedtime", "enabled": true },
+            { "id": "tray", "enabled": true },
+            { "id": "clock", "enabled": true },
+            { "id": "statusIcons", "enabled": true },
+            { "id": "power", "enabled": true }
+        ]
     }
 }
