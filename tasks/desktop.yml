@@ -413,6 +413,27 @@
           back to waybar. Run `make caelestia-build` by hand to see why.
       when: caelestia_build is defined and caelestia_build is failed
 
+# The chosen scheme lives in caelestia's runtime state, not in its config,
+# so a fresh machine comes up on the default until it is set once. The
+# shell.json in common/caelestia turns smartScheme off so that changing the
+# wallpaper does not re-derive a palette and discard this.
+- name: Set the caelestia colour scheme
+  when: is_personal_machine
+  block:
+    - name: Read the current caelestia scheme
+      command: cat "{{ target_home }}/.local/state/caelestia/scheme.json"
+      register: caelestia_scheme_state
+      changed_when: false
+      failed_when: false
+      check_mode: no
+
+    - name: Apply the configured scheme
+      command: caelestia scheme set -n {{ caelestia_scheme }} -f {{ caelestia_scheme_flavour }} -m dark
+      become: no
+      when: (caelestia_scheme_state.stdout | default('') | from_json).name | default('') != caelestia_scheme
+      # Needs the shell's D-Bus session; harmless to skip during a headless run
+      ignore_errors: yes
+
 - name: Install quickshell Qt6 compatibility check script
   copy:
     src: "{{ dotfiles_dir }}/common/scripts/quickshell-qt6-check.sh"

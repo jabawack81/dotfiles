@@ -252,6 +252,12 @@
     # it; hyprlock, sddm and polkit always get the fingerprint prompt.
     barbatos_fingerprint_sudo: false
 
+    # Colour scheme for the caelestia shell. It ships Nord among its built
+    # in schemes, which matches nvim, btop, lazygit, broot and ghostty.
+    # `dynamic` derives a Material You palette from the wallpaper instead.
+    caelestia_scheme: nord
+    caelestia_scheme_flavour: medium
+
     # EnvyControl mode for the 940MX. "hybrid" keeps the dGPU available via
     # prime-run but it can never power down (Maxwell has no RTD3 support —
     # /proc/driver/nvidia/gpus/*/power says "Not supported"), so it draws
