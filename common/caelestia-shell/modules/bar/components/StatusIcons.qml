@@ -105,6 +105,41 @@ StyledRect {
                         }
                     }
                 }
+                // Local additions (not upstream) — see CHANGES-LOCAL.md.
+                // `name` is what the bar's hover handler uses to pick a
+                // popout, so caffeine opens its state picker from here.
+                DelegateChoice {
+                    roleValue: "caffeine"
+                    delegate: EntryWrapper {
+                        margin: Tokens.spacing.extraSmall / 2
+                        name: "caffeine"
+
+                        CustomStatusIcon {
+                            color: root.colour
+                            icon: "coffee"
+                            iconMap: ({
+                                normal: "hourglass_empty",
+                                caffeine: "coffee",
+                                remote: "lan",
+                                hibernate: "mode_standby"
+                            })
+                            cmd: ["sh", "-c", "$HOME/.config/waybar_common/caffeine-status.sh 2>/dev/null"]
+                        }
+                    }
+                }
+                DelegateChoice {
+                    roleValue: "bedtime"
+                    delegate: EntryWrapper {
+                        margin: Tokens.spacing.extraSmall / 2
+
+                        CustomStatusIcon {
+                            color: root.colour
+                            icon: "bedtime"
+                            interval: 60000
+                            cmd: ["sh", "-c", "$HOME/.config/bedtime/bedtime-status.sh 2>/dev/null"]
+                        }
+                    }
+                }
                 DelegateChoice {
                     roleValue: "kbLayout"
                     delegate: EntryWrapper {

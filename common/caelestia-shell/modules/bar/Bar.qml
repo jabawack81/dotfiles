@@ -68,11 +68,6 @@ ColumnLayout {
                 popouts.hasCurrent = false;
                 tray.expanded = true;
             }
-        } else if (id === "caffeine") {
-            // Local addition (not upstream) — see CHANGES-LOCAL.md
-            popouts.currentName = "caffeine";
-            popouts.currentCenter = Qt.binding(() => (ch.item as Item).mapToItem(root, 0, (ch.item as Item).implicitHeight / 2).y);
-            popouts.hasCurrent = true;
         } else if (id === "activeWindow" && Config.bar.popouts.activeWindow && Config.bar.activeWindow.showOnHover) {
             popouts.currentName = id.toLowerCase();
             popouts.currentCenter = (ch.item as Item).mapToItem(root, 0, (ch.item as Item).implicitHeight / 2).y ?? 0;
@@ -209,38 +204,6 @@ ColumnLayout {
                         icon: "mode_fan"
                         cmd: ["sh", "-c", "$HOME/.config/waybar/fan-status.sh 2>/dev/null"]
                         clickCmd: ["ghostty", "--class=thinkfan-tui", "-e", "thinkfan-tui"]
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "caffeine"
-                delegate: EntryWrapper {
-                    CustomStatus {
-                        objectName: "taskbarCaffeine"
-                        icon: "coffee"
-                        // normal / caffeine / remote / hibernate, per
-                        // common/waybar/caffeine-status.sh
-                        iconMap: ({
-                            normal: "hourglass_empty",
-                            caffeine: "coffee",
-                            remote: "lan",
-                            hibernate: "mode_standby"
-                        })
-                        cmd: ["sh", "-c", "$HOME/.config/waybar_common/caffeine-status.sh 2>/dev/null"]
-                        // No clickCmd: hovering opens the state picker popout
-                        // instead of cycling blindly through the states.
-                    }
-                }
-            }
-            DelegateChoice {
-                roleValue: "bedtime"
-                delegate: EntryWrapper {
-                    CustomStatus {
-                        objectName: "taskbarBedtime"
-                        icon: "bedtime"
-                        interval: 60000
-                        cmd: ["sh", "-c", "$HOME/.config/bedtime/bedtime-status.sh 2>/dev/null"]
-                        clickCmd: ["sh", "-c", "$HOME/.config/bedtime/bedtime-check.sh"]
                     }
                 }
             }

@@ -42,6 +42,20 @@
                 "enabled": true
             },
             {
+                "id": "statusIcons",
+                "enabled": true
+            },
+            {
+                "id": "power",
+                "enabled": true
+            }
+        ],
+        "statusIcons": [
+            {
+                "id": "lockStatus",
+                "enabled": true
+            },
+            {
                 "id": "bedtime",
                 "enabled": true
             },
@@ -50,11 +64,15 @@
                 "enabled": true
             },
             {
-                "id": "statusIcons",
+                "id": "network",
                 "enabled": true
             },
             {
-                "id": "power",
+                "id": "bluetooth",
+                "enabled": true
+            },
+            {
+                "id": "battery",
                 "enabled": true
             }
         ]

@@ -14,14 +14,20 @@ update**.
   when the caffeine entry is hovered. It reads the current state from the
   file caffeine-toggle.sh writes and shells out to the same script to
   change it.
+- `modules/bar/components/status/CustomStatusIcon.qml` — the icon-only
+  variant that lives in the StatusIcons island, for scripts whose whole
+  state is in `class` (caffeine, bedtime).
 
 ## Re-apply after every update
 
-- `modules/bar/Bar.qml` — two hunks: four `DelegateChoice` blocks at the
-  end of the `DelegateChooser` registering the `gpu`, `fan`, `caffeine`
-  and `bedtime` entry ids against `CustomStatus`, and a `caffeine` branch
-  in `handleHover` that opens the picker. Entry ids are free-form strings
-  in the config, so nothing else needs changing.
+- `modules/bar/Bar.qml` — two `DelegateChoice` blocks at the end of the
+  `DelegateChooser`, registering the `gpu` and `fan` entry ids against
+  `CustomStatus`. Entry ids are free-form strings in the config, so
+  nothing else needs changing.
+- `modules/bar/components/StatusIcons.qml` — `caffeine` and `bedtime`
+  `DelegateChoice` blocks. The caffeine one sets `name: "caffeine"`, which
+  is what the island's existing hover handling uses to choose a popout, so
+  no change to `handleHover` is needed.
 - `modules/bar/popouts/Content.qml` — a `Popout` registering the
   `caffeine` name against `CustomCaffeine`.
 
