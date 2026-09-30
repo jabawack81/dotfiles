@@ -90,18 +90,34 @@
         - op_installed.rc == 0
         - gh_protocol.stdout | default('') | trim != 'ssh'
 
+    # The op:// reference names a vault and item that only exist in this
+    # user's 1Password, so it comes from private-config rather than being
+    # hardcoded here. Without it gh writes a reference that cannot resolve
+    # and every gh call fails with "token is invalid".
     - name: Create gh hosts.yml for 1Password integration
       copy:
         content: |
           github.com:
             user: {{ ansible_facts['user_id'] }}
             git_protocol: ssh
-            oauth_token: op://Personal/GitHub Personal Access Token/credential
+            oauth_token: {{ github_token_ref }}
         dest: "{{ ansible_facts['env'].HOME }}/.config/gh/hosts.yml"
         mode: '0600'
       when:
         - gh_installed.rc == 0
         - op_installed.rc == 0
+        - github_token_ref is defined
+
+    - name: Note when the gh token reference is not configured
+      debug:
+        msg: >-
+          github_token_ref is not set in private-config/config.yml, so
+          ~/.config/gh/hosts.yml was left alone. Set it to the op:// path of
+          your GitHub PAT, e.g. "op://<vault>/<item>/<field>".
+      when:
+        - gh_installed.rc == 0
+        - op_installed.rc == 0
+        - github_token_ref is not defined
 
     - name: Show 1Password CLI installation instructions
       debug:
