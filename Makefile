@@ -1,4 +1,4 @@
-.PHONY: help menu setup dry-run status docs clean sync validate update-nvim clean-nvim backup push-changes git-log view-docs test install-deps caelestia-update caelestia-build
+.PHONY: help menu setup dry-run status docs clean sync validate update-nvim clean-nvim backup push-changes git-log view-docs test install-deps caelestia-update caelestia-build caelestia-verify
 
 # Ensure bash is used for shell commands (needed for echo -e)
 SHELL := /bin/bash
@@ -64,6 +64,7 @@ menu:
 	@echo -e "$(BOLD)Caelestia shell (vendored):$(RESET)"
 	@echo -e "  $(GREEN)make caelestia-build$(RESET) Build the QML plugin from the vendored source"
 	@echo -e "  $(GREEN)make caelestia-update$(RESET) Re-sync with upstream (TAG=v2.6.0)"
+	@echo -e "  $(GREEN)make caelestia-verify$(RESET) Check our changes are additions only"
 	@echo ""
 	@echo -e "$(BOLD)Maintenance:$(RESET)"
 	@echo -e "  $(GREEN)make update-nvim$(RESET)     Update neovim plugins"
@@ -154,6 +155,13 @@ caelestia-build:
 	@ver=$$(awk '/^ *version/ {print $$2}' $(CAELESTIA_DIR)/UPSTREAM); 	rev=$$(awk '/^ *commit/ {print $$2}' $(CAELESTIA_DIR)/UPSTREAM); 	cmake -S $(CAELESTIA_DIR) -B $(CAELESTIA_DIR)/build -G Ninja 	  -DCMAKE_BUILD_TYPE=Release 	  -DVERSION="$$ver" -DGIT_REVISION="$$rev" 	  -DDISTRIBUTOR="jabawack81/dotfiles (vendored)" >/dev/null
 	@cmake --build $(CAELESTIA_DIR)/build
 	@echo -e "$(GREEN)✓ Built into $(CAELESTIA_DIR)/build/qml$(RESET)"
+
+# Check the vendored tree against the upstream tag it claims to be. Our
+# changes to upstream files must be additions only — a deletion means an
+# edit clobbered something, which stays invisible until the shell silently
+# drops a component at runtime.
+caelestia-verify:
+	@$(DOTFILES_DIR)/scripts/caelestia-verify.rb
 
 aur-check:
 	@echo -e "$(BOLD)$(BLUE)Scanning for AUR supply-chain indicators...$(RESET)"

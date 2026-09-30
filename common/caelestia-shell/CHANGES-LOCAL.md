@@ -35,3 +35,12 @@ The entries themselves are turned on in `common/caelestia/shell.json`.
 Listing `bar.entries` replaces the default list outright, so that file
 enumerates the upstream entries too; check it against upstream's defaults
 after an update in case new ones were added.
+
+## Checking
+
+`make caelestia-verify` compares this tree with the upstream tag named in
+UPSTREAM and fails if any upstream line or file has gone missing. Our
+changes must only ever add: a deletion means an edit clobbered something,
+and that stays invisible until the shell quietly drops a component at
+runtime. Removing one `colour: root.colour` binding once cost the
+bluetooth, battery and lock icons, with nothing in the logs.
