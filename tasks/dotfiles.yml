@@ -242,35 +242,3 @@
     owner: "{{ target_user }}"
     group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
 
-# TPM (tmux plugin manager) and the plugins .tmux.conf declares. TPM ships a
-# command-line installer, so no prefix+I inside tmux is needed.
-- name: Setup tmux plugins
-  block:
-    - name: Check if tmux is installed
-      command: which tmux
-      register: tmux_installed
-      changed_when: false
-      failed_when: false
-
-    - name: Clone TPM
-      git:
-        repo: https://github.com/tmux-plugins/tpm.git
-        dest: "{{ target_home }}/.tmux/plugins/tpm"
-        depth: 1
-      when: tmux_installed.rc == 0
-
-    # A tmux server that was already running before .tmux.conf was linked has
-    # never read it, and TPM's installer asks the running server for its plugin
-    # path, so reload the config there first. A fresh server reads it on start.
-    - name: Install tmux plugins from .tmux.conf
-      shell: |
-        set -e
-        if tmux ls >/dev/null 2>&1; then
-          tmux source-file "{{ target_home }}/.tmux.conf"
-        fi
-        "{{ target_home }}/.tmux/plugins/tpm/bin/install_plugins"
-      register: tpm_install
-      changed_when: "'Installing' in tpm_install.stdout"
-      when: tmux_installed.rc == 0
-  become: "{{ running_as_root }}"
-  become_user: "{{ target_user if running_as_root else omit }}"

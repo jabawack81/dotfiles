@@ -630,8 +630,18 @@
     # server has sourced the config. Running it inside a detached session gets
     # that for free whether or not a server is already up; the session ends
     # when the install finishes.
+    # A tmux server that was already running before .tmux.conf was linked has
+    # never read it, and the installer asks the running server for its plugin
+    # path — so reload the config there first. With no server running, the
+    # detached session below starts one that reads the config on startup.
     - name: Install missing tmux plugins
-      command: tmux new-session -d -s ansible-tpm-install "{{ ansible_facts['env'].HOME }}/.tmux/plugins/tpm/bin/install_plugins"
+      shell: |
+        set -e
+        if tmux ls >/dev/null 2>&1; then
+          tmux source-file "{{ ansible_facts['env'].HOME }}/.tmux.conf"
+        fi
+        tmux new-session -d -s ansible-tpm-install \
+          "{{ ansible_facts['env'].HOME }}/.tmux/plugins/tpm/bin/install_plugins"
       when: tmux_plugin_stats.results | rejectattr('stat.exists') | list | length > 0
       become: "{{ running_as_root }}"
       become_user: "{{ target_user if running_as_root else omit }}"
