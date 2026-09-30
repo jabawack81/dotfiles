@@ -263,7 +263,10 @@
         marker: "# {mark} ANSIBLE MANAGED BLOCK - fastfetch"
         insertafter: EOF
         block: |
-          # Run fastfetch on shell startup
-          if command -v fastfetch &> /dev/null; then
+          # Run fastfetch on shell startup.
+          # $commands checks real binaries: `command -v fastfetch` matches the
+          # alias from the oh-my-zsh custom file and so is true even when the
+          # package is missing, which printed an error on every new shell.
+          if (( $+commands[fastfetch] )); then
               fastfetch
           fi

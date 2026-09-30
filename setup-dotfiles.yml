@@ -87,6 +87,7 @@
       # Core utilities
       - zsh
       - git
+      - fastfetch      # the shell greeting; its config is symlinked per machine
       - github-cli
       - neovim
       - lazygit

@@ -1,9 +1,15 @@
 #!/bin/bash
 
-# Script to select the appropriate fastfetch config based on hostname
-# This allows for machine-specific logos and configurations
+# Select the appropriate fastfetch config based on hostname, so each machine
+# can have its own logo and layout.
+#
+# On personal machines ~/.config/fastfetch is the <hostname>/fastfetch
+# directory from the dotfiles, so plain `fastfetch` already picks up the
+# machine config; only work machines need an explicit --config here.
 
-HOSTNAME=$(hostname | tr '[:upper:]' '[:lower:]')
+# uname -n rather than hostname(1): the latter comes from inetutils, which
+# is not installed by default on Arch.
+HOSTNAME=$(uname -n | tr '[:upper:]' '[:lower:]')
 CONFIG_DIR="$HOME/.config/fastfetch"
 PRIVATE_LOGOS="$HOME/dotfiles/private-config/logos"
 
