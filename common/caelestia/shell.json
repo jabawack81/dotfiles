@@ -79,5 +79,11 @@
     },
     "services": {
         "smartScheme": false
+    },
+    "general": {
+        "idle": {
+            "timeouts": [],
+            "lockBeforeSleep": false
+        }
     }
 }

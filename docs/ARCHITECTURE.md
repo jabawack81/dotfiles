@@ -186,7 +186,10 @@ Personal machines include:
 - **hyprlauncher**: Application launcher (Hypr ecosystem) with dark theme via hyprtoolkit
 - **dunst**: Notification daemon with custom icons
 - **wlogout**: Session logout menu
-- **hypridle**: Idle management daemon (screen off, lock, suspend)
+- **hypridle**: Idle management daemon (screen off, lock, suspend). It owns idle
+  and locking on every machine and under every bar, driven by
+  `caffeine-toggle.sh`; caelestia's own idle timeouts are turned off in
+  `common/caelestia/shell.json` so the two do not both decide when to lock
 - **hyprsunset**: Blue-light filter
 - **grimblast**: Screenshot tool (Hypr ecosystem wrapper around grim+slurp)
 - **bedtime reminder**: Systemd timer for healthy sleep habits (school nights only)
