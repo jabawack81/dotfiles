@@ -314,6 +314,9 @@
         interface: tailscale0
 
 # ── Services and groups ──────────────────────────────────────────────
+# The display manager is deliberately absent: tasks/desktop.yml installs
+# greetd and disables sddm, and enabling sddm here fails once greetd owns
+# the display-manager.service symlink.
 - name: Enable system services
   systemd:
     name: "{{ item }}"
@@ -323,7 +326,6 @@
     - iwd.service
     - systemd-networkd.service
     - systemd-resolved.service
-    - sddm.service
     - bluetooth.service
     - cups.service
     - avahi-daemon.service
