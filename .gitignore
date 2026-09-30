@@ -6,6 +6,11 @@ settings.local.json
 backups/
 # Playbook run logs (make setup / make dry-run)
 logs/
+
+# Colour schemes caelestia-shell generates from the current wallpaper and
+# writes into the config dirs we symlink from here
+*/hypr/scheme/
+common/btop/themes/caelestia.theme
 # Environment variables (contains sensitive data)
 .env
 # Private config example (template only)

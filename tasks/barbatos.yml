@@ -234,6 +234,9 @@
 - name: Network configuration
   become: "{{ not running_as_root }}"
   block:
+    # iwd drives the radio in both stacks, and with NetworkManager's iwd
+    # backend NM's own cloned-mac-address is not honoured — so this stays the
+    # thing that actually randomises the MAC.
     - name: Randomise the Wi-Fi MAC address on every boot
       copy:
         dest: /etc/iwd/main.conf
@@ -242,6 +245,45 @@
           [General]
           AddressRandomization=once
         mode: '0644'
+
+    # Both shells (caelestia and our own quickshell) read the network through
+    # nmcli, so Wi-Fi has to be reachable via NetworkManager or their network
+    # menus are simply empty. NM takes wlan0 with iwd as its backend; wired
+    # stays with systemd-networkd, which is already configured for it.
+    - name: Let NetworkManager drive Wi-Fi through iwd, and leave wired alone
+      copy:
+        dest: /etc/NetworkManager/conf.d/10-barbatos.conf
+        content: |
+          # barbatos: managed by ~/dotfiles (tasks/barbatos.yml)
+          [device]
+          wifi.backend=iwd
+
+          [keyfile]
+          # systemd-networkd keeps the wired links; tailscale and docker
+          # manage their own interfaces.
+          unmanaged-devices=interface-name:en*;interface-name:tailscale0;interface-name:docker*
+        mode: '0644'
+      register: nm_conf
+
+    # Stock ISO file from archinstall. Leaving it in place has networkd and
+    # NetworkManager both claiming wlan0.
+    - name: Stop systemd-networkd managing wlan0
+      file:
+        path: /etc/systemd/network/20-wlan.network
+        state: absent
+      register: networkd_wlan
+
+    - name: Reload systemd-networkd after dropping the wlan config
+      systemd:
+        name: systemd-networkd
+        state: reloaded
+      when: networkd_wlan is changed
+
+    - name: Enable NetworkManager
+      systemd:
+        name: NetworkManager.service
+        enabled: yes
+        state: started
 
     - name: Point resolv.conf at systemd-resolved's stub
       file:
