@@ -236,8 +236,11 @@ hl.bind("XF86AudioRaiseVolume",  hl.dsp.exec_cmd("pamixer -i 5"),               
 hl.bind("XF86AudioLowerVolume",  hl.dsp.exec_cmd("pamixer -d 5"),                                 { locked = true, repeating = true, description = "Volume down" })
 hl.bind("XF86AudioMute",         hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"),   { locked = true, repeating = true, description = "Toggle mute" })
 hl.bind("XF86AudioMicMute",      hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { locked = true, repeating = true, description = "Toggle mic mute" })
-hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("brightnessctl s 10%+"),                         { locked = true, repeating = true, description = "Brightness up" })
-hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("brightnessctl s 10%-"),                         { locked = true, repeating = true, description = "Brightness down" })
+-- Via shell-action.sh so the running shell makes the change itself and can
+-- show its on-screen display. Setting the backlight directly moves it
+-- behind the shell's back, with no indicator.
+hl.bind("XF86MonBrightnessUp",   hl.dsp.exec_cmd("~/.config/scripts/shell-action.sh brightness-up"),   { locked = true, repeating = true, description = "Brightness up" })
+hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("~/.config/scripts/shell-action.sh brightness-down"), { locked = true, repeating = true, description = "Brightness down" })
 
 -- Requires playerctl
 hl.bind("XF86AudioNext",  hl.dsp.exec_cmd("playerctl next"),       { locked = true, description = "Media next" })
