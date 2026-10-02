@@ -130,6 +130,7 @@
       - brightnessctl
       - xdg-desktop-portal-hyprland
       - hyprpolkitagent
+      - gnome-keyring   # Secret Service provider: 1Password keeps its 2FA token there
       - qt5-wayland
       - qt6-wayland
 

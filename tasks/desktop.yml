@@ -138,6 +138,26 @@
         mode: '0644'
         force: no   # don't overwrite if regreet has already written the user's real picks
 
+    # sddm ships PAM hooks that unlock the keyring with the login password;
+    # greetd's stock stack has none. Without a keyring nothing answers
+    # org.freedesktop.secrets, so 1Password cannot store its 2FA token and
+    # asks for it at every unlock, and anything else using libsecret fails
+    # the same way. The module is optional, so a failure to start the
+    # keyring can never block a login. On the first login after this it
+    # creates the "login" keyring with the password just typed.
+    - name: Unlock the keyring at login (auth)
+      lineinfile:
+        path: /etc/pam.d/greetd
+        insertafter: '^auth\s+include\s+system-local-login'
+        line: 'auth       optional     pam_gnome_keyring.so'
+        backup: yes
+
+    - name: Start the keyring at login (session)
+      lineinfile:
+        path: /etc/pam.d/greetd
+        insertafter: '^session\s+include\s+system-local-login'
+        line: 'session    optional     pam_gnome_keyring.so auto_start'
+
     - name: Disable sddm (greetd replaces it)
       systemd:
         name: sddm.service
