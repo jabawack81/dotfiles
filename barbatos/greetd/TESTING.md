@@ -1,37 +1,58 @@
-# Testing the quickshell greeter without risking your login
+# Testing the quickshell greeter
 
-The greeter's drawing can be checked from inside a session:
+The loop is three commands; `scripts/greeter.sh` is behind them.
 
-    qs -p ~/dotfiles/barbatos/greetd/greeter
+    make greeter-deploy   # install to /etc/greetd, verify byte-for-byte, restart greetd
+    # Ctrl+Alt+F1, log in, then Ctrl+Alt+F2 if it failed
+    make greeter-logs     # breadcrumbs, the session's own output, greetd's view
 
-but authentication cannot — there is no greetd socket to talk to, so
-`Greetd.available` is false and the password field does nothing. The part
-that can actually lock you out is the launch call, and that needs a real
-greetd.
+`greeter-deploy` refuses to restart greetd unless the deployed files match
+the repo and the `greeter` user can read them, and it truncates the
+session log first, so a stale deploy or a stale log cannot pass for a
+fresh result. Both did, once each.
 
-Run one on a spare VT, with its own socket, leaving the display manager
-alone:
+## How greetd runs the session
+
+greetd does not exec the command the greeter sends. It joins the list
+with spaces and runs `exec <joined>` through `/bin/sh -c`
+(`greetd/src/session/worker.rs`). `source_profile` only prepends the
+profile sourcing; the join happens either way. So the command must be
+valid as a shell command line, which is why the greeter sends one
+shell-quoted element. Sending an argv array such as
+`["sh", "-c", "env BAR=caelestia /usr/bin/start-hyprland"]` is re-split
+into `sh -c env` plus stray positional arguments: the session was a bare
+`env` printing the environment and exiting, which looked exactly like a
+compositor crashing on startup.
+
+## What a spare-VT greetd can and cannot show
 
     sudo greetd --config /etc/greetd/test.toml
 
-`test.toml` (installed by the playbook alongside the real config) runs on
-vt 3, so switch to it with Ctrl+Alt+F3 and log in there. Your desktop on
-vt 1 is untouched, and Ctrl+Alt+F1 returns to it.
+runs a second greetd on vt 3 (Ctrl+Alt+F3; Ctrl+Alt+F1 returns). It
+proves the greeter draws and that the password is accepted or rejected.
+Whether a second Hyprland for the same user can come up on vt 3 is
+untested; the uwsm-managed entry certainly cannot, since uwsm refuses
+outside vt 1 and outside a login shell (`uwsm check may-start -v`). A
+session that bounces straight back on vt 3 is therefore not evidence
+either way about the greeter -- log in on vt 1 for that.
 
-What to check:
+## Where the evidence is
 
-1. The password is accepted and a wrong one shows an error.
-2. The session actually starts — this is the step most likely to fail, as
-   it depends on what `Greetd.launch` expects. If the greeter authenticates
-   and then sits there or exits, the Exec line from the desktop entry is
-   being passed in the wrong shape.
-3. Clicking the session name cycles through the entries in
-   /usr/share/wayland-sessions.
+- `journalctl -t greeter-session` -- breadcrumbs the greeter logs around
+  the launch; they survive the VT switch.
+- `~/.cache/greeter-session.log` -- the session's stdout/stderr, truncated
+  each login.
+- `journalctl -b | grep greetd` -- `session opened`/`session closed` for
+  the user show how long the session lived. Same second means it exited
+  immediately.
+- A session that is still open with a blank screen: `loginctl
+  list-sessions`, then read `/proc/<leader-child>/cmdline`. A stuck
+  process with an inspectable argv is worth more than any theory.
 
-Only once that passes is it worth pointing the real greeter at it, by
-changing `command` in /etc/greetd/config.toml from `regreet` to
-`qs -p /etc/greetd/greeter`.
+## Getting out
 
-Back out at any time:
-
-    sudo systemctl disable --now greetd && sudo systemctl enable --now sddm
+Ctrl+Alt+F2 reaches a TTY whatever the greeter does. regreet stays
+installed as the fallback: swap the commented `command` lines in
+`/etc/greetd/config.toml` and `sudo systemctl restart greetd`. To drop
+greetd entirely: `sudo systemctl disable --now greetd && sudo systemctl
+enable --now sddm`.

@@ -21,14 +21,23 @@ Omarchy; the runbook for the reinstall lives in the personal vault under
 
 ## Greeter
 
-greetd + regreet rather than sddm, whose unthemed default looks nothing
-like the desktop behind it. `barbatos/greetd/` holds the Nord styling; the
-playbook copies it to `/etc/greetd`, seeds the greeter wallpaper from
-`~/Pictures/wallpapers/wall0.png` so greeter and desktop show the same
-image, and switches the display manager over.
+greetd rather than sddm, whose unthemed default looks nothing like the
+desktop behind it. `greetd/greeter/shell.qml` is a self-contained
+quickshell greeter on the same Nord palette as the bar; it shares no code
+with the shell, because the `greeter` user cannot read a home directory at
+0700. The playbook copies `barbatos/greetd/` to `/etc/greetd`, and seeds
+the greeter wallpaper from `~/Pictures/wallpapers/wall0.png` so greeter and
+desktop show the same image.
 
-To go back to sddm: `sudo systemctl disable --now greetd && sudo systemctl
-enable sddm`. A TTY on Ctrl+Alt+F2 stays available either way.
+regreet stays installed as the fallback: swap the commented command in
+`/etc/greetd/config.toml` and restart greetd. To go back to sddm entirely:
+`sudo systemctl disable --now greetd && sudo systemctl enable --now sddm`.
+A TTY on Ctrl+Alt+F2 stays available either way.
+
+Testing changes to the greeter: `make greeter-deploy`, log in, `make
+greeter-logs`; `barbatos/greetd/TESTING.md` has the detail. The one thing
+to know about greetd is that it joins the session command into a string
+and runs it through `sh -c`, so the greeter sends a single quoted element.
 
 ## System side
 

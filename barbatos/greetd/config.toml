@@ -18,6 +18,9 @@ source_profile = false
 # cage -m last = use only the last-connected output (default is "extend"
 #                which spans the compositor across all monitors — that's
 #                what gave us the split-screen greeter).
-# regreet = graphical greeter driving greetd via IPC
-command = "cage -s -m last -- regreet"
+# The greeter itself drives greetd over IPC. regreet is the fallback: it
+# is a stock package rather than our own QML, so swap the two lines if the
+# quickshell greeter ever fails to come up.
+command = "cage -s -m last -- qs -p /etc/greetd/greeter"
+# command = "cage -s -m last -- regreet"
 user = "greeter"

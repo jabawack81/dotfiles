@@ -54,10 +54,10 @@
     path: "{{ dotfiles_dir }}/{{ hostname }}/greetd"
   register: greetd_config_dir
 
-# Any machine with a greetd/ directory gets greetd + regreet instead of
-# sddm, whose unthemed default looks nothing like the desktop behind it.
-# The theme is per machine so the greeter matches that machine's desktop.
-- name: Setup greetd + regreet as display manager
+# Any machine with a greetd/ directory gets greetd instead of sddm, whose
+# unthemed default looks nothing like the desktop behind it. The theme is
+# per machine so the greeter matches that machine's desktop.
+- name: Setup greetd as display manager
   block:
     - name: Install greetd configs from dotfiles
       copy:
@@ -71,9 +71,10 @@
         - regreet.toml
         - regreet.css
 
-    # The quickshell greeter and a second greetd config for trying it on a
-    # spare VT. Installed but not active: config.toml still starts regreet
-    # until the launch path has been tested. See barbatos/greetd/TESTING.md.
+    # The quickshell greeter config.toml starts, plus a second greetd config
+    # for trying changes to it on a spare VT (drawing and password only;
+    # see barbatos/greetd/TESTING.md). The regreet files stay installed as
+    # the fallback config.toml keeps commented out.
     - name: Check for a quickshell greeter
       stat:
         path: "{{ dotfiles_dir }}/{{ hostname }}/greetd/greeter/shell.qml"
