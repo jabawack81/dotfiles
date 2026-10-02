@@ -68,12 +68,13 @@ hl.config({
 ---- INPUT ----
 ---------------
 
--- US keyboard on this ThinkPad (common.lua defaults to gb); Caps Lock is the
--- compose key.
+-- US keyboard on this ThinkPad (common.lua defaults to gb). The compose key
+-- is Right Alt: it was Caps Lock, which took the key away from caps and left
+-- the greeter (which has no such remap) behaving differently from the session.
 hl.config({
     input = {
         kb_layout          = "us",
-        kb_options         = "compose:caps",
+        kb_options         = "compose:ralt",
         repeat_rate        = 40,
         repeat_delay       = 600,
         numlock_by_default = true,
