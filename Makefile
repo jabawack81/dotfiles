@@ -1,4 +1,4 @@
-.PHONY: help menu setup dry-run status docs clean sync validate update-nvim clean-nvim backup push-changes git-log view-docs test install-deps caelestia-update caelestia-build caelestia-verify
+.PHONY: help menu setup dry-run status docs clean sync validate update-nvim clean-nvim backup push-changes git-log view-docs test install-deps caelestia-update caelestia-build caelestia-verify greeter-deploy greeter-logs greeter-status
 
 # Ensure bash is used for shell commands (needed for echo -e)
 SHELL := /bin/bash
@@ -76,6 +76,11 @@ menu:
 	@echo -e "  $(GREEN)make caelestia-build$(RESET) Build the QML plugin from the vendored source"
 	@echo -e "  $(GREEN)make caelestia-update$(RESET) Re-sync with upstream (TAG=v2.6.0)"
 	@echo -e "  $(GREEN)make caelestia-verify$(RESET) Check our changes are additions only"
+	@echo ""
+	@echo -e "$(BOLD)Greeter (greetd):$(RESET)"
+	@echo -e "  $(GREEN)make greeter-deploy$(RESET)  Install to /etc/greetd, verify, restart greetd"
+	@echo -e "  $(GREEN)make greeter-logs$(RESET)    Why the last login attempt failed"
+	@echo -e "  $(GREEN)make greeter-status$(RESET)  What is deployed, and is it current"
 	@echo ""
 	@echo -e "$(BOLD)Maintenance:$(RESET)"
 	@echo -e "  $(GREEN)make update-nvim$(RESET)     Update neovim plugins"
@@ -173,6 +178,15 @@ caelestia-build:
 # drops a component at runtime.
 caelestia-verify:
 	@$(DOTFILES_DIR)/scripts/caelestia-verify.rb
+
+greeter-deploy:
+	@$(DOTFILES_DIR)/scripts/greeter.sh deploy
+
+greeter-logs:
+	@$(DOTFILES_DIR)/scripts/greeter.sh logs
+
+greeter-status:
+	@$(DOTFILES_DIR)/scripts/greeter.sh status
 
 aur-check:
 	@echo -e "$(BOLD)$(BLUE)Scanning for AUR supply-chain indicators...$(RESET)"
