@@ -358,6 +358,21 @@
       loop_control:
         label: "{{ item.key }} {{ item.value }}"
 
+# ── Boot time: skip TPM provisioning nothing here uses ───────────────
+# See barbatos_skip_tpm_setup in setup-dotfiles.yml for the numbers and for
+# when to turn this off. Masked rather than disabled because the units are
+# static: sysinit.target pulls them in, and there is nothing to disable.
+- name: Skip TPM NvPCR provisioning at boot
+  systemd:
+    name: "{{ item }}"
+    masked: "{{ barbatos_skip_tpm_setup }}"
+    daemon_reload: yes
+  become: "{{ not running_as_root }}"
+  loop:
+    - systemd-tpm2-setup-early.service
+    - systemd-tpm2-setup.service
+  ignore_errors: yes   # absent on a systemd built without TPM2 support
+
 # ── Services and groups ──────────────────────────────────────────────
 # The display manager is deliberately absent: tasks/desktop.yml installs
 # greetd and disables sddm, and enabling sddm here fails once greetd owns

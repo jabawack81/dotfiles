@@ -283,6 +283,16 @@
       - systemd.show_status=auto
       - vt.global_cursor_default=0
 
+    # Skip the two systemd TPM provisioning units at boot. They cost about
+    # 8.7s on this machine's critical path: the TPM rejects NV_DefineSpace
+    # (error 0x14c) while systemd initialises NvPCRs, and it retries for ~5s
+    # before giving up and reporting success. The SRK already exists, the
+    # root is not encrypted, and nothing here unlocks anything with the TPM,
+    # so the only thing lost is extra measured-boot logging nobody reads.
+    # Set to false -- or run `systemctl unmask` on both -- before enrolling
+    # a TPM2 key with systemd-cryptenroll, which does need them.
+    barbatos_skip_tpm_setup: true
+
     barbatos_aur_packages:  # ThinkPad T470p AUR packages
       - nvidia-580xx-dkms     # legacy branch for Maxwell (GM108M)
       - nvidia-580xx-utils

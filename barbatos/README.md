@@ -48,7 +48,9 @@ fingerprint (python-validity + open-fprintd + PAM), ThinkPad fan control,
 iwd MAC randomisation, sysctl/udev knobs, services and groups, and the boot
 presentation: `barbatos_quiet_boot` is appended to `/etc/kernel/cmdline` and
 baked into the UKI, and systemd-boot's menu is hidden (hold Space at boot
-to see it) with its text sized for the panel.
+to see it) with its text sized for the panel. `barbatos_skip_tpm_setup` masks
+the two systemd TPM provisioning units (~8s of boot, spent on NvPCR setup the
+TPM keeps rejecting); turn it off before enrolling a TPM2 key.
 
 ## After the first `make setup`
 
