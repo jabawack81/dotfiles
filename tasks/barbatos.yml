@@ -313,6 +313,51 @@
         direction: in
         interface: tailscale0
 
+# ── Boot presentation: quiet console, hidden loader menu ─────────────
+# What the screen shows between the firmware logo and the greeter. The
+# kernel command line lives in /etc/kernel/cmdline and is baked into the
+# unified kernel image, so a change needs mkinitcpio to rebuild it. The
+# loader options are read by systemd-boot at each boot.
+- name: Boot presentation
+  become: "{{ not running_as_root }}"
+  block:
+    - name: Read the kernel command line
+      slurp:
+        src: /etc/kernel/cmdline
+      register: kernel_cmdline
+
+    # Appends what is missing rather than rewriting the line: the root
+    # PARTUUID and the btrfs options in there are this machine's own.
+    - name: Quiet the console during boot
+      copy:
+        dest: /etc/kernel/cmdline
+        content: "{{ (current_cmdline + (barbatos_quiet_boot | reject('in', current_cmdline) | list)) | join(' ') }}\n"
+      vars:
+        current_cmdline: "{{ (kernel_cmdline.content | b64decode | trim).split() }}"
+      register: kernel_cmdline_write
+
+    - name: Rebuild the unified kernel image with the new command line
+      command: mkinitcpio -P
+      when: kernel_cmdline_write is changed
+
+    # menu-hidden: boot the default at once; holding Space shows the menu,
+    # and the fallback image is still in it. console-mode auto picks a text
+    # mode sized for the panel instead of drawing 8x16 at 1080p. editor no
+    # keeps the command line from being edited at the prompt, which is the
+    # classic init=/bin/sh way around a login.
+    - name: Keep systemd-boot's menu hidden and its text legible
+      lineinfile:
+        path: /boot/loader/loader.conf
+        regexp: '^#?\s*{{ item.key }}\b'
+        line: "{{ item.key }} {{ item.value }}"
+        create: yes
+      loop:
+        - { key: timeout, value: menu-hidden }
+        - { key: console-mode, value: auto }
+        - { key: editor, value: "no" }
+      loop_control:
+        label: "{{ item.key }} {{ item.value }}"
+
 # ── Services and groups ──────────────────────────────────────────────
 # The display manager is deliberately absent: tasks/desktop.yml installs
 # greetd and disables sddm, and enabling sddm here fails once greetd owns

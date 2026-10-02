@@ -270,6 +270,19 @@
     # battery life, no prime-run. Either way a reboot applies the switch.
     barbatos_gpu_mode: hybrid
 
+    # Kernel command line additions for a quiet boot. Without them the
+    # kernel and systemd narrate the whole boot on the console, fourteen
+    # seconds of it in an 8x16 font, between the Arch splash and the greeter.
+    # show_status=auto still prints unit status if something hangs, and the
+    # last entry hides the blinking cursor on the black frames in between.
+    # These are baked into the UKI, so the playbook rebuilds it on change.
+    barbatos_quiet_boot:
+      - quiet
+      - loglevel=3
+      - udev.log_level=3
+      - systemd.show_status=auto
+      - vt.global_cursor_default=0
+
     barbatos_aur_packages:  # ThinkPad T470p AUR packages
       - nvidia-580xx-dkms     # legacy branch for Maxwell (GM108M)
       - nvidia-580xx-utils

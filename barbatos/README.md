@@ -45,7 +45,10 @@ Everything that touches `/etc` is in `tasks/barbatos.yml`: NVIDIA 580xx via
 AUR (nvidia-open does not support Maxwell), EnvyControl mode (`barbatos_gpu_mode`:
 `hybrid` keeps prime-run, `integrated` powers the dGPU off — Maxwell has no RTD3),
 fingerprint (python-validity + open-fprintd + PAM), ThinkPad fan control,
-iwd MAC randomisation, sysctl/udev knobs, services and groups.
+iwd MAC randomisation, sysctl/udev knobs, services and groups, and the boot
+presentation: `barbatos_quiet_boot` is appended to `/etc/kernel/cmdline` and
+baked into the UKI, and systemd-boot's menu is hidden (hold Space at boot
+to see it) with its text sized for the panel.
 
 ## After the first `make setup`
 
