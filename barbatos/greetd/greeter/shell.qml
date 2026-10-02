@@ -142,13 +142,18 @@ ShellRoot {
         implicitWidth: 1920
         implicitHeight: 1080
 
+        // The wallpaper at full strength, not washed into the base colour.
+        // It is a dark navy with a cyan drop, and at 35% it went flat grey
+        // beside the desktop it hands over to. Undimmed, the drop sits where
+        // the desktop's startup splash draws it, so the handoff reads as the
+        // card leaving rather than the whole scene changing. The text is on
+        // the card, not the wallpaper, so nothing needs the dimming.
         Image {
             anchors.fill: parent
             source: "file:///etc/greetd/wallpaper.png"
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
             cache: false
-            opacity: 0.35
         }
 
         // ── Clock ───────────────────────────────────────────────
