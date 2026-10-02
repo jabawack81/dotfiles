@@ -70,14 +70,33 @@ ShellRoot {
             if (!root.session)
                 return;
 
-            // Through a shell, not straight to exec: the Exec lines in
-            // /usr/share/wayland-sessions are shell fragments, not argv —
-            // "env BAR=caelestia /usr/bin/start-hyprland" and
-            // "uwsm start -e -D Hyprland hyprland.desktop". Passing the
-            // whole string as the command has greetd look for a binary of
-            // that literal name, which fails silently and leaves a black
-            // screen where the session should be.
-            Greetd.launch(["sh", "-c", root.session.exec]);
+            // greetd does not exec this as an argv. It joins the list with
+            // spaces and runs `exec <joined>` through /bin/sh -c
+            // (greetd/src/session/worker.rs), so what is sent has to be a
+            // valid shell command line: one element, shell-quoted, and no
+            // `exec` of our own, since greetd supplies that. An argv such
+            // as ["sh", "-c", "env BAR=caelestia /usr/bin/start-hyprland"]
+            // is re-split into `sh -c env` plus stray positional arguments
+            // -- a session that prints the environment and exits.
+            //
+            // A shell is wanted regardless, because the Exec lines in
+            // /usr/share/wayland-sessions are shell fragments. A login
+            // shell, so the session gets what a TTY login would:
+            // /etc/profile and the profile.d PATH.
+            //
+            // The environment is what greetd cannot know on its own and
+            // regreet would have passed; without it the session reports
+            // itself to logind as a tty.
+            //
+            // Not covered: the uwsm-managed entry. uwsm checks that its
+            // parent is a login shell by argv[0] ("-bash"), which this
+            // chain does not produce. The other entries do not use uwsm.
+            const q = str => "'" + String(str).replace(/'/g, "'\\''") + "'";
+            Greetd.launch([`/bin/bash -l -c ${q(root.session.exec)}`], [
+                "XDG_SESSION_TYPE=wayland",
+                "XDG_SESSION_DESKTOP=Hyprland",
+                "XDG_CURRENT_DESKTOP=Hyprland"
+            ]);
         }
 
         function onError(error: string): void {

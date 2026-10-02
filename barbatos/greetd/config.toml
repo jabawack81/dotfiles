@@ -1,6 +1,18 @@
 [terminal]
 vt = 1
 
+[general]
+# greetd's source_profile joins the session command's argv into one string
+# and re-runs it through a shell, which re-splits it. Anything with a space
+# in it is then taken apart: `bash -c "<script>" name "<script>"` becomes
+# `bash -c <first-word>`, and the rest turns into positional arguments. The
+# visible result was a session that printed the environment and exited --
+# `env BAR=caelestia /usr/bin/start-hyprland` re-parsed as a bare `env`.
+# With this off, greetd execs the argv it is given, unchanged. Nothing is
+# lost: the greeter starts the session through `bash -l`, which sources the
+# profile itself.
+source_profile = false
+
 [default_session]
 # cage -s = allow Ctrl+Alt+Backspace escape
 # cage -m last = use only the last-connected output (default is "extend"
