@@ -21,6 +21,12 @@ source_profile = false
 # The greeter itself drives greetd over IPC. regreet is the fallback: it
 # is a stock package rather than our own QML, so swap the two lines if the
 # quickshell greeter ever fails to come up.
-command = "cage -s -m last -- qs -p /etc/greetd/greeter"
+#
+# systemd-cat sends cage's stderr to the journal (journalctl -t greeter-cage)
+# instead of the VT, and LIBSEAT_BACKEND=logind skips libseat's probe for
+# seatd. Without both, "Could not connect to socket /run/seatd.sock" and
+# "Backend 'seatd' failed to open seat, skipping" flash on tty1 just before
+# the greeter appears. logind is the seat backend on this system anyway.
+command = "systemd-cat -t greeter-cage env LIBSEAT_BACKEND=logind cage -s -m last -- qs -p /etc/greetd/greeter"
 # command = "cage -s -m last -- regreet"
 user = "greeter"
