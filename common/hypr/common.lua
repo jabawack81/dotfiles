@@ -86,9 +86,15 @@ hl.config({
         new_status = "master",
     },
 
+    -- Until the shell draws its wallpaper, Hyprland paints its own: a random
+    -- mascot image, for about a second after login. Off, and the fallback is
+    -- a plain colour close to the wallpaper's average (#0a1326), so the gap
+    -- between the greeter and the desktop is one dark navy, not a different
+    -- picture.
     misc = {
-        force_default_wallpaper = -1,    -- Set to 0 or 1 to disable the anime mascot wallpapers
-        disable_hyprland_logo   = false, -- If true disables the random hyprland logo / anime girl background. :(
+        force_default_wallpaper = 0,
+        disable_hyprland_logo   = true,
+        background_color        = "rgba(0a1326ff)",
     },
 })
 
