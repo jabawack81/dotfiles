@@ -91,9 +91,10 @@ cmd_logs() {
     if [ -n "$log" ]; then note "$log"; grep -iE "err|crit|fail" "$log" | tail -10 || note "(no errors)"
     else note "(none this boot -- Hyprland never started)"; fi
 
-    printf '\n'; say "What flashed on tty1"
-    note "greetd prints the shell's own errors there, e.g. 'exec: foo: not found'."
-    note "They are not journaled; read them before switching VT."
+    printf '\n'; say "Session output (journal, via systemd-cat)"
+    journalctl -t greetd-session -b --no-pager 2>/dev/null | tail -15 || true
+    note "Errors from the shell greetd wraps the command in -- 'exec: foo: not"
+    note "found' -- come before this and only ever show on tty1."
 }
 
 cmd_status() {

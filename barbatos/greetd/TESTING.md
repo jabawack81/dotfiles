@@ -38,10 +38,9 @@ either way about the greeter -- log in on vt 1 for that.
 
 ## Where the evidence is
 
-- `journalctl -t greeter-session` -- breadcrumbs the greeter logs around
-  the launch; they survive the VT switch.
-- `~/.cache/greeter-session.log` -- the session's stdout/stderr, truncated
-  each login.
+- `journalctl -t greetd-session` -- the session's stdout and stderr,
+  which the greeter routes through systemd-cat. Hyprland's startup banner
+  and its first log lines land here instead of on tty1.
 - `journalctl -b | grep greetd` -- `session opened`/`session closed` for
   the user show how long the session lived. Same second means it exited
   immediately.

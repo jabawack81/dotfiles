@@ -88,11 +88,19 @@ ShellRoot {
             // regreet would have passed; without it the session reports
             // itself to logind as a tty.
             //
+            // Through systemd-cat, because the session inherits greetd's
+            // stdout, which is the VT: Hyprland's "Welcome to Hyprland!"
+            // banner and its first DEBUG lines were showing on tty1 for a
+            // second between the greeter and the desktop. Under sddm that
+            // output went to the journal; this puts it back there, where
+            // `journalctl -t greetd-session` can read it. systemd-cat
+            // execs the command, so nothing extra stays in the tree.
+            //
             // Not covered: the uwsm-managed entry. uwsm checks that its
             // parent is a login shell by argv[0] ("-bash"), which this
             // chain does not produce. The other entries do not use uwsm.
             const q = str => "'" + String(str).replace(/'/g, "'\\''") + "'";
-            Greetd.launch([`/bin/bash -l -c ${q(root.session.exec)}`], [
+            Greetd.launch([`/bin/bash -l -c ${q("exec systemd-cat -t greetd-session " + root.session.exec)}`], [
                 "XDG_SESSION_TYPE=wayland",
                 "XDG_SESSION_DESKTOP=Hyprland",
                 "XDG_CURRENT_DESKTOP=Hyprland"
