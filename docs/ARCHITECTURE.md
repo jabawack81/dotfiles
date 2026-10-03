@@ -148,8 +148,8 @@ Built-in diagnostic capabilities:
 
 ### Debian Servers (virtue)
 - **OS**: Debian (any host where `ansible_facts['os_family'] == 'Debian'`)
-- **Installed**: zsh + oh-my-zsh, Neovim from the official release tarball (`/opt/nvim`), lazygit, tmux, LazyVim build deps, and the standard dev toolchain (rbenv, nodenv, pnpm, SDKMAN, g)
-- **Linked**: `nvim` config and `.tmux.conf`
+- **Installed**: zsh + oh-my-zsh, Neovim from the official release tarball (`/opt/nvim`), the terminal toolset (fzf, bat, jq, gh, lazygit, tmux, btop, htop, broot, trash-cli), LazyVim build deps, and the standard dev toolchain (rbenv, nodenv, pnpm, SDKMAN, g)
+- **Linked**: `nvim` and `btop` configs, `.tmux.conf`
 - **Skipped**: desktop, Claude Code
 
 ### Work Machines

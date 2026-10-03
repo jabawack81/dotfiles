@@ -9,14 +9,20 @@
     owner: "{{ target_user }}"
     group: "{{ 'staff' if ansible_facts['os_family'] == 'Darwin' else target_user }}"
 
-# Debian's fd-find installs the binary as `fdfind`; LazyVim's pickers look
-# for `fd`, so expose it under the expected name.
-- name: Link fdfind as fd for the target user
+# Debian renames two binaries to dodge name clashes: fd-find installs `fdfind`
+# and bat installs `batcat`. LazyVim's pickers look for `fd` and `bat`, so
+# expose both under the expected names.
+- name: Link Debian-renamed binaries under their upstream names
   file:
-    src: /usr/bin/fdfind
-    dest: "{{ home_dir }}/.local/bin/fd"
+    src: "/usr/bin/{{ item.debian }}"
+    dest: "{{ home_dir }}/.local/bin/{{ item.upstream }}"
     state: link
     force: yes
+  loop:
+    - { debian: fdfind, upstream: fd }
+    - { debian: batcat, upstream: bat }
+  loop_control:
+    label: "{{ item.upstream }}"
   become: "{{ running_as_root }}"
   become_user: "{{ target_user if running_as_root else omit }}"
   when: is_server_machine

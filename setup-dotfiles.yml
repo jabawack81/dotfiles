@@ -38,9 +38,11 @@
       - fastfetch
       - opencode
 
-    # Configs linked on servers (headless Debian) — editor only
+    # Configs linked on servers (headless Debian): editor and the TUI tools
+    # whose binaries server_packages installs
     server_configs:
       - nvim
+      - btop
 
     # Servers have no 1Password, so commits are signed with a plain SSH key
     # kept on the box. Generate it, register it on GitHub as a signing key,
@@ -72,8 +74,18 @@
       - zip               # sdkman
       - ripgrep
       - fd-find           # Debian names the binary fdfind; symlinked as fd in tasks/dotfiles.yml
+      - fzf               # fzf-lua pickers, run.zsh, version-managers.zsh
+      - bat               # picker previews; Debian names it batcat, symlinked as bat
+      - jq
+      - gh                # octo.nvim and signing-key setup
       - lazygit           # LazyVim git UI
       - tmux
+      - btop
+      - htop
+      - broot             # its config is linked by tasks/devtools.yml on every machine
+      - trash-cli         # snacks explorer deletes go to the trash instead of being permanent
+      - rsync
+      - wget
       # ruby-build dependencies (https://github.com/rbenv/ruby-build/wiki)
       - autoconf
       - patch

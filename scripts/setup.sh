@@ -113,7 +113,7 @@ echo "Checking for configs in dotfiles that might not be linked..."
 
 # Define work machine and server configs (from playbook)
 WORK_CONFIGS="btop ghostty nvim lazygit broot"
-SERVER_CONFIGS="nvim"
+SERVER_CONFIGS="nvim btop"
 
 # Check common directory
 if [ -d "$DOTFILES_DIR/common" ]; then

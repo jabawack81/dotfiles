@@ -53,7 +53,7 @@ For full list of available commands: `make help`
 - **kyrios**: Personal Arch Linux laptop (battery monitoring, single display)
 - **shinkiro**: Personal Arch Linux desktop (dual 4K displays, GPU monitoring, EWW widgets)
 - **barbatos**: Arch Linux ThinkPad T470p (hybrid Intel/NVIDIA 940MX, fingerprint reader). Formerly `lupus` on Omarchy; see `barbatos/README.md`
-- **virtue**: Debian server. Headless profile, detected by OS family rather than hostname, so any other Debian box gets the same treatment. Installs zsh + oh-my-zsh, Neovim with the LazyVim config, lazygit, tmux, and the same dev toolchain as the other machines (rbenv + latest Ruby, nodenv + Node, pnpm, SDKMAN, g). No desktop, no Claude Code.
+- **virtue**: Debian server. Headless profile, detected by OS family rather than hostname, so any other Debian box gets the same treatment. Installs zsh + oh-my-zsh, Neovim with the LazyVim config, the terminal toolset (fzf, bat, jq, gh, lazygit, tmux, btop, broot), and the same dev toolchain as the other machines (rbenv + latest Ruby, nodenv + Node, pnpm, SDKMAN, g). No desktop, no Claude Code.
 - **Work machines**: Limited configs for non-personal machines
 
 ### Setting up a Debian server

@@ -25,16 +25,16 @@ Personal machines are the primary target; the server and work profiles are addit
 
 Servers get the shell, the editor and the language toolchain, and nothing that assumes a desktop:
 
-| Step           | What happens                                                                                                              |
-|----------------|---------------------------------------------------------------------------------------------------------------------------|
-| Packages (apt) | `server_packages`: zsh, git, curl, zip/unzip, build-essential, ripgrep, fd-find, lazygit, tmux, plus ruby-build libraries |
-| Neovim         | Official release tarball, pinned by `neovim_release` + `neovim_sha256`, in `/opt/nvim-<version>`; `/opt/nvim` links to it |
-| fd             | `~/.local/bin/fd -> /usr/bin/fdfind` because Debian renames the binary                                                    |
-| Shell          | oh-my-zsh, autosuggestions + syntax-highlighting, custom files, zsh as login shell                                        |
-| Configs        | Only `server_configs` (currently `nvim`) is symlinked into `~/.config`                                                    |
-| Dev tools      | `devtools.yml` as on every machine: rbenv + latest Ruby, nodenv + Node, pnpm, SDKMAN, g                                   |
-| Git signing    | SSH signing with `server_signing_key` (`~/.ssh/id_ed25519_github.pub`) when it exists; no 1Password on servers            |
-| Skipped        | `desktop.yml`, `claude.yml`, `bedtime-prompt.zsh`                                                                         |
+| Step           | What happens                                                                                                                                     |
+|----------------|--------------------------------------------------------------------------------------------------------------------------------------------------|
+| Packages (apt) | `server_packages`: shell, build deps, and the Arch terminal toolset (ripgrep, fd, fzf, bat, jq, gh, lazygit, tmux, btop, htop, broot, trash-cli) |
+| Neovim         | Official release tarball, pinned by `neovim_release` + `neovim_sha256`, in `/opt/nvim-<version>`; `/opt/nvim` links to it                        |
+| fd, bat        | `~/.local/bin/{fd,bat}` link to Debian's renamed `fdfind` and `batcat`                                                                           |
+| Shell          | oh-my-zsh, autosuggestions + syntax-highlighting, custom files, zsh as login shell                                                               |
+| Configs        | Only `server_configs` (`nvim`, `btop`) is symlinked into `~/.config`                                                                             |
+| Dev tools      | `devtools.yml` as on every machine: rbenv + latest Ruby, nodenv + Node, pnpm, SDKMAN, g                                                          |
+| Git signing    | SSH signing with `server_signing_key` (`~/.ssh/id_ed25519_github.pub`) when it exists; no 1Password on servers                                   |
+| Skipped        | `desktop.yml`, `claude.yml`, `bedtime-prompt.zsh`                                                                                                |
 
 `bedtime-prompt.zsh` is skipped because it runs a script from `~/.config/bedtime` on every prompt, which servers never get. To upgrade Neovim, bump `neovim_release` and the `neovim_sha256` entries together and re-run the playbook; older releases stay under `/opt/nvim-<version>` until removed by hand. The tarball is staged in the root-owned install directory, never `/tmp`, so a local user cannot plant an archive for root to unpack.
 
