@@ -95,6 +95,7 @@ Scope {
                 Bedtime {}
                 Caffeine {}
                 Network {}
+                Bluetooth {}
                 Audio {}
                 Temperatures {}
                 SystemStats {}

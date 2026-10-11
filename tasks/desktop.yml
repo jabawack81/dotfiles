@@ -173,6 +173,16 @@
     - is_personal_machine
     - greetd_config_dir.stat.exists
 
+# bluez is in the common package list; without the daemon running the bar
+# BT pill stays hidden and bluetoothctl has nothing to talk to.
+- name: Enable the Bluetooth daemon
+  systemd:
+    name: bluetooth.service
+    enabled: yes
+    state: started
+  become: "{{ not running_as_root }}"
+  when: is_personal_machine
+
 # Every personal machine gets the wallpaper directory: caelestia's
 # paths.wallpaperDir points at it and its wallpaper switcher reads from
 # there. Only the cycling timer below is desktop-specific.

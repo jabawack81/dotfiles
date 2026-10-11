@@ -191,6 +191,7 @@
       - networkmanager
       - bluez
       - bluez-utils
+      - bluetui         # TUI pairing manager; the bar BT pill opens it on right-click
 
     aur_packages:
       - discord
