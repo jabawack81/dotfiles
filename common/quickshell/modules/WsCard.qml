@@ -24,11 +24,11 @@ Rectangle {
 
     width: 240
     height: 140
-    color: Color.surface
+    color: Colors.surface
     // Keyboard cursor (magenta) takes visual precedence over the active
     // marker; which workspace is active is still shown by the ● inside.
     border.width: (selected || isActive) ? 2 : 1
-    border.color: selected ? Color.highlight : (isActive ? Color.accent : Color.accentDim)
+    border.color: selected ? Colors.highlight : (isActive ? Colors.accent : Colors.accentDim)
     radius: Style.cornerRadius
 
     MouseArea {
@@ -47,11 +47,11 @@ Rectangle {
         BarText {
             small: true
             text: (card.isActive ? "● " : "") + "WS " + card.ws.id
-            color: card.isActive ? Color.accent : Color.foreground
+            color: card.isActive ? Colors.accent : Colors.foreground
             font.bold: true
         }
 
-        Rectangle { width: parent.width; height: 1; color: Color.accentDim }
+        Rectangle { width: parent.width; height: 1; color: Colors.accentDim }
 
         Column {
             width: parent.width
@@ -82,7 +82,7 @@ Rectangle {
                             const ipc = modelData.lastIpcObject;
                             return (ipc && ipc.title) || (ipc && ipc.class) || "window";
                         }
-                        color: Color.textDim
+                        color: Colors.textDim
                         elide: Text.ElideRight
                         maximumLineCount: 1
                     }

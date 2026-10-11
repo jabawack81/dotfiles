@@ -1,4 +1,6 @@
 pragma Singleton
+// Named Colors, not Color: Qt 6.12 added a QtQuick `Color` singleton that
+// shadows any same-named type from a later import.
 import QtQuick
 
 // Cyberpunk palette + per-surface roles. Foundational colors are the neon

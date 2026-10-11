@@ -37,24 +37,24 @@ MouseArea {
         BarText {
             small: true
             text: Style.bracketL + root.dateText + Style.bracketR
-            color: Color.textDim
+            color: Colors.textDim
             anchors.verticalCenter: parent.verticalCenter
         }
         BarText {
             text: Style.bracketL
-            color: Color.accent
+            color: Colors.accent
             anchors.verticalCenter: parent.verticalCenter
         }
         BarText {
             text: root.timeText
-            color: root.containsMouse || dash.visible ? Color.highlight : Color.foreground
+            color: root.containsMouse || dash.visible ? Colors.highlight : Colors.foreground
             font.bold: true
             anchors.verticalCenter: parent.verticalCenter
             Behavior on color { ColorAnimation { duration: 120 } }
         }
         BarText {
             text: Style.bracketR
-            color: Color.accent
+            color: Colors.accent
             anchors.verticalCenter: parent.verticalCenter
         }
     }
@@ -80,7 +80,7 @@ MouseArea {
                 Text {
                     id: bigTime
                     text: "00:00:00"
-                    color: Color.accent
+                    color: Colors.accent
                     font.family: Style.font.family
                     font.pixelSize: Style.font.big
                     font.bold: true
@@ -88,7 +88,7 @@ MouseArea {
                 BarText {
                     id: bigDate
                     text: ""
-                    color: Color.textDim
+                    color: Colors.textDim
                 }
                 Timer {
                     interval: 1000

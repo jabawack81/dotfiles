@@ -2,7 +2,7 @@ pragma Singleton
 import QtQuick
 
 // Pure helper functions shared across the shell. No state — anything
-// stateful belongs on Color, Style, or Globals.
+// stateful belongs on Colors, Style, or Globals.
 QtObject {
     id: root
 

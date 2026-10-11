@@ -16,12 +16,12 @@ Row {
     }
 
     function statColor(pct) {
-        if (pct >= 90) return Color.urgent;
-        if (pct >= 75) return Color.warning;
-        return Color.foreground;
+        if (pct >= 90) return Colors.urgent;
+        if (pct >= 75) return Colors.warning;
+        return Colors.foreground;
     }
 
-    BarText { text: "CPU"; color: Color.textDim; anchors.verticalCenter: parent.verticalCenter }
+    BarText { text: "CPU"; color: Colors.textDim; anchors.verticalCenter: parent.verticalCenter }
     BarText {
         text: root.bar(SystemUsage.cpuPercent)
         color: root.statColor(SystemUsage.cpuPercent)
@@ -33,9 +33,9 @@ Row {
         anchors.verticalCenter: parent.verticalCenter
     }
 
-    BarText { text: "│"; color: Color.accentDim; anchors.verticalCenter: parent.verticalCenter }
+    BarText { text: "│"; color: Colors.accentDim; anchors.verticalCenter: parent.verticalCenter }
 
-    BarText { text: "MEM"; color: Color.textDim; anchors.verticalCenter: parent.verticalCenter }
+    BarText { text: "MEM"; color: Colors.textDim; anchors.verticalCenter: parent.verticalCenter }
     BarText {
         text: root.bar(SystemUsage.memPercent)
         color: root.statColor(SystemUsage.memPercent)

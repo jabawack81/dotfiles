@@ -113,7 +113,7 @@ Row {
             id: ovText
             anchors.centerIn: parent
             text: "⋯" + root.overflowItems.length
-            color: overflowBtn.containsMouse || overflowPopup.visible ? Color.highlight : Color.textDim
+            color: overflowBtn.containsMouse || overflowPopup.visible ? Colors.highlight : Colors.textDim
             Behavior on color { ColorAnimation { duration: 120 } }
         }
 
@@ -157,7 +157,7 @@ Row {
                         Rectangle {
                             anchors.fill: parent
                             radius: Style.cornerRadius
-                            color: ovRow.containsMouse ? Color.surfaceInactive : "transparent"
+                            color: ovRow.containsMouse ? Colors.surfaceInactive : "transparent"
                         }
 
                         Row {
@@ -178,7 +178,7 @@ Row {
                                 width: ovCol.width - 52
                                 text: ovRow.modelData.tooltipTitle || ovRow.modelData.title
                                       || ovRow.modelData.id || "tray item"
-                                color: ovRow.containsMouse ? Color.highlight : Color.foreground
+                                color: ovRow.containsMouse ? Colors.highlight : Colors.foreground
                                 elide: Text.ElideRight
                             }
                         }

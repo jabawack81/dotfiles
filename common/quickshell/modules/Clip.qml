@@ -10,7 +10,7 @@ import qs.Ui
 BarPill {
     id: root
     content: "󰅍"
-    baseColor: clipMenu.visible ? Color.highlight : Color.textDim
+    baseColor: clipMenu.visible ? Colors.highlight : Colors.textDim
     onClicked: {
         if (!clipMenu.visible) { scope.filter = ""; root.refresh(); }
         clipMenu.toggle();
@@ -83,8 +83,8 @@ BarPill {
                     text: "WIPE"
                     // Greyed out and inert when the clipboard is already empty.
                     property bool hasItems: scope.entries.length > 0
-                    color: !hasItems ? Color.accentDim
-                         : (wipeArea.containsMouse ? Color.urgent : Color.textDim)
+                    color: !hasItems ? Colors.accentDim
+                         : (wipeArea.containsMouse ? Colors.urgent : Colors.textDim)
                     font.bold: true
                     MouseArea {
                         id: wipeArea
@@ -101,8 +101,8 @@ BarPill {
             Rectangle {
                 width: parent.width
                 height: 28
-                color: Color.background
-                border.color: Color.accentDim
+                color: Colors.background
+                border.color: Colors.accentDim
                 border.width: 1
 
                 Row {
@@ -113,13 +113,13 @@ BarPill {
                         small: true
                         anchors.verticalCenter: parent.verticalCenter
                         text: "❯"
-                        color: Color.accent
+                        color: Colors.accent
                     }
                     TextInput {
                         id: searchInput
                         anchors.verticalCenter: parent.verticalCenter
                         width: parent.width - 30
-                        color: Color.foreground
+                        color: Colors.foreground
                         font.family: Style.font.family
                         font.pixelSize: Style.font.small
                         focus: true
@@ -140,7 +140,7 @@ BarPill {
                 small: true
                 visible: root.filtered().length === 0
                 text: "// clipboard empty"
-                color: Color.textDim
+                color: Colors.textDim
             }
 
             ListView {
@@ -154,8 +154,8 @@ BarPill {
                     required property var modelData
                     width: ListView.view.width
                     height: 28
-                    color: clipArea.containsMouse ? Color.surfaceInactive : Color.background
-                    border.color: Color.accentDim
+                    color: clipArea.containsMouse ? Colors.surfaceInactive : Colors.background
+                    border.color: Colors.accentDim
                     border.width: 1
 
                     BarText {
@@ -165,7 +165,7 @@ BarPill {
                         anchors.rightMargin: 8
                         verticalAlignment: Text.AlignVCenter
                         text: modelData.preview
-                        color: clipArea.containsMouse ? Color.highlight : Color.foreground
+                        color: clipArea.containsMouse ? Colors.highlight : Colors.foreground
                         elide: Text.ElideRight
                         maximumLineCount: 1
                     }

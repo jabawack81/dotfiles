@@ -1,6 +1,6 @@
 // Cyberpunk neon-glow bar — three floating, rounded, glowing islands
 // (left / center / right) over the desktop, matching the omni-menu card look.
-// Design tokens live in Commons/ (Color, Style, Util, Globals); reusable UI
+// Design tokens live in Commons/ (Colors, Style, Util, Globals); reusable UI
 // in Ui/; feature modules in modules/.
 import Quickshell
 import QtQuick
@@ -41,22 +41,22 @@ Scope {
                 height: Style.barHeight
                 radius: Style.cornerRadius
                 gradient: Gradient {
-                    GradientStop { position: 0.0; color: Color.surfaceRaised }
-                    GradientStop { position: 1.0; color: Color.surfaceDeep }
+                    GradientStop { position: 0.0; color: Colors.surfaceRaised }
+                    GradientStop { position: 1.0; color: Colors.surfaceDeep }
                 }
-                border.color: Color.accent
+                border.color: Colors.accent
                 border.width: 1
 
                 // Layered outer glow (two concentric fading rings).
                 Rectangle {
                     anchors.fill: parent; anchors.margins: -2; z: -1
                     radius: parent.radius + 2; color: "transparent"
-                    border.color: Color.accent; border.width: 2; opacity: 0.16
+                    border.color: Colors.accent; border.width: 2; opacity: 0.16
                 }
                 Rectangle {
                     anchors.fill: parent; anchors.margins: -5; z: -2
                     radius: parent.radius + 5; color: "transparent"
-                    border.color: Color.accent; border.width: 3; opacity: 0.07
+                    border.color: Colors.accent; border.width: 3; opacity: 0.07
                 }
 
                 Row {

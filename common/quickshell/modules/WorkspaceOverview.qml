@@ -123,7 +123,7 @@ Scope {
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: "[ WORKSPACES · " + overviewWindow.modelData.name + " ]"
-                        color: Color.accent
+                        color: Colors.accent
                         font.family: Style.font.family
                         font.pixelSize: Style.font.base + 2
                         font.bold: true
@@ -154,7 +154,7 @@ Scope {
                         small: true
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: "// tab·arrows move · enter select · 1-9 jump · esc close"
-                        color: Color.textDim
+                        color: Colors.textDim
                     }
                 }
             }

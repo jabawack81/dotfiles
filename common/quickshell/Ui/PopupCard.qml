@@ -20,7 +20,7 @@ PopupWindow {
     property int contentWidth: 240
     property int contentHeight: 200
     property int padding: Style.spacing.lg
-    property color borderColor: Color.popups.border
+    property color borderColor: Colors.popups.border
     // Direction the popup expands from the anchor's bottom edge. Default
     // Bottom|Left keeps right-side bar icons on-screen; use Bottom alone to
     // center the popup under a centered anchor (e.g. the clock).
@@ -47,7 +47,7 @@ PopupWindow {
 
     Rectangle {
         anchors.fill: parent
-        color: Color.popups.background
+        color: Colors.popups.background
         border.color: root.borderColor
         border.width: 1
         radius: Style.cornerRadius

@@ -100,6 +100,10 @@ start_quickshell() {
     window_start=$(date +%s)
 
     while :; do
+        # The crash toast below is sent while no notification server is up,
+        # so D-Bus activation starts dunst to show it. Clear it again or it
+        # keeps the name and quickshell's notifications go dark.
+        stop_dunst
         "$cmd"
         local rc=$?
 

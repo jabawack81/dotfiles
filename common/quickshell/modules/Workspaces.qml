@@ -31,7 +31,7 @@ Row {
 
     BarText {
         text: Style.bracketL + "WS" + Style.bracketR
-        color: Color.textDim
+        color: Colors.textDim
         anchors.verticalCenter: parent.verticalCenter
     }
 
@@ -54,10 +54,10 @@ Row {
                 anchors.centerIn: parent
                 text: parent.isActive ? "●" + parent.modelData.id
                                       : String(parent.modelData.id)
-                color: parent.isActive ? Color.accent
-                                       : (parent.hovered ? Color.highlight
-                                                         : (parent.hasWindows ? Color.foreground
-                                                                              : Color.textDim))
+                color: parent.isActive ? Colors.accent
+                                       : (parent.hovered ? Colors.highlight
+                                                         : (parent.hasWindows ? Colors.foreground
+                                                                              : Colors.textDim))
                 font.bold: parent.isActive
 
                 Behavior on color {

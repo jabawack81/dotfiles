@@ -145,11 +145,11 @@ Scope {
                     opacity: 0.5
                     Repeater {
                         model: Math.ceil(parent.height / 42)
-                        Rectangle { y: index * 42; width: parent.width; height: 1; color: Color.accent; opacity: 0.04 }
+                        Rectangle { y: index * 42; width: parent.width; height: 1; color: Colors.accent; opacity: 0.04 }
                     }
                     Repeater {
                         model: Math.ceil(parent.width / 42)
-                        Rectangle { x: index * 42; width: 1; height: parent.height; color: Color.accent; opacity: 0.04 }
+                        Rectangle { x: index * 42; width: 1; height: parent.height; color: Colors.accent; opacity: 0.04 }
                     }
                 }
 
@@ -182,14 +182,14 @@ Scope {
                         width: Math.min(880, parent.width - 80)
                         height: 520
                         radius: Style.cornerRadius
-                        color: Color.surfaceRaised
-                        border.color: Color.accent
+                        color: Colors.surfaceRaised
+                        border.color: Colors.accent
                         border.width: 1
                         // layered outer glow
                         Rectangle {
                             anchors.fill: parent; anchors.margins: -3; z: -1
                             radius: parent.radius + 3; color: "transparent"
-                            border.color: Color.accent; border.width: 2; opacity: 0.18
+                            border.color: Colors.accent; border.width: 2; opacity: 0.18
                         }
 
                         Column {
@@ -204,19 +204,19 @@ Scope {
                                     spacing: 14
                                     Text {
                                         anchors.verticalCenter: parent.verticalCenter
-                                        text: "⌕"; color: Color.accent; font.family: Style.font.family; font.pixelSize: 22
+                                        text: "⌕"; color: Colors.accent; font.family: Style.font.family; font.pixelSize: 22
                                     }
                                     Text {
                                         anchors.verticalCenter: parent.verticalCenter
                                         width: parent.width - 120
                                         text: scope.query === "" ? "Search apps and actions…" : scope.query
-                                        color: scope.query === "" ? Color.textDim : Color.foreground
+                                        color: scope.query === "" ? Colors.textDim : Colors.foreground
                                         font.family: Style.font.family; font.pixelSize: 19
                                         elide: Text.ElideRight
                                     }
                                     Rectangle {  // caret
                                         anchors.verticalCenter: parent.verticalCenter
-                                        width: 2; height: 22; color: Color.highlight
+                                        width: 2; height: 22; color: Colors.highlight
                                         SequentialAnimation on opacity {
                                             loops: Animation.Infinite
                                             NumberAnimation { to: 0; duration: 500 }
@@ -232,7 +232,7 @@ Scope {
                                 gradient: Gradient {
                                     orientation: Gradient.Horizontal
                                     GradientStop { position: 0.0; color: "transparent" }
-                                    GradientStop { position: 0.5; color: Color.accent }
+                                    GradientStop { position: 0.5; color: Colors.accent }
                                     GradientStop { position: 1.0; color: "transparent" }
                                 }
                             }
@@ -267,12 +267,12 @@ Scope {
                                         width: ListView.view.width
                                         height: 52
                                         property bool sel: index === scope.selected
-                                        color: sel ? Color.omni.rowSelected : "transparent"
+                                        color: sel ? Colors.omni.rowSelected : "transparent"
 
                                         // selected accent bar
                                         Rectangle {
                                             visible: parent.sel
-                                            width: 2; height: parent.height; color: Color.accent
+                                            width: 2; height: parent.height; color: Colors.accent
                                         }
 
                                         Row {
@@ -283,8 +283,8 @@ Scope {
                                             Rectangle {  // icon chip
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 width: 34; height: 34; radius: 9
-                                                color: parent.parent.sel ? Color.omni.chipSelected : Color.omni.chip
-                                                border.color: parent.parent.sel ? Color.secondary : Color.omni.chipBorder
+                                                color: parent.parent.sel ? Colors.omni.chipSelected : Colors.omni.chip
+                                                border.color: parent.parent.sel ? Colors.secondary : Colors.omni.chipBorder
                                                 border.width: 1
                                                 Image {
                                                     anchors.centerIn: parent
@@ -299,13 +299,13 @@ Scope {
                                                 spacing: 2
                                                 Text {
                                                     text: modelData.name
-                                                    color: parent.parent.parent.sel ? Color.accent : Color.foreground
+                                                    color: parent.parent.parent.sel ? Colors.accent : Colors.foreground
                                                     font.family: Style.font.family; font.pixelSize: 15
                                                     elide: Text.ElideRight; width: parent.width
                                                 }
                                                 Text {
                                                     text: modelData.comment
-                                                    color: Color.textDim
+                                                    color: Colors.textDim
                                                     font.family: Style.font.family; font.pixelSize: 11
                                                     elide: Text.ElideRight; width: parent.width
                                                 }
@@ -313,7 +313,7 @@ Scope {
                                             Text {
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 text: modelData.kind === "action" ? "PWR" : "APP"
-                                                color: Color.textDim; font.family: Style.font.family; font.pixelSize: 10
+                                                color: Colors.textDim; font.family: Style.font.family; font.pixelSize: 10
                                             }
                                         }
 
@@ -327,7 +327,7 @@ Scope {
                                 }
 
                                 // vertical divider
-                                Rectangle { width: 1; height: parent.height; color: Color.omni.divider }
+                                Rectangle { width: 1; height: parent.height; color: Colors.omni.divider }
 
                                 // Preview pane
                                 Item {
@@ -343,7 +343,7 @@ Scope {
 
                                         Rectangle {
                                             width: 74; height: 74; radius: 16
-                                            color: Color.omni.chipSelected; border.color: Color.secondary; border.width: 1
+                                            color: Colors.omni.chipSelected; border.color: Colors.secondary; border.width: 1
                                             Image {
                                                 anchors.centerIn: parent
                                                 width: 40; height: 40; sourceSize.width: 40; sourceSize.height: 40
@@ -354,18 +354,18 @@ Scope {
                                         }
                                         Text {
                                             text: parent.parent.cur ? parent.parent.cur.name : ""
-                                            color: Color.foreground; font.family: Style.font.family; font.pixelSize: 22
+                                            color: Colors.foreground; font.family: Style.font.family; font.pixelSize: 22
                                             elide: Text.ElideRight; width: parent.width
                                         }
                                         Text {
                                             text: parent.parent.cur
                                                 ? (parent.parent.cur.kind === "action" ? "SYSTEM ACTION" : "APPLICATION")
                                                 : ""
-                                            color: Color.accent; font.family: Style.font.family; font.pixelSize: 11
+                                            color: Colors.accent; font.family: Style.font.family; font.pixelSize: 11
                                         }
                                         Text {
                                             text: parent.parent.cur ? parent.parent.cur.comment : ""
-                                            color: Color.textDim; font.family: Style.font.family; font.pixelSize: 13
+                                            color: Colors.textDim; font.family: Style.font.family; font.pixelSize: 13
                                             wrapMode: Text.WordWrap; width: parent.width
                                         }
                                     }
@@ -375,13 +375,13 @@ Scope {
                             // Footer
                             Rectangle {
                                 width: parent.width; height: 44
-                                color: Color.surfaceDeep
+                                color: Colors.surfaceDeep
                                 Row {
                                     anchors.fill: parent
                                     anchors.leftMargin: 30; anchors.rightMargin: 30
                                     spacing: 22
-                                    Text { anchors.verticalCenter: parent.verticalCenter; text: "↑↓ move"; color: Color.textDim; font.family: Style.font.family; font.pixelSize: 11 }
-                                    Text { anchors.verticalCenter: parent.verticalCenter; text: "⏎ run"; color: Color.textDim; font.family: Style.font.family; font.pixelSize: 11 }
+                                    Text { anchors.verticalCenter: parent.verticalCenter; text: "↑↓ move"; color: Colors.textDim; font.family: Style.font.family; font.pixelSize: 11 }
+                                    Text { anchors.verticalCenter: parent.verticalCenter; text: "⏎ run"; color: Colors.textDim; font.family: Style.font.family; font.pixelSize: 11 }
                                     Item { width: 1; height: 1 }
                                 }
                                 Text {
@@ -389,7 +389,7 @@ Scope {
                                     anchors.right: parent.right; anchors.rightMargin: 30
                                     text: scope.query === "" ? "system · type to search · esc"
                                                              : scope.items.length + " results · esc"
-                                    color: Color.highlight; font.family: Style.font.family; font.pixelSize: 11
+                                    color: Colors.highlight; font.family: Style.font.family; font.pixelSize: 11
                                 }
                             }
                         }

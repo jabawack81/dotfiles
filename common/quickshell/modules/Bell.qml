@@ -20,10 +20,10 @@ BarPill {
            : missed > 0 ? "󰂚 " + missed
            : count > 0  ? "󰂚 " + count
            :              "󰂜"
-    baseColor: center.visible ? Color.highlight
-             : (dnd || missed > 0) ? Color.warning
-             : count > 0 ? Color.accent
-             :             Color.textDim
+    baseColor: center.visible ? Colors.highlight
+             : (dnd || missed > 0) ? Colors.warning
+             : count > 0 ? Colors.accent
+             :             Colors.textDim
 
     acceptedButtons: Qt.LeftButton | Qt.RightButton
     onClicked: function(mouse) {
@@ -50,18 +50,18 @@ BarPill {
             BarText {
                 small: true
                 text: root.dnd ? "▶ DO NOT DISTURB" : "  notifications on"
-                color: root.dnd ? Color.warning : Color.textDim
+                color: root.dnd ? Colors.warning : Colors.textDim
                 font.bold: root.dnd
             }
             BarText {
                 small: true
                 visible: root.missed > 0
                 text: "  " + root.missed + " missed since you last looked"
-                color: Color.foreground
+                color: Colors.foreground
             }
             Item { width: 1; height: 2 }
-            BarText { small: true; text: "left  · history";        color: Color.textDim }
-            BarText { small: true; text: "right · toggle DND  (Super+Shift+N)"; color: Color.textDim }
+            BarText { small: true; text: "left  · history";        color: Colors.textDim }
+            BarText { small: true; text: "right · toggle DND  (Super+Shift+N)"; color: Colors.textDim }
         }
     }
 
@@ -88,8 +88,8 @@ BarPill {
                     text: "CLEAR"
                     // Greyed out and inert when there's nothing to clear.
                     property bool hasItems: Globals.notificationHistory.length > 0
-                    color: !hasItems ? Color.accentDim
-                         : (clearArea.containsMouse ? Color.urgent : Color.textDim)
+                    color: !hasItems ? Colors.accentDim
+                         : (clearArea.containsMouse ? Colors.urgent : Colors.textDim)
                     font.bold: true
                     MouseArea {
                         id: clearArea
@@ -108,7 +108,7 @@ BarPill {
                 small: true
                 visible: Globals.notificationHistory.length === 0
                 text: "// no notifications"
-                color: Color.textDim
+                color: Colors.textDim
             }
 
             ListView {
@@ -123,13 +123,13 @@ BarPill {
                     required property var modelData
                     width: ListView.view.width
                     height: itemCol.implicitHeight + 16
-                    color: Color.surfaceInactive
+                    color: Colors.surfaceInactive
                     border.width: 1
                     radius: Style.cornerRadius
                     border.color: {
-                        if (modelData.urgency === 2) return Color.urgent;
-                        if (modelData.urgency === 0) return Color.accentDim;
-                        return Color.accent;
+                        if (modelData.urgency === 2) return Colors.urgent;
+                        if (modelData.urgency === 0) return Colors.accentDim;
+                        return Colors.accent;
                     }
 
                     Column {
@@ -153,7 +153,7 @@ BarPill {
                             BarText {
                                 small: true
                                 text: modelData.time
-                                color: Color.textDim
+                                color: Colors.textDim
                                 horizontalAlignment: Text.AlignRight
                                 width: 44
                             }
@@ -162,7 +162,7 @@ BarPill {
                             small: true
                             width: parent.width
                             text: modelData.summary
-                            color: Color.foreground
+                            color: Colors.foreground
                             font.bold: true
                             wrapMode: Text.WordWrap
                             elide: Text.ElideRight
@@ -173,7 +173,7 @@ BarPill {
                             width: parent.width
                             visible: modelData.body !== ""
                             text: modelData.body
-                            color: Color.textDim
+                            color: Colors.textDim
                             wrapMode: Text.WordWrap
                             elide: Text.ElideRight
                             maximumLineCount: 3

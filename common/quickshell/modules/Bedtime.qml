@@ -17,13 +17,13 @@ BarPill {
     bold: severityClass === "critical" || severityClass === "warning"
     baseColor: {
         switch (severityClass) {
-            case "work":     return Color.accent;
-            case "lunch":    return Color.warning;
-            case "weekend":  return Color.highlight;
-            case "info":     return Color.warning;
-            case "warning":  return Color.heat;   // orange
-            case "critical": return Color.urgent;
-            default:         return Color.foreground;
+            case "work":     return Colors.accent;
+            case "lunch":    return Colors.warning;
+            case "weekend":  return Colors.highlight;
+            case "info":     return Colors.warning;
+            case "warning":  return Colors.heat;   // orange
+            case "critical": return Colors.urgent;
+            default:         return Colors.foreground;
         }
     }
 

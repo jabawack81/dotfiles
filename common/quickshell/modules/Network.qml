@@ -13,9 +13,9 @@ BarPill {
 
     content: "..."
     baseColor: {
-        if (state === "off")     return Color.urgent;
-        if (state === "limited") return Color.warning;
-        return Color.foreground;
+        if (state === "off")     return Colors.urgent;
+        if (state === "limited") return Colors.warning;
+        return Colors.foreground;
     }
 
     Timer {

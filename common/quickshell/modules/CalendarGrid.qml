@@ -43,7 +43,7 @@ Column {
                 width: 44
                 horizontalAlignment: Text.AlignHCenter
                 text: modelData
-                color: Color.accentDim
+                color: Colors.accentDim
             }
         }
     }
@@ -66,14 +66,14 @@ Column {
                     height: 20
                     visible: parent.isToday
                     color: "transparent"
-                    border.color: Color.accent
+                    border.color: Colors.accent
                     border.width: 1
                 }
                 BarText {
                     anchors.centerIn: parent
                     small: true
                     text: parent.modelData > 0 ? String(parent.modelData) : ""
-                    color: parent.isToday ? Color.accent : Color.foreground
+                    color: parent.isToday ? Colors.accent : Colors.foreground
                     font.bold: parent.isToday
                 }
             }

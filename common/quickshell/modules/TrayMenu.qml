@@ -37,7 +37,7 @@ PopupCard {
 
                 Component {
                     id: sepComp
-                    Rectangle { height: 1; color: Color.accentDim }
+                    Rectangle { height: 1; color: Colors.accentDim }
                 }
 
                 Component {
@@ -53,7 +53,7 @@ PopupCard {
 
                         Rectangle {
                             anchors.fill: parent
-                            color: parent.containsMouse ? Color.surfaceInactive : "transparent"
+                            color: parent.containsMouse ? Colors.surfaceInactive : "transparent"
                         }
 
                         BarText {
@@ -63,8 +63,8 @@ PopupCard {
                             anchors.leftMargin: 10
                             anchors.verticalCenter: parent.verticalCenter
                             text: modelData.text
-                            color: !modelData.enabled ? Color.textDim
-                                 : (parent.containsMouse ? Color.highlight : Color.foreground)
+                            color: !modelData.enabled ? Colors.textDim
+                                 : (parent.containsMouse ? Colors.highlight : Colors.foreground)
                         }
                     }
                 }

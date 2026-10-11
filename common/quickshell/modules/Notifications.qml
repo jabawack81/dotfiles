@@ -88,14 +88,14 @@ Scope {
                             // Cap height as a safety net (summary/body are already
                             // line-limited + elided) so a toast can't grow tall.
                             height: Math.min(toastContent.implicitHeight + 20, 200)
-                            color: Color.surface
+                            color: Colors.surface
                             border.width: 1
                             radius: Style.cornerRadius
                             border.color: {
                                 // urgency: 0=low, 1=normal, 2=critical
-                                if (modelData.urgency === 2) return Color.urgent;
-                                if (modelData.urgency === 0) return Color.accentDim;
-                                return Color.accent;
+                                if (modelData.urgency === 2) return Colors.urgent;
+                                if (modelData.urgency === 0) return Colors.accentDim;
+                                return Colors.accent;
                             }
 
                             // Auto-dismiss timer (critical notifications stay)
@@ -138,14 +138,14 @@ Scope {
                                     BarText {
                                         small: true
                                         text: "✕"
-                                        color: Color.textDim
+                                        color: Colors.textDim
                                     }
                                 }
 
                                 BarText {
                                     width: parent.width
                                     text: modelData.summary
-                                    color: Color.foreground
+                                    color: Colors.foreground
                                     font.bold: true
                                     wrapMode: Text.WordWrap
                                     elide: Text.ElideRight
@@ -157,7 +157,7 @@ Scope {
                                     width: parent.width
                                     visible: modelData.body !== ""
                                     text: modelData.body
-                                    color: Color.textDim
+                                    color: Colors.textDim
                                     wrapMode: Text.WordWrap
                                     elide: Text.ElideRight
                                     maximumLineCount: 4

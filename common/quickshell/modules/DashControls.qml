@@ -72,9 +72,9 @@ Column {
         Rectangle {
             width: caffText.implicitWidth + 20
             height: 26
-            color: caffArea.containsMouse ? Color.surfaceInactive : Color.background
+            color: caffArea.containsMouse ? Colors.surfaceInactive : Colors.background
             border.width: 1
-            border.color: root.caffeineState !== "normal" ? Color.accent : Color.accentDim
+            border.color: root.caffeineState !== "normal" ? Colors.accent : Colors.accentDim
 
             BarText {
                 id: caffText
@@ -88,7 +88,7 @@ Column {
                         default:          return "☕ NORM";
                     }
                 }
-                color: root.caffeineState !== "normal" ? Color.accent : Color.textDim
+                color: root.caffeineState !== "normal" ? Colors.accent : Colors.textDim
             }
             MouseArea {
                 id: caffArea
@@ -105,16 +105,16 @@ Column {
         Rectangle {
             width: wifiText.implicitWidth + 20
             height: 26
-            color: wifiArea.containsMouse ? Color.surfaceInactive : Color.background
+            color: wifiArea.containsMouse ? Colors.surfaceInactive : Colors.background
             border.width: 1
-            border.color: root.wifiOn ? Color.secondary : Color.accentDim
+            border.color: root.wifiOn ? Colors.secondary : Colors.accentDim
 
             BarText {
                 id: wifiText
                 small: true
                 anchors.centerIn: parent
                 text: root.wifiOn ? "󰖩 WIFI" : "󰖪 WIFI"
-                color: root.wifiOn ? Color.secondary : Color.textDim
+                color: root.wifiOn ? Colors.secondary : Colors.textDim
             }
             MouseArea {
                 id: wifiArea
@@ -132,16 +132,16 @@ Column {
             visible: root.btPresent
             width: btText.implicitWidth + 20
             height: 26
-            color: btArea.containsMouse ? Color.surfaceInactive : Color.background
+            color: btArea.containsMouse ? Colors.surfaceInactive : Colors.background
             border.width: 1
-            border.color: root.btOn ? Color.accent : Color.accentDim
+            border.color: root.btOn ? Colors.accent : Colors.accentDim
 
             BarText {
                 small: true
                 id: btText
                 anchors.centerIn: parent
                 text: root.btOn ? "󰂯 BT" : "󰂲 BT"
-                color: root.btOn ? Color.accent : Color.textDim
+                color: root.btOn ? Colors.accent : Colors.textDim
             }
             MouseArea {
                 id: btArea
@@ -168,7 +168,7 @@ Column {
         BarText {
             small: true
             text: "VOL " + root.volume + "%"
-            color: Color.textDim
+            color: Colors.textDim
         }
 
         // Track + fill + draggable handle
@@ -176,16 +176,16 @@ Column {
             id: track
             width: parent.width
             height: 8
-            color: Color.surfaceInactive
+            color: Colors.surfaceInactive
             border.width: 1
-            border.color: Color.accentDim
+            border.color: Colors.accentDim
 
             Rectangle {
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
                 width: parent.width * (root.volume / 100)
-                color: Color.accent
+                color: Colors.accent
             }
 
             MouseArea {

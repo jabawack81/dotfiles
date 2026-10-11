@@ -32,7 +32,7 @@ MouseArea {
         id: powerIcon
         anchors.verticalCenter: parent.verticalCenter
         text: "⏻"
-        color: root.containsMouse ? Color.urgent : Color.accent
+        color: root.containsMouse ? Colors.urgent : Colors.accent
         font.family: Style.font.family
         font.pixelSize: Style.font.base + 2
         Behavior on color { ColorAnimation { duration: 120 } }
@@ -66,7 +66,7 @@ MouseArea {
 
                     Rectangle {
                         anchors.fill: parent
-                        color: parent.containsMouse ? Color.surfaceInactive : "transparent"
+                        color: parent.containsMouse ? Colors.surfaceInactive : "transparent"
                     }
 
                     BarText {
@@ -76,8 +76,8 @@ MouseArea {
                         anchors.verticalCenter: parent.verticalCenter
                         text: modelData.text
                         color: parent.containsMouse
-                             ? (modelData.danger ? Color.urgent : Color.highlight)
-                             : (modelData.danger ? Color.urgentDim : Color.foreground)
+                             ? (modelData.danger ? Colors.urgent : Colors.highlight)
+                             : (modelData.danger ? Colors.urgentDim : Colors.foreground)
                     }
                 }
             }

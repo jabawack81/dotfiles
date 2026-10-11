@@ -13,7 +13,7 @@ BarPill {
     property int volume: sink && sink.audio ? Math.round(sink.audio.volume * 100) : 0
 
     content: muted ? "MUTE" : "VOL " + String(volume).padStart(2, "0") + "%"
-    baseColor: muted ? Color.urgent : Color.foreground
+    baseColor: muted ? Colors.urgent : Colors.foreground
 
     acceptedButtons: Qt.LeftButton
     onClicked: if (sink && sink.audio) sink.audio.muted = !sink.audio.muted

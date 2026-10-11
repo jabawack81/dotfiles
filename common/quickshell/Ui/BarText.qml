@@ -7,5 +7,5 @@ Text {
     property bool small: false
     font.family: Style.font.family
     font.pixelSize: small ? Style.font.small : Style.font.base
-    color: Color.foreground
+    color: Colors.foreground
 }

@@ -115,8 +115,8 @@ Scope {
 
                 Rectangle {
                     anchors.fill: parent
-                    color: Color.surface
-                    border.color: Color.accent
+                    color: Colors.surface
+                    border.color: Colors.accent
                     border.width: 1
                     radius: Style.cornerRadius
 
@@ -131,7 +131,7 @@ Scope {
                                 if (scope.osdMuted) return "VOL · MUTE";
                                 return "VOL " + scope.osdValue + "%";
                             }
-                            color: scope.osdMuted ? Color.urgent : Color.accent
+                            color: scope.osdMuted ? Colors.urgent : Colors.accent
                             font.bold: true
                         }
 
@@ -145,9 +145,9 @@ Scope {
                                     width: 12
                                     height: 8
                                     property bool lit: (index + 1) * 5 <= scope.osdValue
-                                    color: !lit ? Color.surfaceInactive
-                                         : scope.osdMuted ? Color.urgent
-                                         : (scope.osdType === "brightness" ? Color.warning : Color.accent)
+                                    color: !lit ? Colors.surfaceInactive
+                                         : scope.osdMuted ? Colors.urgent
+                                         : (scope.osdType === "brightness" ? Colors.warning : Colors.accent)
                                 }
                             }
                         }

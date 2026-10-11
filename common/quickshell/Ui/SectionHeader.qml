@@ -5,7 +5,7 @@ import qs.Commons
 Text {
     property string title: ""
     text: "[ " + title + " ]"
-    color: Color.secondary
+    color: Colors.secondary
     font.family: Style.font.family
     font.pixelSize: Style.font.small
     font.bold: true

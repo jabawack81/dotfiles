@@ -50,10 +50,10 @@ Row {
 
     // Heat gradient: green (cool) → amber → orange → red (critical)
     function tempColor(c) {
-        if (c >= 85) return Color.urgent;     // red
-        if (c >= 75) return Color.heat;       // orange
-        if (c >= 60) return Color.warning;    // amber
-        return Color.secondary;               // green — running cool
+        if (c >= 85) return Colors.urgent;     // red
+        if (c >= 75) return Colors.heat;       // orange
+        if (c >= 60) return Colors.warning;    // amber
+        return Colors.secondary;               // green — running cool
     }
 
     function isCritical(c) {
@@ -62,7 +62,7 @@ Row {
 
     BarText {
         text: "CPU"
-        color: Color.textDim
+        color: Colors.textDim
         anchors.verticalCenter: parent.verticalCenter
     }
     BarText {
@@ -75,13 +75,13 @@ Row {
     BarText {
         visible: root.gpuPresent
         text: "│"
-        color: Color.accentDim
+        color: Colors.accentDim
         anchors.verticalCenter: parent.verticalCenter
     }
     BarText {
         visible: root.gpuPresent
         text: "GPU"
-        color: Color.textDim
+        color: Colors.textDim
         anchors.verticalCenter: parent.verticalCenter
     }
     BarText {

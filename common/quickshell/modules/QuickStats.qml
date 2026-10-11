@@ -84,15 +84,15 @@ Item {
 
     // ── helpers ───────────────────────────────────────────────────────
     function heat(c) {
-        if (c >= 85) return Color.urgent;
-        if (c >= 75) return Color.heat;
-        if (c >= 60) return Color.warning;
-        return Color.secondary;
+        if (c >= 85) return Colors.urgent;
+        if (c >= 75) return Colors.heat;
+        if (c >= 60) return Colors.warning;
+        return Colors.secondary;
     }
     function load(pct) {
-        if (pct >= 90) return Color.urgent;
-        if (pct >= 75) return Color.warning;
-        return Color.foreground;
+        if (pct >= 90) return Colors.urgent;
+        if (pct >= 75) return Colors.warning;
+        return Colors.foreground;
     }
 
     // ── tile ──────────────────────────────────────────────────────────
@@ -100,14 +100,14 @@ Item {
         property string glyph: ""
         property string label: ""
         property string sub: ""
-        property color tone: Color.foreground
+        property color tone: Colors.foreground
         signal activated()
 
         width: root.tileW
         height: 84
         radius: Style.cornerRadius
         color: tileMouse.containsMouse ? Qt.rgba(0.2, 0.8, 1, 0.06) : Qt.rgba(1, 1, 1, 0.02)
-        border.color: tileMouse.containsMouse ? Color.accent : Color.omni.tileBorder
+        border.color: tileMouse.containsMouse ? Colors.accent : Colors.omni.tileBorder
         border.width: 1
         Behavior on color { ColorAnimation { duration: 80 } }
         Behavior on border.color { ColorAnimation { duration: 80 } }
@@ -123,12 +123,12 @@ Item {
             }
             Text {
                 text: parent.parent.label
-                color: Color.textDim
+                color: Colors.textDim
                 font.family: Style.font.family; font.pixelSize: 10; font.bold: true
             }
             Text {
                 text: parent.parent.sub
-                color: Color.foreground
+                color: Colors.foreground
                 font.family: Style.font.family; font.pixelSize: 13
                 elide: Text.ElideRight; width: parent.width
             }
@@ -159,28 +159,28 @@ Item {
         }
         Tile {
             glyph: root.audioMuted ? "󰝟" : "󰕾"; label: "AUDIO"
-            tone: root.audioMuted ? Color.urgent : Color.accent
+            tone: root.audioMuted ? Colors.urgent : Colors.accent
             sub: root.audioMuted ? "MUTED" : root.volume + "%"
             onActivated: if (root.sink && root.sink.audio) root.sink.audio.muted = !root.sink.audio.muted
         }
         Tile {
             glyph: root.netKind === "wifi" ? "󰖩" : (root.netKind === "eth" ? "󰈁" : "󰖪")
             label: root.netKind === "wifi" ? "WI-FI" : (root.netKind === "eth" ? "ETHERNET" : "OFFLINE")
-            tone: root.netKind === "none" ? Color.textDim : Color.accent
+            tone: root.netKind === "none" ? Colors.textDim : Colors.accent
             sub: root.netSub
         }
         Tile {
             visible: root.btPresent
             glyph: root.btOn ? "󰂯" : "󰂲"; label: "BLUETOOTH"
-            tone: root.btOn ? Color.accent : Color.textDim
+            tone: root.btOn ? Colors.accent : Colors.textDim
             sub: !root.btOn ? "OFF" : (root.btCount > 0 ? root.btCount + " CONN" : "ON")
         }
 
-        Tile { glyph: "󰅐"; label: "UPTIME";  tone: Color.secondary; sub: SystemUsage.uptime }
-        Tile { glyph: "󰃭"; label: "DATE";    tone: Color.foreground; sub: root.dateStr }
-        Tile { glyph: "󰥔"; label: "TIME";    tone: Color.foreground; sub: root.timeStr }
+        Tile { glyph: "󰅐"; label: "UPTIME";  tone: Colors.secondary; sub: SystemUsage.uptime }
+        Tile { glyph: "󰃭"; label: "DATE";    tone: Colors.foreground; sub: root.dateStr }
+        Tile { glyph: "󰥔"; label: "TIME";    tone: Colors.foreground; sub: root.timeStr }
         Tile {
-            glyph: "󰐥"; label: "POWER"; tone: Color.urgent; sub: "LOCK · OFF"
+            glyph: "󰐥"; label: "POWER"; tone: Colors.urgent; sub: "LOCK · OFF"
             onActivated: { actionProc.command = ["bash", "-c", "hyprlock"]; actionProc.running = true; Globals.omniOpen = false; }
         }
     }

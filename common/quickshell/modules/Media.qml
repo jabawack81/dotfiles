@@ -30,7 +30,7 @@ Row {
     // Play/pause toggle
     BarText {
         text: root.playing ? "⏸" : "⏵"
-        color: mpHover.containsMouse ? Color.highlight : Color.secondary
+        color: mpHover.containsMouse ? Colors.highlight : Colors.secondary
         anchors.verticalCenter: parent.verticalCenter
 
         MouseArea {
@@ -61,7 +61,7 @@ Row {
         small: true
         visible: root.player && root.player.canGoPrevious
         text: "⏮"
-        color: prevHover.containsMouse ? Color.highlight : Color.textDim
+        color: prevHover.containsMouse ? Colors.highlight : Colors.textDim
         anchors.verticalCenter: parent.verticalCenter
         MouseArea {
             id: prevHover
@@ -75,7 +75,7 @@ Row {
         small: true
         visible: root.player && root.player.canGoNext
         text: "⏭"
-        color: nextHover.containsMouse ? Color.highlight : Color.textDim
+        color: nextHover.containsMouse ? Colors.highlight : Colors.textDim
         anchors.verticalCenter: parent.verticalCenter
         MouseArea {
             id: nextHover

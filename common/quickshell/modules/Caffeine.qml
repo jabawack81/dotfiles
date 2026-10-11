@@ -22,10 +22,10 @@ BarPill {
     }
     baseColor: {
         switch (state) {
-            case "caffeine":  return Color.accent;     // cyan
-            case "remote":    return Color.secondary;  // green
-            case "hibernate": return Color.warning;    // amber
-            default:          return Color.textDim;
+            case "caffeine":  return Colors.accent;     // cyan
+            case "remote":    return Colors.secondary;  // green
+            case "hibernate": return Colors.warning;    // amber
+            default:          return Colors.textDim;
         }
     }
 
@@ -81,13 +81,13 @@ BarPill {
                         small: true
                         width: 56
                         text: (parent.current ? "▶ " : "  ") + modelData.label
-                        color: parent.current ? Color.accent : Color.textDim
+                        color: parent.current ? Colors.accent : Colors.textDim
                         font.bold: parent.current
                     }
                     BarText {
                         small: true
                         text: modelData.desc
-                        color: parent.current ? Color.foreground : Color.textDim
+                        color: parent.current ? Colors.foreground : Colors.textDim
                     }
                 }
             }
@@ -97,7 +97,7 @@ BarPill {
             BarText {
                 small: true
                 text: "L-click: cycle · R-click: reset"
-                color: Color.accentDim
+                color: Colors.accentDim
             }
         }
     }

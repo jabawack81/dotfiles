@@ -8,7 +8,7 @@ import qs.Commons
 MouseArea {
     id: root
     property string content: ""
-    property color baseColor: Color.foreground
+    property color baseColor: Colors.foreground
     property bool hoverHighlight: true
     property bool bold: false
 
@@ -24,13 +24,13 @@ MouseArea {
 
         Text {
             text: Style.bracketL
-            color: Color.accent
+            color: Colors.accent
             font.family: Style.font.family
             font.pixelSize: Style.font.base
         }
         Text {
             text: root.content
-            color: (root.hoverHighlight && root.containsMouse) ? Color.highlight : root.baseColor
+            color: (root.hoverHighlight && root.containsMouse) ? Colors.highlight : root.baseColor
             font.family: Style.font.family
             font.pixelSize: Style.font.base
             font.bold: root.bold
@@ -38,7 +38,7 @@ MouseArea {
         }
         Text {
             text: Style.bracketR
-            color: Color.accent
+            color: Colors.accent
             font.family: Style.font.family
             font.pixelSize: Style.font.base
         }

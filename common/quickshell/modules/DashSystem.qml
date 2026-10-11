@@ -32,7 +32,7 @@ Column {
     }
     BarText {
         small: true
-        color: Color.textDim
+        color: Colors.textDim
         text: "UP   " + SystemUsage.uptime
     }
 }
