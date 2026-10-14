@@ -99,6 +99,12 @@ macos-titlebar-style=native
 # Use left Option as Alt (terminal shortcuts), right Option for macOS input (e.g. #)
 macos-option-as-alt=left
 
+# Ghostty binds Alt+Left/Right to readline word-jump (esc:b / esc:f) by default,
+# which hides the real <M-Left>/<M-Right> keys from apps. Unbind so Neovim can
+# use Option+arrows for window resize (Ctrl+arrows are taken by Mission Control).
+keybind = alt+arrow_left=unbind
+keybind = alt+arrow_right=unbind
+
 # ==============================================================================
 # Other UI/UX options (uncomment to enable)
 # ==============================================================================
