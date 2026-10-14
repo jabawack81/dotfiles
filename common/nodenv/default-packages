@@ -39,3 +39,5 @@ dotenv-cli
 # Development servers
 live-server
 serve
+
+@modelcontextprotocol/server-filesystem
