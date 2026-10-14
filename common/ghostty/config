@@ -91,7 +91,10 @@ minimum-contrast=1.1
 # ==============================================================================
 
 # Titlebar style: native, hidden (no tabs), tabs (minimal with tabs), transparent
-macos-titlebar-style=tabs
+# TEMP: native instead of tabs — Ghostty 1.3.1 renders titlebar tabs squashed on macOS 27
+# (fixed in tip builds, not yet in stable: github.com/ghostty-org/ghostty/issues/13070).
+# Revert to macos-titlebar-style=tabs once the next stable release lands.
+macos-titlebar-style=native
 
 # Use left Option as Alt (terminal shortcuts), right Option for macOS input (e.g. #)
 macos-option-as-alt=left
