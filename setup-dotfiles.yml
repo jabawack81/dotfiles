@@ -37,6 +37,7 @@
       - nodenv
       - fastfetch
       - opencode
+      - scripts        # fastfetch-select.sh lives here; the shell alias expects ~/.config/scripts
 
     # Configs linked on servers (headless Debian): editor and the TUI tools
     # whose binaries server_packages installs
