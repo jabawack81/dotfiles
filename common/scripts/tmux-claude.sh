@@ -71,14 +71,24 @@ list_sessions() {
     done < <(ls -t "$dir"/*.jsonl 2>/dev/null)
 }
 
-# Ask for a session name. Restricted to characters that are safe both as a
-# tmux session name and inside the claude command sent with send-keys.
+# Ask for a session name, defaulting to $1. Restricted to characters that
+# are safe both as a tmux session name and inside the claude command sent
+# with send-keys, and must not already belong to a session in $taken (one
+# name per line), or tmux and `claude --resume <name>` could pick the wrong
+# one.
 ask_name() {
     local name
     while :; do
-        read -r -e -i "$1" -p "Session name: " name || exit 1
-        [[ "$name" =~ ^[A-Za-z0-9_-]+$ ]] && break
-        echo "Use letters, digits, - and _ only." >&2
+        # No `read -i` prefill: macOS ships bash 3.2, which lacks it.
+        read -r -e -p "Session name [$1]: " name || exit 1
+        name=${name:-$1}
+        if [[ ! "$name" =~ ^[A-Za-z0-9_-]+$ ]]; then
+            echo "Use letters, digits, - and _ only." >&2
+        elif grep -qxF -- "$name" <<<"$taken"; then
+            echo "\"$name\" is already used by another session here." >&2
+        else
+            break
+        fi
     done
     echo "$name"
 }
@@ -86,17 +96,19 @@ ask_name() {
 pick() {
     command -v fzf >/dev/null || { echo "fzf is not installed"; exit 1; }
 
-    # One row per session: id (hidden), marker, title, date.
-    local rows id title when mark
-    rows=$'new\t+ new session\t\t'
+    # One row per session: id (hidden), marker + title padded so the dates
+    # line up, date. printf rather than `column -o`, which BSD/macOS lacks.
+    local rows id title when mark taken=""
+    rows=$'new\t+ new session'
     while IFS=$'\t' read -r id title when; do
         mark="  "
         tmux has-session -t "=$title" 2>/dev/null && mark="● "
-        rows+=$'\n'"$id"$'\t'"$mark$title"$'\t'"$when"
+        rows+=$'\n'$(printf '%s\t%s%-40.40s\t%s' "$id" "$mark" "$title" "$when")
+        taken+="$title"$'\n'
     done < <(list_sessions)
 
     local choice
-    choice=$(printf '%s\n' "$rows" | column -t -s $'\t' -o $'\t' |
+    choice=$(printf '%s\n' "$rows" |
         fzf --delimiter=$'\t' --with-nth=2.. --no-sort --reverse --height=40% \
             --header="Claude sessions in $(basename "$PWD")  (● = tmux running)")
     # fzf exits 1 (no match) or 130 (Esc / Ctrl-C) when you back out; anything
@@ -112,6 +124,12 @@ pick() {
 
     local default name cmd
     default="$(uname -n | cut -d. -f1)-$(basename "$PWD" | tr -c 'A-Za-z0-9_\n-' '-')"
+    # Another session here already has it: suggest <host>-<dir>-2, -3, ...
+    local base=$default n=2
+    while grep -qxF -- "$default" <<<"$taken"; do
+        default="$base-$n"
+        n=$((n + 1))
+    done
     if [[ "$id" == "new" ]]; then
         name=$(ask_name "$default") || exit 0
         cmd="claude --name $name"
