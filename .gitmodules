@@ -5,3 +5,6 @@
 [submodule "common/ghostty/ghostty-shaders"]
 	path = common/ghostty/ghostty-shaders
 	url = git@github.com:hackr-sh/ghostty-shaders.git
+[submodule "common/claude/skills/asd-ste100"]
+	path = common/claude/skills/asd-ste100
+	url = https://github.com/danyuchn/asd-ste100-skill
