@@ -112,7 +112,7 @@
   loop: "{{ private_claude_skills.files | default([]) }}"
   when: private_claude_skills is succeeded
 
-- name: Find private Claude agent supplements
+- name: Find private Claude agents
   find:
     paths: "{{ dotfiles_dir }}/private-config/claude/agents"
     patterns: "*.md"
@@ -121,7 +121,7 @@
   register: private_claude_agents
   ignore_errors: yes
 
-- name: Symlink private Claude agent supplements into ~/.claude/agents
+- name: Symlink private Claude agents into ~/.claude/agents
   file:
     src: "{{ item.path }}"
     dest: "{{ target_home }}/.claude/agents/{{ item.path | basename }}"
